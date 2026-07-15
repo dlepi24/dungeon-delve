@@ -1,19 +1,21 @@
 # Roadmap
 
 ## Status
-- **Current milestone:** M4 built, awaiting Dustin's call. **M5 is design-blocked.**
+- **Current milestone:** M4 PASSED. **M5 is design-blocked — that is now the
+  critical path, and it is a design session, not a coding task.**
 - **M0-M3 all PASSED.** M1 signed off 2026-07-14; M2 and M3 signed off 2026-07-15
   ("It's genuinely fun"), re-judged after the null-node-reference fix so the
   verdict was given against working telegraphs and counts. Movement, combat and
   juice values are all approved as-is — do not change them without a fresh call
   from Dustin.
-- **Last session:** 2026-07-15. Closed M2 and M3 (after fixing the null-node-ref
-  bug that had made both unjudgeable), then built M4: the central seeded RNG
-  service with independent streams, a generated tileset with one-way platforms,
-  six ASCII-authored TileMap rooms, seeded delve assembly, room transitions and a
-  follow camera. Both halves of M4's exit criterion are pinned by tests.
-- **Next step:** Dustin plays the delve and judges it. Then **M5 needs a design
-  session before any code** — see below.
+- **Last session:** 2026-07-15. Built M4 (seeded RNG with independent streams,
+  generated tileset with one-way platforms, six ASCII-authored TileMap rooms,
+  seeded assembly, transitions). Dustin walked a full delve: **M4 PASSED**.
+  His playtest then found a pillar violation — attack-spam beat everything —
+  which produced the poise/hyper-armor system, attacks as `EnemyAttackData`
+  resources chosen by range, and enemy jumping. See the GDD decision log.
+- **Next step:** re-play the delve to judge poise. Then M5, which cannot start
+  without the design session below.
 - **Needs a design call from Dustin:**
   - `allow_air_roll` on the player, currently off. The GDD says roll is "always
     available" but never rules on mid-air, and air-rolling changes platforming a
@@ -104,7 +106,7 @@ climb for real overhangs.
 - Seeded assembly of rooms into a short delve (this is where procgen starts, using the central seeded RNG service)
 
 **Exit:** a seeded 5-room delve is playable start to finish, same seed produces the same delve.
-**Built 2026-07-15, awaiting Dustin's call.** Both halves pinned by tests
+**PASSED 2026-07-15** — Dustin walked a full delve start to finish. Both halves pinned by tests
 (`tests/delve_test.tscn` for reproducibility, a headless walk for playability).
 Rooms are authored as ASCII in `tools/rooms/room_layouts.gd` and generated into
 `src/rooms/delve/` — edit the ASCII, not the scenes. The plan is computed up front
