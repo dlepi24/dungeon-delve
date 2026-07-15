@@ -27,3 +27,10 @@ signal player_hurt(damage: float)
 signal player_jumped
 signal player_landed
 signal player_rolled
+
+## An enemy's health hit zero.
+signal enemy_died(enemy: Node2D)
+
+## The player's health hit zero. M5 owns the real run-loss consequences; for now
+## the room just puts you back.
+signal player_died

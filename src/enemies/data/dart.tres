@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="EnemyStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/enemy_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+display_name = "Dart"
+max_health = 38.0
+hurt_ms = 200
+knockback = 260.0
+move_speed = 150.0
+acceleration = 1100.0
+attack_range = 210.0
+aggro_range = 720.0
+damage = 8.0
+telegraph_ms = 300
+swing_active_ms = 200
+recover_ms = 480
+idle_ms = 300
+stagger_ms = 900
+dash_speed = 620.0
+colour_idle = Color(0.35, 0.7, 0.5, 1)
+colour_telegraph = Color(0.9, 0.95, 0.35, 1)
+colour_attack = Color(0.3, 1, 0.6, 1)
+colour_recover = Color(0.25, 0.45, 0.35, 1)
+colour_stagger = Color(0.35, 0.65, 1, 1)
+body_size = Vector2(26, 48)
+hitbox_size = Vector2(44, 44)
+hitbox_offset = Vector2(24, -24)

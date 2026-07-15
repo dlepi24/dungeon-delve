@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="EnemyStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/enemy_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+display_name = "Brute"
+max_health = 150.0
+hurt_ms = 120
+knockback = 90.0
+move_speed = 62.0
+acceleration = 380.0
+attack_range = 78.0
+aggro_range = 700.0
+damage = 26.0
+telegraph_ms = 750
+swing_active_ms = 120
+recover_ms = 700
+idle_ms = 520
+stagger_ms = 1100
+dash_speed = 0.0
+colour_idle = Color(0.55, 0.3, 0.5, 1)
+colour_telegraph = Color(1, 0.85, 0.3, 1)
+colour_attack = Color(1, 0.15, 0.35, 1)
+colour_recover = Color(0.4, 0.25, 0.38, 1)
+colour_stagger = Color(0.35, 0.65, 1, 1)
+body_size = Vector2(48, 88)
+hitbox_size = Vector2(104, 78)
+hitbox_offset = Vector2(62, -44)

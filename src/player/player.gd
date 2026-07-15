@@ -99,6 +99,13 @@ const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll", "attack", "parry"]
 ## parry with no damage reward.
 @export var riposte_damage_multiplier: float = 3.0
 
+@export_group("Health")
+@export var max_health: float = 100.0
+## Where you reappear after dying. PLACEHOLDER: M5 owns death, losing your haul
+## and returning to the hub. Right now the room just puts you back so a fight can
+## be judged without restarting the game.
+@export var respawn_delay_ms: int = 700
+
 @export_group("Hitstun")
 @export var hitstun_ms: int = 250
 @export var hitstun_knockback: float = 220.0
@@ -141,7 +148,11 @@ var _jump_velocity: float = 0.0
 var _jump_gravity: float = 0.0
 var _fall_gravity: float = 0.0
 
+var health: float = 0.0
+
 var _was_on_floor: bool = true
+var _spawn_position: Vector2 = Vector2.ZERO
+var _respawn_at_tick: int = -1
 
 @onready var _state_machine: PlayerStateMachine = $StateMachine
 @onready var _juice: BodyJuice = $VisualRoot
@@ -150,6 +161,11 @@ var _was_on_floor: bool = true
 
 
 func _ready() -> void:
+	# Enemies find us through this group rather than a node path, so they can be
+	# dropped into any room without knowing its layout.
+	add_to_group(&"player")
+	health = max_health
+	_spawn_position = global_position
 	_buffer = InputBuffer.new(BUFFERED_ACTIONS)
 	_state_machine.setup(self)
 	attack_hitbox.deactivate()
@@ -168,6 +184,11 @@ func _physics_process(delta: float) -> void:
 	_tick += 1
 	_recalculate_derived()
 
+	if _respawn_at_tick >= 0:
+		if _tick >= _respawn_at_tick:
+			_respawn()
+		return
+
 	if is_on_floor():
 		_last_grounded_tick = _tick
 
@@ -184,14 +205,42 @@ func _physics_process(delta: float) -> void:
 func _on_hurt(hitbox: Hitbox) -> void:
 	if invulnerable:
 		return
+	if _respawn_at_tick >= 0:
+		return
 	last_hit_direction = 1 if hitbox.global_position.x < global_position.x else -1
 	_state_machine.handle_hit(hitbox)
 	# Landing in Hitstun is the definition of "that hurt". A parry sends us to
 	# Idle instead, so a good read costs nothing — no flash, no shake, no freeze.
-	if _state_machine.get_current_name() == &"Hitstun":
-		Hitstop.request(hitstop_hurt_frames)
-		_juice.flash()
-		Events.player_hurt.emit(hitbox.damage)
+	if _state_machine.get_current_name() != &"Hitstun":
+		return
+
+	Hitstop.request(hitstop_hurt_frames)
+	_juice.flash()
+	health = maxf(0.0, health - hitbox.damage)
+	Events.player_hurt.emit(hitbox.damage)
+	if health <= 0.0:
+		_die()
+
+
+## PLACEHOLDER. M5 owns what death actually costs you — the haul, the run, the
+## trip back to the hub. This exists only so a fight can be judged end to end
+## without quitting the game.
+func _die() -> void:
+	_respawn_at_tick = _tick + ms_to_ticks(respawn_delay_ms)
+	velocity = Vector2.ZERO
+	invulnerable = true
+	Events.player_died.emit()
+	_juice.punch(Vector2(1.6, 0.4))
+
+
+func _respawn() -> void:
+	_respawn_at_tick = -1
+	health = max_health
+	invulnerable = false
+	velocity = Vector2.ZERO
+	global_position = _spawn_position
+	consume_riposte()
+	_state_machine.transition_to(&"Idle")
 
 
 ## We landed a hit on something.

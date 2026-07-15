@@ -1,0 +1,128 @@
+[gd_scene load_steps=11 format=3]
+
+; The M3 gate room: "a single room with 3 enemies is a genuinely fun fight."
+;
+; Deliberately a FLAT pit. The fight should be about spacing, reading telegraphs
+; and choosing roll-vs-parry — not about platforming.
+;
+; It started with two low ledges as escape valves, and they jammed every enemy
+; solid. The geometry does not allow it: a ledge low enough to jump onto from the
+; floor (109 px of rise, 30 px thick) leaves only ~50 px of headroom underneath,
+; which is less than the player's 56 px, never mind the Brute's 88. A platform
+; you can reach from the floor is a STEP, not an overhang — anything that walks
+; under it gets stuck inside it. Real verticality needs a taller room and a
+; two-stage climb; that is M4's job, along with the follow camera.
+;
+; The roster is a triangle on purpose:
+;   Brute (purple, slow, 750 ms telegraph)  -> the parry teacher. Huge reward.
+;   Dart  (green, lunges across the room)   -> the roll teacher. Greedy to parry.
+;   Grunt (red, generalist)                 -> pressure while you deal with those.
+
+[ext_resource type="PackedScene" path="res://src/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://src/ui/debug_overlay.tscn" id="2_overlay"]
+[ext_resource type="Script" path="res://src/systems/screen_shake.gd" id="3_shake"]
+[ext_resource type="PackedScene" path="res://src/enemies/enemy.tscn" id="4_enemy"]
+[ext_resource type="PackedScene" path="res://src/enemies/dart_enemy.tscn" id="5_dart"]
+[ext_resource type="Resource" path="res://src/enemies/data/grunt.tres" id="6_grunt"]
+[ext_resource type="Resource" path="res://src/enemies/data/brute.tres" id="7_brute"]
+[ext_resource type="Resource" path="res://src/enemies/data/dart.tres" id="8_dart"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
+size = Vector2(1840, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(40, 1080)
+
+[node name="Arena" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(960, 540)
+script = ExtResource("3_shake")
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.09, 0.09, 0.12, 1)
+
+[node name="Geometry" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="FloorShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(960, 960)
+shape = SubResource("RectangleShape2D_floor")
+
+[node name="LeftWallShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(20, 540)
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="RightWallShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(1900, 540)
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="GeometryVisuals" type="Node2D" parent="."]
+
+[node name="Floor" type="ColorRect" parent="GeometryVisuals"]
+offset_left = 40.0
+offset_top = 920.0
+offset_right = 1880.0
+offset_bottom = 1000.0
+color = Color(0.26, 0.27, 0.33, 1)
+
+[node name="LeftWall" type="ColorRect" parent="GeometryVisuals"]
+offset_right = 40.0
+offset_bottom = 1080.0
+color = Color(0.26, 0.27, 0.33, 1)
+
+[node name="RightWall" type="ColorRect" parent="GeometryVisuals"]
+offset_left = 1880.0
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.26, 0.27, 0.33, 1)
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(960, 920)
+
+[node name="Grunt" parent="." instance=ExtResource("4_enemy")]
+position = Vector2(420, 920)
+stats = ExtResource("6_grunt")
+
+[node name="Brute" parent="." instance=ExtResource("4_enemy")]
+position = Vector2(1520, 920)
+stats = ExtResource("7_brute")
+
+[node name="Dart" parent="." instance=ExtResource("5_dart")]
+position = Vector2(1180, 920)
+stats = ExtResource("8_dart")
+
+[node name="DebugOverlay" parent="." instance=ExtResource("2_overlay")]
+player = NodePath("../Player")
+
+[node name="ControlsHint" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="ControlsHint"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -150.0
+offset_right = 260.0
+offset_bottom = -20.0
+grow_vertical = 0
+
+[node name="Margin" type="MarginContainer" parent="ControlsHint/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Label" type="Label" parent="ControlsHint/Panel/Margin"]
+layout_mode = 2
+text = "WASD    move
+SPACE   jump
+SHIFT   roll
+LMB / J attack
+RMB / K parry
+
+F3      debug"

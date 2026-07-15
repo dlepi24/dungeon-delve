@@ -43,6 +43,7 @@ func _process(_delta: float) -> void:
 	var buffer: InputBuffer = player.get_buffer()
 	var tick: int = player.get_tick()
 	var lines: PackedStringArray = [
+		"hp         %d / %d" % [roundi(player.health), roundi(player.max_health)],
 		"state      %s" % player.get_state_name(),
 		"tick       %d" % tick,
 		"vel        %6.1f, %6.1f" % [player.velocity.x, player.velocity.y],

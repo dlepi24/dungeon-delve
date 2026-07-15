@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="my-game"
-run/main_scene="res://src/rooms/gym.tscn"
+run/main_scene="res://src/rooms/arena.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]
@@ -128,6 +128,16 @@ debug_toggle={
 2d_physics/layer_4="PlayerAttack"
 2d_physics/layer_5="EnemyAttack"
 2d_physics/layer_6="Pickup"
+
+[physics]
+
+; Pinned per the GDD: daily seeds and ghost replays need a stable tick.
+; This equals the engine default, so Godot's ProjectSettings.save() drops the
+; line whenever the editor or a tool script rewrites this file. It has been
+; stripped three times now. If it disappears again, put it back — tools/check.tscn
+; fails loudly if the tick is ever actually wrong, so this is documentation of
+; intent rather than the enforcement mechanism.
+common/physics_ticks_per_second=60
 
 [rendering]
 
