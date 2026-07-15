@@ -34,3 +34,10 @@ signal enemy_died(enemy: Node2D)
 ## The player's health hit zero. M5 owns the real run-loss consequences; for now
 ## the room just puts you back.
 signal player_died
+
+## A run began, from this seed. The seed is shareable and reproduces the delve.
+signal run_started(seed_value: int)
+## The player entered room `index` of the plan.
+signal room_entered(index: int, room_id: String)
+## Every room in the plan is done.
+signal delve_completed

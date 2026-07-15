@@ -243,6 +243,18 @@ func _respawn() -> void:
 	_state_machine.transition_to(&"Idle")
 
 
+## Drop the player somewhere with a clean slate. Used by the Delve when moving
+## between rooms: carrying velocity or a half-finished roll across a transition
+## would make you arrive already moving, which reads as losing control.
+func teleport_to(destination: Vector2) -> void:
+	global_position = destination
+	_spawn_position = destination
+	velocity = Vector2.ZERO
+	consume_riposte()
+	_was_on_floor = true
+	_state_machine.transition_to(&"Idle")
+
+
 ## We landed a hit on something.
 func _on_hit_landed(_damage: float, was_riposte: bool) -> void:
 	Hitstop.request(hitstop_parry_frames if was_riposte else hitstop_hit_frames)

@@ -1,0 +1,71 @@
+[gd_scene load_steps=7 format=3]
+
+; The playable delve. Rooms are loaded and freed by Delve as you walk through
+; them; only the player, camera and HUD persist across a transition.
+
+[ext_resource type="Script" path="res://src/rooms/delve.gd" id="1_delve"]
+[ext_resource type="PackedScene" path="res://src/player/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://src/systems/follow_camera.gd" id="3_cam"]
+[ext_resource type="PackedScene" path="res://src/ui/debug_overlay.tscn" id="4_overlay"]
+[ext_resource type="PackedScene" path="res://src/ui/hud.tscn" id="5_hud"]
+[ext_resource type="PackedScene" path="res://src/ui/delve_hud.tscn" id="6_dhud"]
+
+[node name="DelveRun" type="Node2D"]
+
+[node name="Background" type="CanvasLayer" parent="."]
+layer = -10
+
+[node name="Rect" type="ColorRect" parent="Background"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.07, 0.07, 0.1, 1)
+
+[node name="Delve" type="Node2D" parent="."]
+script = ExtResource("1_delve")
+room_count = 5
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(200, 500)
+
+[node name="Camera2D" type="Camera2D" parent="." node_paths=PackedStringArray("target")]
+position = Vector2(960, 340)
+script = ExtResource("3_cam")
+target = NodePath("../Player")
+
+[node name="DebugOverlay" parent="." instance=ExtResource("4_overlay") node_paths=PackedStringArray("player")]
+player = NodePath("../Player")
+
+[node name="Hud" parent="." instance=ExtResource("5_hud") node_paths=PackedStringArray("player")]
+player = NodePath("../Player")
+
+[node name="DelveHud" parent="." instance=ExtResource("6_dhud")]
+
+[node name="ControlsHint" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="ControlsHint"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -150.0
+offset_right = 260.0
+offset_bottom = -20.0
+grow_vertical = 0
+
+[node name="Margin" type="MarginContainer" parent="ControlsHint/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Label" type="Label" parent="ControlsHint/Panel/Margin"]
+layout_mode = 2
+text = "WASD    move
+SPACE   jump
+SHIFT   roll
+LMB / J attack
+RMB / K parry
+
+F3      debug"

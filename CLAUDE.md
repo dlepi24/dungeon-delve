@@ -53,6 +53,18 @@ Godot 4.7.1 installed via `brew install --cask godot`. Binary is on PATH at
     registers autoload singletons, so `load()` on anything referencing `Events`
     fails with "Identifier not found" even though the game runs fine.
 - Headless smoke run (boots the main scene and quits): `godot --headless --path . --quit-after 3`
+- Seeded RNG determinism test: `godot --headless --path . res://tests/rng_test.tscn`
+- Delve assembly test: `godot --headless --path . res://tests/delve_test.tscn`
+  - Pins M4's exit criterion: same seed produces the same delve. Also checks every
+    room's entry/exit is standable, which is a run-ending bug you otherwise only
+    find by walking into it.
+- Regenerate the tileset: `godot --headless --path . --script tools/gen_tileset.gd`
+  (run twice on a clean checkout — the PNG must be imported before the TileSet can
+  reference it). Regenerate rooms: `godot --headless --path . res://tools/gen_rooms.tscn`
+  - Rooms are authored as ASCII in `tools/rooms/room_layouts.gd`. That is the source
+    of truth; the `.tscn` files under `src/rooms/delve/` are generated output and a
+    regen overwrites them. The generator validates first and refuses to build a
+    broken layout.
 - Feel stack behaviour test: `godot --headless --path . res://tests/feel_test.tscn`
   - Exits 0/1. Asserts coyote, input buffering and roll i-frames actually fire.
     Not a feel judgement — that is always Dustin's — just proof the mechanisms run,
