@@ -1,21 +1,30 @@
 # Roadmap
 
 ## Status
-- **Current milestone:** M0 complete. M1 is next.
-- **Last session:** 2026-07-14. Scaffolded the project: Godot 4.7.1 installed via
-  Homebrew, project boots clean windowed, headless, and via editor import. All 13
-  InputMap actions, the 6 named collision layers, physics tick pinned to 60,
-  `Events` and `GameState` autoload stubs. `tools/check.gd` is a real gate
-  (exits non-zero, negative-tested). Static typing is engine-enforced. Commands
-  documented in CLAUDE.md. First commit landed.
-- **Next step:** M1. Start with the player FSM and movement, since the M1 exit gate
-  is about how movement alone feels, before any combat verb exists.
+- **Current milestone:** M1, first half built. **Blocked on the feel gate — Dustin's
+  call.** Nothing further gets built until movement is fun on its own.
+- **Last session:** 2026-07-14. M0 scaffold complete (Godot 4.7.1 via Homebrew, 13
+  InputMap actions, 6 named collision layers, tick pinned to 60, autoload stubs,
+  `tools/check.gd` as a real negative-tested gate, static typing engine-enforced).
+  Then M1 up to the gate: gray-box gym room, player FSM (idle/run/air/roll),
+  accel/decel, variable jump, 100 ms buffer, 80 ms coyote, roll with i-frames over
+  the middle 200 ms. Debug overlay on F3. `tests/feel_test.tscn` proves coyote,
+  buffering and i-frames actually fire (9 assertions, all green).
+- **Next step:** Dustin plays `src/rooms/gym.tscn` and judges the gate. Tune the
+  exports in the inspector while playing; commit whatever values win. Only once
+  movement is fun by itself does the M1 combat half (attack with commitment and
+  cancel windows, parry, training dummy) get built.
+- **Needs a design call from Dustin:**
+  - `allow_air_roll` on the player, currently off. The GDD says roll is "always
+    available" but never rules on mid-air, and air-rolling changes platforming a
+    lot. Feel both, then it goes in the GDD decision log.
+  - Whatever tuned feel-spec values win should be written back into the GDD feel
+    spec table, which still holds the untested starting values.
 - **Deferred:** Godot MCP server. No official or registry-listed server exists; all
   candidates are unvetted third-party code. The headless CLI already covers running
-  scenes and reading output. Revisit in M1 only if tuning feel outgrows the CLI.
-- **Open, needs Dustin:** confirm the project opens and plays from the Godot editor
-  GUI. Headless import is clean and the windowed CLI run uses the same path as the
-  editor's play button, so this is expected to pass, but a human has not clicked it.
+  scenes and reading output. Revisit only if tuning feel outgrows the CLI.
+- **Resolved:** the editor-GUI check from M0 — the project has since been imported
+  and run repeatedly, and Dustin ran the headless check himself.
 
 Update this section at the end of every session: date, what got done, what's next. Feel gates require Dustin's explicit sign-off, not Claude's judgment.
 
