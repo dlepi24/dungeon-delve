@@ -128,3 +128,35 @@ position = Vector2(980, 920)
 [node name="DebugOverlay" parent="." instance=ExtResource("2_overlay")]
 player = NodePath("../Player")
 dummy = NodePath("../TrainingDummy")
+
+; Dev affordance, not product UI — M7 owns real menus and controller glyphs.
+; It exists because a build that does not tell you its verbs gets judged on the
+; verbs you happened to guess.
+[node name="ControlsHint" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="ControlsHint"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -150.0
+offset_right = 260.0
+offset_bottom = -20.0
+grow_vertical = 0
+
+[node name="Margin" type="MarginContainer" parent="ControlsHint/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Label" type="Label" parent="ControlsHint/Panel/Margin"]
+layout_mode = 2
+text = "WASD    move
+SPACE   jump
+SHIFT   roll
+LMB / J attack
+RMB / K parry
+
+F3      debug"

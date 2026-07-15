@@ -16,7 +16,6 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]
 
-; Order matters: Events must exist before anything that connects to it.
 Events="*res://src/autoload/events.gd"
 GameState="*res://src/autoload/game_state.gd"
 Hitstop="*res://src/systems/hitstop.gd"
