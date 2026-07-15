@@ -85,7 +85,7 @@ const GAP: Array[String] = [
 ## reason the one-way tile exists: a solid ledge low enough to jump onto leaves
 ## less headroom than the player is tall, so enemies walking beneath would get
 ## stuck inside it. Here they walk under freely while you climb over. The exit
-## stands on a solid landing at the top.
+## stands on a solid landing at the top, so the climb has a point.
 const CLIMB: Array[String] = [
 	"..........................................................",
 	"..............................................X...........",
@@ -108,7 +108,8 @@ const CLIMB: Array[String] = [
 ]
 
 ## Open floor with two tiers of cover. The fighting room — space to circle, read a
-## telegraph, and choose roll or parry without geometry getting in the way.
+## telegraph, and choose roll or parry without geometry getting in the way. The
+## Brute cannot jump, so the tiers are a real escape from it.
 const ARENA: Array[String] = [
 	"..........................................................",
 	"..........................................................",
@@ -130,8 +131,9 @@ const ARENA: Array[String] = [
 	"##########################################################",
 ]
 
-## A low ceiling forces you into one lane with a brute in it. Rewards rolling
-## through rather than standing and trading.
+## A low ceiling turns the ground lane into a gauntlet past the brute, and the
+## exit is UP on the right-hand landing. So the tiers are a genuine alternative
+## route rather than scenery: climb over the fight, or roll through it.
 const CORRIDOR: Array[String] = [
 	"..........................................................",
 	"..........................................................",
@@ -143,13 +145,13 @@ const CORRIDOR: Array[String] = [
 	"####################......################......##########",
 	"..........................................................",
 	"..........................................................",
+	"...............................................X..........",
+	"................======..........======......######........",
 	"..........................................................",
-	"................======..........======....................",
 	"..........................................................",
+	"......................========..........======............",
 	"..........................................................",
-	"......................========............................",
-	"..........................................................",
-	"...P......g...................b...............d.......X...",
+	"...P......g...................b...............d...........",
 	"##########################################################",
 ]
 

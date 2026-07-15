@@ -65,6 +65,16 @@ Godot 4.7.1 installed via `brew install --cask godot`. Binary is on PATH at
     of truth; the `.tscn` files under `src/rooms/delve/` are generated output and a
     regen overwrites them. The generator validates first and refuses to build a
     broken layout.
+- Enemy poise / AI test: `godot --headless --path . res://tests/enemy_test.tscn`
+  - Pins the poise pillar: light enemies break in one poke, the Brute cannot be
+    poked out of its swing at all, a parry always breaks poise, and a poise break
+    gives no riposte. Attack-spam beating everything is a silent regression — the
+    game still plays, it just stops being the game it is meant to be.
+- Regenerate enemy data: `godot --headless --path . res://tools/gen_enemies.tscn`
+  - A one-time BOOTSTRAP, not a pipeline. The `.tres` files under
+    `src/enemies/data/` are ordinary resources — tune them in the inspector. Do
+    not re-run this over tuned values; it exists because a typed
+    `Array[EnemyAttackData]` is fiddly to hand-write correctly.
 - Feel stack behaviour test: `godot --headless --path . res://tests/feel_test.tscn`
   - Exits 0/1. Asserts coyote, input buffering and roll i-frames actually fire.
     Not a feel judgement — that is always Dustin's — just proof the mechanisms run,

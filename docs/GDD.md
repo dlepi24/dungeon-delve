@@ -37,6 +37,10 @@ Consumables are never core combat. All bindings go through Godot InputMap action
 
 ### Combat rules
 - **Roll:** safe, always available, i-frames on good timing, never punished. No stamina in v1. Add a light stamina cost only if roll spam proves degenerate in playtesting, and only via a decision log entry.
+- **Poise (enemy hyper armor):** enemies flinch freely when idle, walking or recovering, but once a telegraph begins they have poise for the duration of that attack. Poise is per-attack: a heavier swing carries more. Chip it below zero and they are knocked off balance; fail to, and they swing through your pokes and hit you. Poise refills between attacks.
+  - A **poise break** staggers them. It does NOT open a riposte — that is parry's reward alone, or parry stops being the greedy option and becomes a worse version of attacking.
+  - A **parry** always breaks poise outright, whatever the value. Parry is the answer to a heavy attack you cannot poke through.
+  - Exists because attack-spam beat everything: every hit cancelled the enemy's telegraph, so parry was never worth its risk. That is a pillar violation, not a balance nit.
 - **Parry:** design pillar. Tight active window, deflects the incoming attack, opens a riposte. Whiffing has recovery frames and is punishable. Reward is speed and style. Roll-only play must remain fully viable.
 - **Attacks:** animation commitment (weight) with defined cancel-into-roll windows. Where those windows sit is a primary tuning knob.
 - **Enemies:** telegraph everything. Readability over surprise.
@@ -91,3 +95,5 @@ Screenshake, squash/stretch, and flashes arrive in Milestone 2.
 - 2026-07-14: Roll is never punished, no stamina in v1. Parry locked as the greedy pillar with riposte reward.
 - 2026-07-14: Competition is async only: daily seeds, leaderboards, ghost replays. Real-time PvP permanently out of scope.
 - 2026-07-14: Gray-box before art. Feel stack (buffer, coyote, hitstop, cancel windows) mandatory from Milestone 1.
+- 2026-07-15: **Poise / hyper armor added**, Dustin's call after playtesting M4. Enemies keep swinging through pokes during a committed attack; light enemies have little poise, heavy ones a lot. Poise applies ONLY during telegraph/attack, so enemies still flinch when idle and combat stays at the Dead Cells pace rather than drifting to Dark Souls weight. A poise break staggers but gives no riposte; only a parry does. Reason: attack-spam trivially beat everything, which made parry decorative and broke its pillar status.
+- 2026-07-15: Enemy attacks are data (`EnemyAttackData` resources) chosen by range, not one hard-coded swing. Folds the Dart's lunge in as a `dash_speed` value rather than a subclass — it turned out to be a number, not a verb. Adding an attack or an enemy variant is now a resource file.

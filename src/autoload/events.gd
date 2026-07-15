@@ -28,6 +28,9 @@ signal player_jumped
 signal player_landed
 signal player_rolled
 
+## An enemy's poise gave out mid-attack and it was knocked off balance.
+signal poise_broken(enemy: Node2D)
+
 ## An enemy's health hit zero.
 signal enemy_died(enemy: Node2D)
 

@@ -81,6 +81,10 @@ const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll", "attack", "parry"]
 ## your own active frames, which usually feels cheap.
 @export var attack_cancel_start_ms: int = 170
 @export var attack_damage: float = 12.0
+## How much enemy poise a swing chips. Equal to damage by default, so the poise
+## numbers on enemies read directly as "how many pokes to break". Lower it to
+## make enemies harder to stagger without making them tankier.
+@export var attack_poise_damage: float = 12.0
 ## Fraction of run speed you keep while swinging. Low values plant your feet.
 @export_range(0.0, 1.0) var attack_move_control: float = 0.15
 ## Hitbox position relative to the player, mirrored by facing.

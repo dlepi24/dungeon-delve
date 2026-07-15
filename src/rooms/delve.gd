@@ -22,11 +22,8 @@ const FIRST_ROOM: StringName = &"entry"
 const LAST_ROOM: StringName = &"deep"
 const MIDDLE_POOL: Array[StringName] = [&"gap", &"climb", &"arena", &"corridor"]
 
-const ENEMY_SCENES: Dictionary[String, String] = {
-	"grunt": "res://src/enemies/enemy.tscn",
-	"brute": "res://src/enemies/enemy.tscn",
-	"dart": "res://src/enemies/dart_enemy.tscn",
-}
+## One scene for every enemy: there are no enemy subclasses any more, only data.
+const ENEMY_SCENE: String = "res://src/enemies/enemy.tscn"
 const ENEMY_STATS: Dictionary[String, String] = {
 	"grunt": "res://src/enemies/data/grunt.tres",
 	"brute": "res://src/enemies/data/brute.tres",
@@ -151,10 +148,10 @@ func _load_room(id: StringName) -> void:
 func _spawn_enemies(room: Room) -> void:
 	for point: Dictionary in room.spawn_points():
 		var kind: String = point["kind"]
-		if not ENEMY_SCENES.has(kind):
+		if not ENEMY_STATS.has(kind):
 			push_error("Delve: unknown enemy kind '%s'" % kind)
 			continue
-		var packed: PackedScene = load(ENEMY_SCENES[kind]) as PackedScene
+		var packed: PackedScene = load(ENEMY_SCENE) as PackedScene
 		var enemy: Enemy = packed.instantiate() as Enemy
 		enemy.stats = load(ENEMY_STATS[kind]) as EnemyStats
 		enemy.global_position = point["position"]

@@ -13,6 +13,10 @@ extends Area2D
 signal parried
 
 @export var damage: float = 10.0
+## How much of a committed enemy's poise this hit chips. Separate from damage so
+## a fast poke can hurt without staggering: that gap between "it hurts" and "it
+## interrupts" is exactly what makes heavy attacks worth respecting.
+@export var poise_damage: float = 10.0
 
 ## Drawn while the box is live, then faded out. NOT decoration: without it an
 ## attack is 80 ms of invisible geometry and you are fighting on faith — you

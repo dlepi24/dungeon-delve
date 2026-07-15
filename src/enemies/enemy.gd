@@ -1,16 +1,20 @@
 class_name Enemy
 extends CharacterBody2D
-## Base for real enemies. Approach, telegraph, attack, recover, react, die.
+## Approach, telegraph, attack, recover, react, die.
 ##
-## One state machine, parameterised by an EnemyStats resource, with a virtual
-## hook for the attack itself. The roadmap says "enemy types with their own
-## FSMs"; three copies of approach->telegraph->swing would have been three places
-## to fix every bug, and would break the rule that new content is a resource file
-## rather than a system edit. So: numbers live in `.tres`, and only genuinely
-## different VERBS (a stationary swing vs a dash) subclass _attack_* below.
+## One state machine, parameterised entirely by an EnemyStats resource. There are
+## no enemy subclasses: the Dart's lunge is `dash_speed` on an attack, which is a
+## number, not a verb. Adding an enemy means adding a `.tres`.
 ##
-## Finds the player through the "player" group rather than a node path, so an
-## enemy can be dropped into any room without knowing its layout.
+## POISE is the reason attacks are worth respecting. From the start of a telegraph
+## to the end of the active window, hits chip the attack's poise instead of
+## interrupting it — so a heavy swing lands even if you poke it. Outside that
+## window the enemy flinches freely, which keeps the pace at Dead Cells rather
+## than Dark Souls. See the GDD decision log.
+##
+## Finds the player through the "player" group, resolved LAZILY. Caching it in
+## _ready silently returned null (node _ready order) and the enemy just stood
+## there forever. See CLAUDE.md.
 
 enum State { IDLE, CHASE, TELEGRAPH, ATTACK, RECOVER, HURT, STAGGER, DEAD }
 
@@ -25,6 +29,14 @@ var _elapsed: int = 0
 var _facing: int = 1
 var _player: Player = null
 
+## The attack currently being wound up or swung. Null outside TELEGRAPH/ATTACK.
+var _attack: EnemyAttackData = null
+## Poise remaining on the current attack. Refills when a new attack starts.
+var _poise: float = 0.0
+var _dash_direction: int = 1
+var _last_jump_tick: int = -10000
+var _tick: int = 0
+
 @onready var _juice: BodyJuice = $VisualRoot
 @onready var _visual: ColorRect = $VisualRoot/Visual
 @onready var _body_shape: CollisionShape2D = $CollisionShape2D
@@ -33,6 +45,7 @@ var _player: Player = null
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _hurtbox_shape: CollisionShape2D = $Hurtbox/CollisionShape2D
 @onready var _health_bar: HealthBar = $HealthBar
+@onready var _ground_probe: RayCast2D = $GroundProbe
 
 
 func _ready() -> void:
@@ -45,8 +58,6 @@ func _ready() -> void:
 	_enter(State.IDLE)
 
 
-## Body and box sizes come from the resource too, so a "big heavy one" is a data
-## change rather than a new scene.
 func _apply_stats_to_body() -> void:
 	_visual.offset_left = -stats.body_size.x * 0.5
 	_visual.offset_right = stats.body_size.x * 0.5
@@ -65,36 +76,22 @@ func _apply_stats_to_body() -> void:
 	_hurtbox_shape.shape = hurt_capsule
 	_hurtbox_shape.position = Vector2(0, -stats.body_size.y * 0.5)
 
-	var rect: RectangleShape2D = RectangleShape2D.new()
-	rect.size = stats.hitbox_size
-	_hitbox_shape.shape = rect
-
-	# The swing arc is drawn at the hitbox's real size, so what you see is
-	# genuinely what will hit you. A lying tell is worse than no tell.
-	var swing: ColorRect = _hitbox.visual as ColorRect
-	if swing != null:
-		swing.size = stats.hitbox_size
-		swing.position = -stats.hitbox_size * 0.5
-		swing.color = stats.colour_attack
-
-	# Sit the bar above the head, whatever height the stats made this thing.
 	_health_bar.position = Vector2(0, -stats.body_size.y - 14.0)
 	_health_bar.bar_size = Vector2(maxf(38.0, stats.body_size.x * 1.35), 6.0)
 
+	# Probe for the ground ahead, used to decide whether to jump a gap.
+	_ground_probe.target_position = Vector2(0, 48)
+
 
 func _physics_process(delta: float) -> void:
-	# Opt in to the freeze like everything else, or this keeps swinging through
-	# a hitstop and reads as a bug.
 	if Hitstop.is_frozen():
 		return
 
+	_tick += 1
 	_elapsed += 1
-	_hitbox.damage = stats.damage
 
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
-
-	_hitbox.position = Vector2(stats.hitbox_offset.x * float(_facing), stats.hitbox_offset.y)
 
 	match _state:
 		State.IDLE:
@@ -104,22 +101,26 @@ func _physics_process(delta: float) -> void:
 				_enter(State.CHASE)
 		State.CHASE:
 			_chase(delta)
-			if _player_distance() <= stats.attack_range:
-				_enter(State.TELEGRAPH)
+			var attack: EnemyAttackData = _pick_attack()
+			if attack != null and _roughly_level_with_player():
+				_begin_attack(attack)
 			elif _player_distance() > stats.aggro_range:
 				_enter(State.IDLE)
 		State.TELEGRAPH:
 			_decelerate(delta)
 			_face_player()
-			if _elapsed >= Ticks.from_ms(stats.telegraph_ms):
+			if _elapsed >= Ticks.from_ms(_attack.telegraph_ms):
 				_enter(State.ATTACK)
 		State.ATTACK:
-			_attack_physics(delta)
-			if _elapsed >= Ticks.from_ms(stats.swing_active_ms):
+			if _attack.dash_speed > 0.0:
+				velocity.x = float(_dash_direction) * _attack.dash_speed
+			else:
+				_decelerate(delta)
+			if _elapsed >= Ticks.from_ms(_attack.active_ms):
 				_enter(State.RECOVER)
 		State.RECOVER:
 			_decelerate(delta)
-			if _elapsed >= Ticks.from_ms(stats.recover_ms):
+			if _elapsed >= Ticks.from_ms(_attack.recover_ms if _attack != null else 400):
 				_enter(State.IDLE)
 		State.HURT:
 			_decelerate(delta)
@@ -136,9 +137,61 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
-## Corpses linger a beat so the kill registers, then fade and free themselves.
-## Leaving them lying around forever reads as a bug, and M5's real drops and
-## cleanup will replace this wholesale.
+## Poise only exists while an attack is committed. Everywhere else a hit flinches.
+func _has_poise() -> bool:
+	return (_state == State.TELEGRAPH or _state == State.ATTACK) and _attack != null
+
+
+## Attacks whose range band contains the player, picked by weight.
+##
+## Randomness comes from the seeded service, not randf(): an enemy's choices are
+## gameplay, and an unseeded draw would desync ghost replays. The stream is named
+## separately from "delve" so combat decisions can never shift the level layout.
+func _pick_attack() -> EnemyAttackData:
+	if stats.attacks.is_empty():
+		return null
+	var distance: float = _player_distance()
+	var options: Array[EnemyAttackData] = []
+	var total: float = 0.0
+	for attack: EnemyAttackData in stats.attacks:
+		if distance >= attack.min_range and distance <= attack.max_range:
+			options.append(attack)
+			total += maxf(0.0, attack.weight)
+	if options.is_empty():
+		return null
+	if total <= 0.0:
+		return options[0]
+	var roll: float = Rng.stream(&"enemy_ai").randf() * total
+	for attack: EnemyAttackData in options:
+		roll -= maxf(0.0, attack.weight)
+		if roll <= 0.0:
+			return attack
+	return options[options.size() - 1]
+
+
+## Do not swing at someone standing on a ledge above your head.
+func _roughly_level_with_player() -> bool:
+	var player: Player = get_player()
+	if player == null:
+		return false
+	return absf(player.global_position.y - global_position.y) <= stats.body_size.y + 24.0
+
+
+func _begin_attack(attack: EnemyAttackData) -> void:
+	_attack = attack
+	_poise = attack.poise
+	var rect: RectangleShape2D = RectangleShape2D.new()
+	rect.size = attack.hitbox_size
+	_hitbox_shape.shape = rect
+	_hitbox.damage = attack.damage
+	var swing: ColorRect = _hitbox.visual as ColorRect
+	if swing != null:
+		swing.size = attack.hitbox_size
+		swing.position = -attack.hitbox_size * 0.5
+		swing.color = attack.colour_attack
+	_enter(State.TELEGRAPH)
+
+
 func _update_corpse() -> void:
 	var linger: int = Ticks.from_ms(stats.corpse_linger_ms)
 	var fade: int = Ticks.from_ms(stats.corpse_fade_ms)
@@ -155,13 +208,16 @@ func _enter(next: State) -> void:
 	_state = next
 	_elapsed = 0
 
-	# The hitbox is open during ATTACK and nowhere else, so a stagger or a death
-	# cancels an in-flight swing for free.
 	if next == State.ATTACK:
-		_attack_start()
+		# Lock the lunge direction now: a dash that steers mid-flight is
+		# unreadable, and the commitment is what makes it fair to roll.
+		_dash_direction = _facing
+		_hitbox.activate()
 	elif previous == State.ATTACK:
-		_attack_end()
 		_hitbox.deactivate()
+
+	if next == State.IDLE or next == State.HURT or next == State.STAGGER:
+		_attack = null
 
 	if next == State.DEAD:
 		_on_death()
@@ -172,9 +228,9 @@ func _enter(next: State) -> void:
 func _colour_for(state: State) -> Color:
 	match state:
 		State.TELEGRAPH:
-			return stats.colour_telegraph
+			return _attack.colour_telegraph if _attack != null else stats.colour_idle
 		State.ATTACK:
-			return stats.colour_attack
+			return _attack.colour_attack if _attack != null else stats.colour_idle
 		State.RECOVER:
 			return stats.colour_recover
 		State.STAGGER:
@@ -185,32 +241,46 @@ func _colour_for(state: State) -> Color:
 			return stats.colour_idle
 
 
-# --- Virtual hooks. Subclasses override these; everything else is data. ---
-
-## Called once when the attack becomes live.
-func _attack_start() -> void:
-	_hitbox.activate()
-
-
-## Called every tick while the attack is live.
-func _attack_physics(delta: float) -> void:
-	_decelerate(delta)
-
-
-## Called once when the attack ends.
-func _attack_end() -> void:
-	pass
-
-
-# --- Shared movement ---
-
 func _decelerate(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0.0, stats.acceleration * delta)
 
 
 func _chase(delta: float) -> void:
 	_face_player()
-	velocity.x = move_toward(velocity.x, float(_facing) * stats.move_speed, stats.acceleration * delta)
+	var player: Player = get_player()
+	if player == null:
+		return
+	# Stop closing once in range of the longest attack, so they do not shove into
+	# you and swing from inside your body.
+	if _player_distance() > stats.preferred_range():
+		velocity.x = move_toward(velocity.x, float(_facing) * stats.move_speed, stats.acceleration * delta)
+	else:
+		_decelerate(delta)
+	_try_jump()
+
+
+## Simple heuristics, not pathfinding: jump if the player is above us, or if the
+## ground runs out ahead and they are further on. Enough to stop enemies standing
+## uselessly while you snipe them from a ledge, without inventing a nav system.
+func _try_jump() -> void:
+	if not stats.can_jump or not is_on_floor():
+		return
+	if _tick - _last_jump_tick < Ticks.from_ms(stats.jump_cooldown_ms):
+		return
+	var player: Player = get_player()
+	if player == null:
+		return
+
+	var player_is_above: bool = global_position.y - player.global_position.y > stats.jump_if_player_above
+	# The probe rides ahead of us; nothing under it means a gap or a ledge.
+	_ground_probe.position = Vector2(float(_facing) * (stats.body_size.x * 0.5 + 12.0), 0.0)
+	_ground_probe.force_raycast_update()
+	var gap_ahead: bool = not _ground_probe.is_colliding() and absf(velocity.x) > 10.0
+
+	if not player_is_above and not gap_ahead:
+		return
+	_last_jump_tick = _tick
+	velocity.y = -2.0 * stats.jump_height / maxf(0.001, stats.jump_time_to_peak)
 
 
 func _face_player() -> void:
@@ -244,15 +314,24 @@ func get_state_name() -> String:
 	return State.keys()[_state]
 
 
+func get_attack_name() -> String:
+	return _attack.display_name if _attack != null else "-"
+
+
+func get_poise() -> float:
+	return _poise if _has_poise() else 0.0
+
+
 func is_dead() -> bool:
 	return _state == State.DEAD
 
 
-# --- Reactions ---
-
+## A parry breaks poise outright, whatever it is. That is the whole point: parry
+## is the answer to a heavy attack you cannot poke through.
 func _on_parried() -> void:
 	if _state == State.DEAD:
 		return
+	_poise = 0.0
 	_enter(State.STAGGER)
 	_juice.punch(Vector2(0.78, 1.24))
 
@@ -266,21 +345,37 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	_juice.punch(Vector2(1.24, 0.8) if hitbox.is_riposte else Vector2(1.12, 0.9))
 	Events.hit_landed.emit(hitbox.damage, hitbox.is_riposte)
 
-	var away: int = 1 if hitbox.global_position.x < global_position.x else -1
-	velocity.x = float(away) * stats.knockback
-
 	if health <= 0.0:
 		_enter(State.DEAD)
-	# A stagger outranks a hurt: being parried should not be cut short by chip damage.
-	elif _state != State.STAGGER:
+		return
+
+	# Poise: mid-attack, chip it rather than interrupting. Knockback is scaled
+	# down too — shoving a committed enemy out of its own swing would undo the
+	# armor just as surely as cancelling it.
+	if _has_poise():
+		_poise -= hitbox.poise_damage
+		if _poise > 0.0:
+			velocity.x = float(_away_from(hitbox)) * stats.knockback * 0.15
+			return
+		Events.poise_broken.emit(self)
+		# A poise break staggers but grants NO riposte. Only a parry does, or
+		# parry becomes a worse version of attacking.
+		_enter(State.STAGGER)
+		velocity.x = float(_away_from(hitbox)) * stats.knockback
+		return
+
+	velocity.x = float(_away_from(hitbox)) * stats.knockback
+	if _state != State.STAGGER:
 		_enter(State.HURT)
+
+
+func _away_from(hitbox: Hitbox) -> int:
+	return 1 if hitbox.global_position.x < global_position.x else -1
 
 
 func _on_death() -> void:
 	_hitbox.deactivate()
 	_health_bar.visible = false
-	# Stop colliding with the player and stop being hittable, but stay visible so
-	# the kill reads. M5 owns corpses, drops and cleanup properly.
 	_hurtbox.set_deferred(&"monitorable", false)
 	_hurtbox.set_deferred(&"monitoring", false)
 	collision_layer = 0

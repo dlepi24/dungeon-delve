@@ -20,7 +20,11 @@ func enter() -> void:
 	# The riposte is spent on this swing whether or not it lands. Cashing it in
 	# is a decision, so a panicked whiff burns it.
 	var was_riposte: bool = player.is_riposte_open()
-	player.attack_hitbox.damage = player.attack_damage * (player.riposte_damage_multiplier if was_riposte else 1.0)
+	var multiplier: float = player.riposte_damage_multiplier if was_riposte else 1.0
+	player.attack_hitbox.damage = player.attack_damage * multiplier
+	# A riposte chips poise just as hard as it damages, so cashing one in also
+	# blows through armor. Parry already broke their stance; this keeps it broken.
+	player.attack_hitbox.poise_damage = player.attack_poise_damage * multiplier
 	player.attack_hitbox.is_riposte = was_riposte
 	player.consume_riposte()
 
