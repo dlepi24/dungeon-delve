@@ -1,9 +1,11 @@
 # Roadmap
 
 ## Status
-- **Current milestone:** M3 built (arena is the main scene). M2 and M3 both await
-  Dustin's call — he has not yet judged crunch, and had not found the attack
-  button when M2 was built.
+- **Current milestone:** M4 — rooms and delve structure.
+  **M0-M3 all PASSED.** M2 and M3 signed off 2026-07-15 ("It's genuinely fun"),
+  re-judged after the null-node-reference fix, so this verdict was given against
+  working telegraphs and counts. Movement, combat and juice values are all
+  approved as-is — do not change them without a fresh call from Dustin.
 - **Worth remembering:** Dustin played two milestones without knowing attack was
   bound to J/LMB, so the combat gates were being judged on movement alone. Both
   rooms now show the controls on screen. Lesson: state the verbs in the build, not
@@ -82,7 +84,9 @@ M2 cannot be judged ("hitting the dummy feels crunchy") until the dummy exists.
 - Hitstop, screenshake, squash/stretch, hit flashes on placeholder shapes, placeholder sound effects
 
 **Exit:** hitting the dummy feels crunchy. Art is now permitted going forward, but not required.
-**Built 2026-07-14, awaiting Dustin's call.** Note for later: hitstop is a freeze
+**PASSED 2026-07-15** ("It's genuinely fun"), re-judged after telegraphs were
+fixed. Art is now PERMITTED but still not required — gray-box remains the default
+until it stops carrying the design. Note for later: hitstop is a freeze
 flag on a physics-tick clock, NOT `Engine.time_scale`, because time_scale halts
 physics stepping and the thaw could then only be timed in render frames — which
 would desync the ghost replays M8 depends on. Any new gameplay system must opt in
@@ -94,7 +98,7 @@ by checking `Hitstop.is_frozen()`; one that forgets keeps moving through a freez
 - Damage, health, death, and hurt states in both directions
 
 **Exit:** a single room with 3 enemies is a genuinely fun fight.
-**Built 2026-07-14, awaiting Dustin's call.** Interpreted "their own FSMs" as one
+**PASSED 2026-07-15.** Interpreted "their own FSMs" as one
 parameterised FSM plus `.tres` data, with subclasses only for genuinely different
 verbs (DartEnemy lunges). Three copies of approach/telegraph/swing would have
 broken the rule that new content is a resource file, not a system edit. If Dustin
