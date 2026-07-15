@@ -18,16 +18,49 @@ signal exit_reached
 ## Radius around the exit marker that counts as reaching it.
 @export var exit_radius: float = 42.0
 
+@export_group("Exit marker")
+## The exit was an invisible trigger, so a cleared room looked like a dead end —
+## you could kill everything and have no idea where to go. It is drawn, and it
+## pulses, because a static rectangle reads as scenery.
+@export var exit_colour: Color = Color(0.45, 0.95, 0.7)
+@export var exit_size: Vector2 = Vector2(38, 76)
+@export var exit_pulse_hz: float = 1.6
+
 var _player: Player = null
 var _fired: bool = false
+var _pulse: float = 0.0
+var _exit_rect: ColorRect = null
 
 @onready var entry: Marker2D = $Entry
 @onready var exit_marker: Marker2D = $Exit
 @onready var spawns: Node2D = $Spawns
 
 
+## Built in code rather than baked into the generated scenes, so changing how the
+## exit reads does not mean regenerating every room.
 func _ready() -> void:
-	_player = get_tree().get_first_node_in_group(&"player") as Player
+	_exit_rect = ColorRect.new()
+	_exit_rect.color = exit_colour
+	_exit_rect.size = exit_size
+	# Sit it on the ground the marker stands on, centred horizontally.
+	_exit_rect.position = Vector2(-exit_size.x * 0.5, -exit_size.y)
+	exit_marker.add_child(_exit_rect)
+
+
+## Visual only.
+func _process(delta: float) -> void:
+	if _exit_rect == null:
+		return
+	_pulse = fposmod(_pulse + delta * exit_pulse_hz, 1.0)
+	_exit_rect.modulate.a = 0.45 + 0.35 * sin(_pulse * TAU)
+
+
+## Lazy, not resolved in _ready — see the note in enemy.gd. A null player here
+## means the exit never triggers and the run silently cannot progress.
+func _get_player() -> Player:
+	if _player == null or not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group(&"player") as Player
+	return _player
 
 
 ## Spawn points, as {kind, position}. The Delve decides what to build from them,
@@ -54,9 +87,10 @@ func exit_position() -> Vector2:
 
 
 func _physics_process(_delta: float) -> void:
-	if _fired or _player == null:
+	var player: Player = _get_player()
+	if _fired or player == null:
 		return
-	if _player.global_position.distance_to(exit_marker.global_position) > exit_radius:
+	if player.global_position.distance_to(exit_marker.global_position) > exit_radius:
 		return
 	# Fire once. The delve frees this room, but a second emission in the same
 	# frame would advance two rooms at once.

@@ -92,13 +92,28 @@ func start(seed_value: int) -> void:
 	_advance()
 
 
+## Lazy — see the note in enemy.gd. Resolving in _ready found nothing, because
+## the Delve sits above the Player in delve_run.tscn and its _ready runs first.
+func _get_player() -> Player:
+	if _player == null or not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group(&"player") as Player
+	return _player
+
+
 func _ready() -> void:
-	_player = get_tree().get_first_node_in_group(&"player") as Player
 	if auto_start and _plan.is_empty():
-		# Run directly rather than from a hub: pick today's seed so the scene is
-		# playable on its own. M5 gives this a real entry point.
-		var today: Dictionary = Time.get_datetime_dict_from_system()
-		start(Rng.daily_seed(today["year"], today["month"], today["day"]))
+		# DEFERRED, not called directly. Starting inside _ready runs before the
+		# Player's own _ready, so its @onready nodes are still null and placing it
+		# in the first room crashes on a state machine that does not exist yet.
+		# Deferring waits until every node in the scene is ready.
+		_start_today.call_deferred()
+
+
+## Run directly rather than from a hub: pick today's seed so the scene is
+## playable on its own. M5 gives this a real entry point.
+func _start_today() -> void:
+	var today: Dictionary = Time.get_datetime_dict_from_system()
+	start(Rng.daily_seed(today["year"], today["month"], today["day"]))
 
 
 func _advance() -> void:
@@ -124,8 +139,11 @@ func _load_room(id: StringName) -> void:
 	_room.exit_reached.connect(_on_exit_reached)
 
 	_spawn_enemies(_room)
-	if _player != null:
-		_player.teleport_to(_room.entry_position())
+	var player: Player = _get_player()
+	if player != null:
+		player.teleport_to(_room.entry_position())
+	else:
+		push_error("Delve: no player in the 'player' group — the run cannot place you.")
 
 
 ## Enemies are built from the room's markers, so a room never hard-codes which

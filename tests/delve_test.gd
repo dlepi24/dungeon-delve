@@ -26,7 +26,11 @@ func _plan(delve: Delve, seed_value: int, count: int = 5) -> Array[StringName]:
 
 
 func _ready() -> void:
+	# plan_for_seed() is pure, so this instance exists only to call it. It MUST
+	# not auto-start: a second live Delve would load its own rooms and fight the
+	# real one over the same player.
 	var delve: Delve = DELVE_SCRIPT.new()
+	delve.auto_start = false
 	add_child(delve)
 
 	_test_same_seed_same_plan(delve)
@@ -35,6 +39,7 @@ func _ready() -> void:
 	_test_other_streams_do_not_disturb_layout(delve)
 	_test_every_planned_room_exists(delve)
 	await _test_rooms_are_walkable()
+	await _test_the_run_is_actually_playable()
 	_report()
 
 
@@ -160,6 +165,60 @@ func _test_rooms_are_walkable() -> void:
 		room.queue_free()
 		await get_tree().physics_frame
 	_check(problems.is_empty(), "all rooms have usable entry/exit (%s)" % [", ".join(problems) if problems.size() > 0 else "ok"])
+
+
+## Everything above passes on a delve where the player is invisible to the world.
+## Shipped exactly that: node _ready order meant Delve, Room and every Enemy
+## resolved a null player, so enemies stood still, exits never fired, and the
+## player was never placed in the room. Nothing errored. This pins the wiring.
+func _test_the_run_is_actually_playable() -> void:
+	print("the run is wired to the player")
+	var run: Node2D = (load("res://src/rooms/delve_run.tscn") as PackedScene).instantiate() as Node2D
+	add_child(run)
+	# Deferred auto-start needs a frame to land.
+	for i: int in 4:
+		await get_tree().physics_frame
+
+	var delve: Delve = run.get_node("Delve")
+	var player: Player = run.get_node("Player")
+	var room: Room = delve.current_room()
+	_check(room != null, "the first room loaded")
+	if room == null:
+		run.queue_free()
+		return
+
+	_check(player.global_position.distance_to(room.entry_position()) < 80.0,
+		"the player is placed at the room entry, not left where the scene put them")
+
+	var enemies: Array[Enemy] = []
+	for child: Node in room.get_children():
+		if child is Enemy:
+			enemies.append(child as Enemy)
+	_check(enemies.size() > 0, "the room spawned enemies (%d)" % enemies.size())
+	var sees_player: bool = true
+	for enemy: Enemy in enemies:
+		if enemy.get_player() == null:
+			sees_player = false
+	_check(sees_player, "every enemy can see the player")
+
+	# Let them come. If any reaches CHASE, the wiring is live.
+	var chased: bool = false
+	for i: int in 240:
+		await get_tree().physics_frame
+		for enemy: Enemy in enemies:
+			if is_instance_valid(enemy) and enemy.get_state_name() != "IDLE":
+				chased = true
+	_check(chased, "at least one enemy actually acts rather than standing still")
+
+	# And the exit advances the run.
+	var before: int = delve.current_index()
+	player.global_position = room.exit_position()
+	player.velocity = Vector2.ZERO
+	for i: int in 20:
+		await get_tree().physics_frame
+	_check(delve.current_index() > before, "reaching the exit advances the delve")
+	run.queue_free()
+	await get_tree().physics_frame
 
 
 func _report() -> void:

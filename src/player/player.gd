@@ -160,10 +160,19 @@ var _respawn_at_tick: int = -1
 @onready var hurtbox: Hurtbox = $Hurtbox
 
 
-func _ready() -> void:
-	# Enemies find us through this group rather than a node path, so they can be
-	# dropped into any room without knowing its layout.
+## Joining the group here rather than in _ready is load-bearing, not style.
+##
+## Godot runs _enter_tree for EVERY node in a scene before it runs any _ready. A
+## sibling whose _ready fires before ours — the Delve does, because it sits above
+## us in delve_run.tscn — would look us up and find nothing. That is exactly what
+## happened: the Delve, every Room and every Enemy all resolved a null player, so
+## enemies never moved, exits never triggered, and the player was never placed at
+## the room entry. None of it errored; it just quietly did nothing.
+func _enter_tree() -> void:
 	add_to_group(&"player")
+
+
+func _ready() -> void:
 	health = max_health
 	_spawn_position = global_position
 	_buffer = InputBuffer.new(BUFFERED_ACTIONS)

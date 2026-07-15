@@ -102,6 +102,17 @@ Gotchas found in M0/M1, worth not rediscovering:
   enemy telegraph colour, every hit flash and the whole F3 overlay for three
   milestones. If a node reference is a fixed child, prefer `@onready var x = $Child`
   and skip the export entirely — that is what `BodyJuice` and `Hitbox` do now.
+- **Node `_ready` order is a trap for group lookups.** Godot runs `_enter_tree`
+  on every node in a scene before it runs any `_ready`, and `_ready` fires
+  children-first, siblings in tree order. A node whose `_ready` runs before the
+  Player's will not find it via `get_first_node_in_group("player")`. This shipped:
+  the Delve sits above the Player in `delve_run.tscn`, so the Delve, every Room and
+  every Enemy resolved a **null player** — enemies stood still, exits never fired,
+  the player was never placed in the room, and nothing errored. Two defences now:
+  the Player joins the group in `_enter_tree`, and every consumer resolves the
+  player **lazily** rather than caching it in `_ready`. Anything that must touch
+  another node's `@onready` state from `_ready` should `call_deferred` instead —
+  that is why `Delve` defers its auto-start.
 - `SceneTree.process_frame` is emitted *before* node `_process` runs, so
   `await get_tree().process_frame` resumes BEFORE the frame's `_process`. Awaiting
   it once and then reading a visual value reads the previous frame's state. Await

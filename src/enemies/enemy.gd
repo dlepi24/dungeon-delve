@@ -42,7 +42,6 @@ func _ready() -> void:
 	_hitbox.deactivate()
 	_hitbox.parried.connect(_on_parried)
 	_hurtbox.hurt.connect(_on_hurt)
-	_player = get_tree().get_first_node_in_group(&"player") as Player
 	_enter(State.IDLE)
 
 
@@ -215,22 +214,29 @@ func _chase(delta: float) -> void:
 
 
 func _face_player() -> void:
-	if _player == null:
+	var player: Player = get_player()
+	if player == null:
 		return
-	_facing = 1 if _player.global_position.x > global_position.x else -1
+	_facing = 1 if player.global_position.x > global_position.x else -1
 
 
 func _player_distance() -> float:
-	if _player == null:
+	var player: Player = get_player()
+	if player == null:
 		return INF
-	return absf(_player.global_position.x - global_position.x)
+	return absf(player.global_position.x - global_position.x)
 
 
 func get_facing() -> int:
 	return _facing
 
 
+## Resolved lazily and cached. Looking this up in _ready is a trap: node _ready
+## order is not guaranteed, and a null here fails silently — the enemy simply
+## stands still forever with no error.
 func get_player() -> Player:
+	if _player == null or not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group(&"player") as Player
 	return _player
 
 
