@@ -19,6 +19,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 Events="*res://src/autoload/events.gd"
 GameState="*res://src/autoload/game_state.gd"
 Hitstop="*res://src/systems/hitstop.gd"
+Rng="*res://src/systems/rng.gd"
 Sfx="*res://src/systems/sfx.gd"
 
 [debug]

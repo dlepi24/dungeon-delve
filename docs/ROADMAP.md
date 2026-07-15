@@ -2,36 +2,19 @@
 
 ## Status
 - **Current milestone:** M4 — rooms and delve structure.
-  **M0-M3 all PASSED.** M2 and M3 signed off 2026-07-15 ("It's genuinely fun"),
-  re-judged after the null-node-reference fix, so this verdict was given against
-  working telegraphs and counts. Movement, combat and juice values are all
-  approved as-is — do not change them without a fresh call from Dustin.
-- **Worth remembering:** Dustin played two milestones without knowing attack was
-  bound to J/LMB, so the combat gates were being judged on movement alone. Both
-  rooms now show the controls on screen. Lesson: state the verbs in the build, not
-  in the handoff message.
-- **Nothing about M2/M3 feel has been fairly judged yet.** Until 2026-07-14, every
-  enemy telegraph colour, every hit flash and the whole F3 overlay were dead —
-  exported node refs in hand-written .tscn files silently resolved to null (see
-  CLAUDE.md). Parry was literally unreadable, which explains "pretty fun in some
-  ways". Any earlier verdict on crunch or on the fight predates working telegraphs
-  and should be re-taken from scratch.
-  **M1 PASSED in full** — the movement gate 2026-07-14 ("it's fun"), and the
-  combat half the same day ("OKAY IT'S FUN, i can dodge through the guy and jump
-  over him"). Movement and combat timings are approved as-is; do not change them
-  without a fresh call from him.
-- **Last session:** 2026-07-14. M0 scaffold complete (Godot 4.7.1 via Homebrew, 13
-  InputMap actions, 6 named collision layers, tick pinned to 60, autoload stubs,
-  `tools/check.gd` as a real negative-tested gate, static typing engine-enforced).
-  Then M1 up to the gate: gray-box gym room, player FSM (idle/run/air/roll),
-  accel/decel, variable jump, 100 ms buffer, 80 ms coyote, roll with i-frames over
-  the middle 200 ms. Debug overlay on F3. `tests/feel_test.tscn` proves coyote,
-  buffering and i-frames actually fire (9 assertions, all green).
-- **Next step:** Dustin judges two gates at once. **M2:** does hitting things feel
-  crunchy? (Knobs: Player inspector > Juice, and each room's Camera2D for shake.)
-  **M3:** is the 3-enemy arena a genuinely fun fight? (Knobs: the `.tres` files in
-  `src/enemies/data/` — telegraph_ms is the parry-fairness dial.) Then M4: rooms
-  and the seeded delve.
+- **M0-M3 all PASSED.** M1 signed off 2026-07-14; M2 and M3 signed off 2026-07-15
+  ("It's genuinely fun"), re-judged after the null-node-reference fix so the
+  verdict was given against working telegraphs and counts. Movement, combat and
+  juice values are all approved as-is — do not change them without a fresh call
+  from Dustin.
+- **Last session:** 2026-07-15. Closed out M2 and M3, then found and fixed the bug
+  that had made both unjudgeable: exported node refs in hand-written `.tscn` files
+  silently resolve to null without `node_paths=PackedStringArray(...)`, which had
+  killed every enemy telegraph colour, every hit flash and the whole F3 overlay
+  since M2. Also added swing arcs, health bars, a HUD and corpse cleanup.
+- **Next step:** M4. Central seeded RNG service first — everything downstream
+  (daily seeds, ghost replays) depends on it, and retrofitting determinism is far
+  worse than building on it.
 - **Needs a design call from Dustin:**
   - `allow_air_roll` on the player, currently off. The GDD says roll is "always
     available" but never rules on mid-air, and air-rolling changes platforming a
@@ -42,16 +25,18 @@
     stamina or cooldown gating it, not that it cancels any state. So roll does not
     cancel parry recovery, and cancels an attack only inside its cancel window.
     A test pins this. If Dustin rules the other way, the test changes with it.
-  - Whatever tuned feel-spec values win should be written back into the GDD feel
-    spec table, which still holds the untested starting values.
-  - The GDD's five open questions (theme, death/extraction, meta shape, v1 scope,
-    name) still block M5. M2-M4 do not need them. Worth a claude.ai design session
-    within the next few milestones, not today.
+  - Tuned feel-spec values should be written back into the GDD feel spec table,
+    which still holds the untested starting values.
+  - **The GDD's five open questions (theme, death/extraction, meta shape, v1 scope,
+    name) block M5.** M4 does not need them. After M4 this is the critical path —
+    the extraction rules especially, per M5's own note.
 - **Deferred:** Godot MCP server. No official or registry-listed server exists; all
   candidates are unvetted third-party code. The headless CLI already covers running
   scenes and reading output. Revisit only if tuning feel outgrows the CLI.
-- **Resolved:** the editor-GUI check from M0 — the project has since been imported
-  and run repeatedly, and Dustin ran the headless check himself.
+- **Lesson worth keeping:** Dustin played two milestones without knowing attack was
+  bound to J/LMB, so the combat gates were being judged on movement alone. Both
+  rooms now show the controls on screen. State the verbs in the build, not in the
+  handoff message.
 
 Update this section at the end of every session: date, what got done, what's next. Feel gates require Dustin's explicit sign-off, not Claude's judgment.
 
