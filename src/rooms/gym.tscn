@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 ; Tuning gym. Every platform here is placed against the DEFAULT jump_height of
 ; 104 px, with the tallest step at 95 px — deliberately near the limit, so a
@@ -10,6 +10,7 @@
 
 [ext_resource type="PackedScene" path="res://src/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://src/ui/debug_overlay.tscn" id="2_overlay"]
+[ext_resource type="PackedScene" path="res://src/enemies/training_dummy.tscn" id="3_dummy"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
 size = Vector2(1840, 80)
@@ -110,5 +111,11 @@ color = Color(0.34, 0.37, 0.44, 1)
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(150, 920)
 
+; On the flat, with clear run-up on both sides. It swings on a loop forever, so
+; you can stand in range and read the telegraph as many times as you need.
+[node name="TrainingDummy" parent="." instance=ExtResource("3_dummy")]
+position = Vector2(980, 920)
+
 [node name="DebugOverlay" parent="." instance=ExtResource("2_overlay")]
 player = NodePath("../Player")
+dummy = NodePath("../TrainingDummy")

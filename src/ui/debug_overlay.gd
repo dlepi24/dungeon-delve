@@ -9,15 +9,27 @@ extends CanvasLayer
 ## Visuals only, so it lives in _process. No gameplay logic here, ever.
 
 @export var player: Player
+@export var dummy: TrainingDummy
 ## Toggled with the debug_toggle action (F3). A dev tool, not a combat verb, so it
 ## does not spend from the GDD's ~10 verb budget.
 @export var start_visible: bool = true
 
 @onready var _label: Label = $Panel/Margin/Label
 
+## Ticks to keep the PARRY banner up after one lands. Purely so a 120 ms window
+## does not vanish before you can see that it worked.
+const PARRY_FLASH_TICKS: int = 40
+
+var _parry_flash: int = 0
+
 
 func _ready() -> void:
 	visible = start_visible
+	Events.parry_succeeded.connect(_on_parry_succeeded)
+
+
+func _on_parry_succeeded() -> void:
+	_parry_flash = PARRY_FLASH_TICKS
 
 
 func _process(_delta: float) -> void:
@@ -25,6 +37,8 @@ func _process(_delta: float) -> void:
 		visible = not visible
 	if not visible or player == null:
 		return
+
+	_parry_flash = maxi(0, _parry_flash - 1)
 
 	var buffer: InputBuffer = player.get_buffer()
 	var tick: int = player.get_tick()
@@ -35,12 +49,28 @@ func _process(_delta: float) -> void:
 		"on_floor   %s" % _mark(player.is_on_floor()),
 		"coyote     %s" % _mark(player.has_coyote()),
 		"i-frames   %s" % _mark(player.invulnerable),
+		"riposte    %s" % _riposte(),
 		"buf jump   %s" % _buffered(buffer, &"jump", tick),
 		"buf roll   %s" % _buffered(buffer, &"roll", tick),
-		"",
-		"F3 toggles this",
+		"buf attack %s" % _buffered(buffer, &"attack", tick),
+		"buf parry  %s" % _buffered(buffer, &"parry", tick),
 	]
+	if dummy != null:
+		lines.append("")
+		lines.append("dummy      %s" % dummy.get_state_name())
+		lines.append("dummy hp   %d" % roundi(dummy.health))
+	if _parry_flash > 0:
+		lines.append("")
+		lines.append(">>> PARRY <<<")
+	lines.append("")
+	lines.append("F3 toggles this")
 	_label.text = "\n".join(lines)
+
+
+func _riposte() -> String:
+	if not player.is_riposte_open():
+		return "-"
+	return "OPEN (%d ticks)" % player.riposte_ticks_left()
 
 
 func _mark(value: bool) -> String:

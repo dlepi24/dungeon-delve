@@ -16,7 +16,7 @@ extends CharacterBody2D
 
 ## Actions that queue instead of being dropped. Movement is not buffered — you
 ## hold a direction, you do not fire it.
-const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll"]
+const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll", "attack", "parry"]
 
 @export_group("Run")
 ## Top horizontal speed, px/s.
@@ -66,15 +66,57 @@ const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll"]
 ## off. Flip it, feel both, and whichever wins goes in the GDD decision log.
 @export var allow_air_roll: bool = false
 
+@export_group("Attack")
+## Wind-up before the hitbox opens. This is the "weight" the GDD asks for: raise
+## it and attacks commit harder, lower it and they get twitchy.
+@export var attack_startup_ms: int = 90
+## How long the hitbox stays open.
+@export var attack_active_ms: int = 80
+## Tail you are locked into after the hitbox closes. This is the punish window.
+@export var attack_recovery_ms: int = 180
+## When cancel-into-roll becomes legal, measured from the start of the attack.
+## The GDD calls where this window sits a PRIMARY TUNING KNOB. Default 170 ms is
+## exactly when the hitbox closes: swing, connect, bail. Push it later and
+## attacking gets genuinely committal; pull it earlier and you can cancel out of
+## your own active frames, which usually feels cheap.
+@export var attack_cancel_start_ms: int = 170
+@export var attack_damage: float = 12.0
+## Fraction of run speed you keep while swinging. Low values plant your feet.
+@export_range(0.0, 1.0) var attack_move_control: float = 0.15
+## Hitbox position relative to the player, mirrored by facing.
+@export var attack_hitbox_offset: Vector2 = Vector2(34, -28)
+
+@export_group("Parry")
+## GDD feel spec: 120 ms. The greedy window.
+@export var parry_active_ms: int = 120
+## GDD feel spec: ~300 ms. Whiff this and you are punishable — roll deliberately
+## does NOT cancel it, or the whiff would carry no risk and parry would stop
+## being a decision.
+@export var parry_whiff_recovery_ms: int = 300
+## How long the riposte stays open after a successful parry.
+@export var riposte_window_ms: int = 700
+## Damage multiplier on a riposte attack. Set to 1.0 to feel a stagger-only
+## parry with no damage reward.
+@export var riposte_damage_multiplier: float = 3.0
+
+@export_group("Hitstun")
+@export var hitstun_ms: int = 250
+@export var hitstun_knockback: float = 220.0
+@export var hitstun_pop: float = 120.0
+
 ## +1 right, -1 left. Combat will read this for attack direction.
 var facing: int = 1
 ## Driven by the roll's i-frame window. Nothing can hurt us yet; the overlay
 ## draws it so the window can be tuned before enemies exist to test it against.
 var invulnerable: bool = false
 
+## Direction the last hit came from, +1 if it pushed us right. Hitstun reads it.
+var last_hit_direction: int = 1
+
 var _tick: int = 0
 ## Deliberately far in the past so we do not start the game holding a coyote jump.
 var _last_grounded_tick: int = -10000
+var _riposte_until_tick: int = -10000
 var _buffer: InputBuffer
 
 var _jump_velocity: float = 0.0
@@ -82,11 +124,15 @@ var _jump_gravity: float = 0.0
 var _fall_gravity: float = 0.0
 
 @onready var _state_machine: PlayerStateMachine = $StateMachine
+@onready var attack_hitbox: Hitbox = $AttackHitbox
+@onready var hurtbox: Hurtbox = $Hurtbox
 
 
 func _ready() -> void:
 	_buffer = InputBuffer.new(BUFFERED_ACTIONS)
 	_state_machine.setup(self)
+	attack_hitbox.deactivate()
+	hurtbox.hurt.connect(_on_hurt)
 
 
 func _physics_process(delta: float) -> void:
@@ -97,8 +143,19 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor():
 		_last_grounded_tick = _tick
 
+	attack_hitbox.position = Vector2(attack_hitbox_offset.x * float(facing), attack_hitbox_offset.y)
+
 	_state_machine.physics_update(delta)
 	move_and_slide()
+
+
+## The hurtbox reports; the active state decides what a hit means. i-frames are
+## checked here because they apply regardless of state.
+func _on_hurt(hitbox: Hitbox) -> void:
+	if invulnerable:
+		return
+	last_hit_direction = 1 if hitbox.global_position.x < global_position.x else -1
+	_state_machine.handle_hit(hitbox)
 
 
 ## Godot's y axis points down: a negative velocity is upward, gravity is positive.
@@ -110,7 +167,25 @@ func _recalculate_derived() -> void:
 
 
 func ms_to_ticks(ms: int) -> int:
-	return roundi(float(ms) * float(Engine.physics_ticks_per_second) / 1000.0)
+	return Ticks.from_ms(ms)
+
+
+## Called on a successful parry. The payoff is a window, not an instant effect,
+## so cashing it in is still a decision you can fumble.
+func open_riposte() -> void:
+	_riposte_until_tick = _tick + ms_to_ticks(riposte_window_ms)
+
+
+func is_riposte_open() -> bool:
+	return _tick <= _riposte_until_tick
+
+
+func consume_riposte() -> void:
+	_riposte_until_tick = -10000
+
+
+func riposte_ticks_left() -> int:
+	return maxi(0, _riposte_until_tick - _tick)
 
 
 func get_input_direction() -> float:
@@ -171,6 +246,20 @@ func try_consume_roll() -> bool:
 	if not is_on_floor() and not allow_air_roll:
 		return false
 	_buffer.consume(&"roll")
+	return true
+
+
+func try_consume_attack() -> bool:
+	if not _buffer.is_buffered(&"attack", _tick, ms_to_ticks(input_buffer_ms)):
+		return false
+	_buffer.consume(&"attack")
+	return true
+
+
+func try_consume_parry() -> bool:
+	if not _buffer.is_buffered(&"parry", _tick, ms_to_ticks(input_buffer_ms)):
+		return false
+	_buffer.consume(&"parry")
 	return true
 
 

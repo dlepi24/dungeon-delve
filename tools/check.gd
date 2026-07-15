@@ -1,8 +1,13 @@
-extends SceneTree
+extends Node
 ## Headless project check. Exits non-zero if the scaffold contract is broken,
 ## so it works as a pre-commit gate and, later, in CI.
 ##
-## Run: godot --headless --path . --script tools/check.gd
+## Run: godot --headless --path . res://tools/check.tscn
+##
+## Runs as a SCENE, not via --script, and that is load-bearing: --script mode
+## never registers autoload singletons, so load() on any script referencing
+## Events fails with "Identifier not found" even though the game runs perfectly.
+## A gate that reports failures the game does not have is worse than no gate.
 ##
 ## This asserts the things docs/GDD.md locks down and that are easy to break by
 ## accident — the InputMap, the named collision layers, the physics tick, the
@@ -45,6 +50,17 @@ func _check_layers() -> void:
 		var actual: String = str(ProjectSettings.get_setting(key, ""))
 		if actual != EXPECTED_LAYERS[i]:
 			_fail("Collision layer %d should be named '%s', found '%s'." % [i + 1, EXPECTED_LAYERS[i], actual])
+
+
+## The hard rule is that raw layer numbers never appear in code, which only holds
+## if the named constants actually match the project. Pins CollisionLayers to
+## project.godot so the GDD table, the settings and the code cannot drift.
+func _check_layer_constants() -> void:
+	for name: String in CollisionLayers.NUMBERS:
+		var number: int = CollisionLayers.NUMBERS[name]
+		var configured: String = str(ProjectSettings.get_setting("layer_names/2d_physics/layer_%d" % number, ""))
+		if configured != name:
+			_fail("CollisionLayers.NUMBERS says '%s' is layer %d, but that layer is named '%s'." % [name, number, configured])
 
 
 func _check_physics_tick() -> void:
@@ -118,9 +134,10 @@ func _check_scripts_parse() -> void:
 	print("  parsed %d script(s)" % paths.size())
 
 
-func _init() -> void:
+func _ready() -> void:
 	_check_actions()
 	_check_layers()
+	_check_layer_constants()
 	_check_physics_tick()
 	_check_autoloads()
 	_check_main_scene()
@@ -130,10 +147,10 @@ func _init() -> void:
 		print("CHECK OK — %d actions, %d layers, %d autoloads, main scene loads." % [
 			EXPECTED_ACTIONS.size(), EXPECTED_LAYERS.size(), EXPECTED_AUTOLOADS.size(),
 		])
-		quit(0)
+		get_tree().quit(0)
 		return
 
 	for failure: String in _failures:
 		printerr("CHECK FAIL: %s" % failure)
 	printerr("%d check(s) failed." % _failures.size())
-	quit(1)
+	get_tree().quit(1)

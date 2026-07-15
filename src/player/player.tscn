@@ -1,4 +1,10 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=14 format=3]
+
+; Collision layers, per the table in docs/GDD.md and src/systems/collision_layers.gd:
+;   1 World  2 Player  3 Enemy  4 PlayerAttack  5 EnemyAttack  6 Pickup
+; Body        : on Player, collides with World.
+; Hurtbox     : on Player, watches EnemyAttack.
+; AttackHitbox: on PlayerAttack, watches Enemy.
 
 [ext_resource type="Script" path="res://src/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://src/player/states/state_machine.gd" id="2_machine"]
@@ -6,10 +12,18 @@
 [ext_resource type="Script" path="res://src/player/states/run.gd" id="4_run"]
 [ext_resource type="Script" path="res://src/player/states/air.gd" id="5_air"]
 [ext_resource type="Script" path="res://src/player/states/roll.gd" id="6_roll"]
+[ext_resource type="Script" path="res://src/player/states/attack.gd" id="7_attack"]
+[ext_resource type="Script" path="res://src/player/states/parry.gd" id="8_parry"]
+[ext_resource type="Script" path="res://src/player/states/hitstun.gd" id="9_hitstun"]
+[ext_resource type="Script" path="res://src/systems/hitbox.gd" id="10_hitbox"]
+[ext_resource type="Script" path="res://src/systems/hurtbox.gd" id="11_hurtbox"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 14.0
 height = 56.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
+size = Vector2(46, 44)
 
 [node name="Player" type="CharacterBody2D"]
 collision_layer = 2
@@ -26,6 +40,24 @@ color = Color(0.36, 0.76, 1, 1)
 position = Vector2(0, -28)
 shape = SubResource("CapsuleShape2D_body")
 
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 16
+script = ExtResource("11_hurtbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -28)
+shape = SubResource("CapsuleShape2D_body")
+
+[node name="AttackHitbox" type="Area2D" parent="."]
+position = Vector2(34, -28)
+collision_layer = 8
+collision_mask = 4
+script = ExtResource("10_hitbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
+shape = SubResource("RectangleShape2D_attack")
+
 [node name="StateMachine" type="Node" parent="."]
 script = ExtResource("2_machine")
 
@@ -40,3 +72,12 @@ script = ExtResource("5_air")
 
 [node name="Roll" type="Node" parent="StateMachine"]
 script = ExtResource("6_roll")
+
+[node name="Attack" type="Node" parent="StateMachine"]
+script = ExtResource("7_attack")
+
+[node name="Parry" type="Node" parent="StateMachine"]
+script = ExtResource("8_parry")
+
+[node name="Hitstun" type="Node" parent="StateMachine"]
+script = ExtResource("9_hitstun")

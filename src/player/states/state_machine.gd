@@ -34,6 +34,17 @@ func physics_update(delta: float) -> void:
 		transition_to(next)
 
 
+## Route an incoming hit to whichever state is live. Fires from the hurtbox
+## signal during the physics step, not from physics_update, so it transitions
+## directly rather than returning a name.
+func handle_hit(hitbox: Hitbox) -> void:
+	if _current == null:
+		return
+	var next: StringName = _current.on_hit(hitbox)
+	if next != &"":
+		transition_to(next)
+
+
 func transition_to(state_name: StringName) -> void:
 	if not _states.has(state_name):
 		push_error("PlayerStateMachine: no state named '%s'." % state_name)

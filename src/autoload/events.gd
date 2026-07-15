@@ -11,5 +11,13 @@ extends Node
 ## - Every parameter is statically typed.
 ## - Add a signal here only when a second system actually needs to hear it.
 ##   Speculative signals rot.
-##
-## Deliberately empty at M0. Signals land as M1 systems earn them.
+
+## A parry landed. M2's hitstop (6 frames, per the feel spec) hangs off this.
+signal parry_succeeded
+
+## Any attack connected. `was_riposte` marks the parry payoff so M2 can give it
+## heavier hitstop than a normal 3-frame hit.
+signal hit_landed(damage: float, was_riposte: bool)
+
+## The player took a hit and entered hitstun.
+signal player_hurt(damage: float)

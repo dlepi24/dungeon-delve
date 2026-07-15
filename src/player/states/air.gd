@@ -18,6 +18,10 @@ func physics_update(delta: float) -> StringName:
 		return &""
 	if player.try_consume_roll():
 		return &"Roll"
+	if player.try_consume_attack():
+		return &"Attack"
+	if player.try_consume_parry():
+		return &"Parry"
 
 	if player.is_on_floor():
 		return &"Idle" if is_zero_approx(direction) else &"Run"

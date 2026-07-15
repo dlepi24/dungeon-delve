@@ -43,11 +43,15 @@ Godot 4.7.1 installed via `brew install --cask godot`. Binary is on PATH at
 - Open in editor: `godot --editor --path .` (or just open Godot.app)
 - Run game from CLI: `godot --path .`
 - Run a specific scene: `godot --path . res://src/main/main.tscn`
-- Headless script/error check: `godot --headless --path . --script tools/check.gd`
+- Headless script/error check: `godot --headless --path . res://tools/check.tscn`
   - Exits 0 on success, 1 on failure. Run before every commit.
-  - Verifies: all 13 InputMap actions bound, the 6 collision layer names, physics
-    tick 60, both autoloads registered, main scene loads, and every script under
-    `src/` and `tools/` parses.
+  - Verifies: all 13 InputMap actions bound, the 6 collision layer names, the
+    `CollisionLayers` constants still matching those names, physics tick 60, both
+    autoloads registered, main scene loads, and every script under `src/`,
+    `tools/` and `tests/` parses.
+  - It is a SCENE, not `--script`, and must stay that way: `--script` mode never
+    registers autoload singletons, so `load()` on anything referencing `Events`
+    fails with "Identifier not found" even though the game runs fine.
 - Headless smoke run (boots the main scene and quits): `godot --headless --path . --quit-after 3`
 - Feel stack behaviour test: `godot --headless --path . res://tests/feel_test.tscn`
   - Exits 0/1. Asserts coyote, input buffering and roll i-frames actually fire.
@@ -62,6 +66,13 @@ Gotchas found in M0/M1, worth not rediscovering:
   usable gate. `tools/check.gd` uses `GDScript.can_instantiate()` instead, which is
   the thing that actually goes false on a parse error (`load()` returns non-null
   even for a broken script).
+- Autoloads do not exist in `--script` mode. Anything that touches `Events` must
+  run as a scene. This is why both `tools/check.tscn` and `tests/feel_test.tscn`
+  are scenes.
+- An `Area2D` hitbox toggled via `monitoring` will miss a target that is already
+  standing inside it, because `area_entered` only fires on a *new* overlap — the
+  exact training-dummy case. `Hitbox` keeps monitoring on permanently and gates
+  hits with a flag, sweeping `get_overlapping_areas()` when it opens.
 - Static typing is enforced by the engine, not by convention:
   `gdscript/warnings/untyped_declaration=2` in `project.godot` makes an untyped
   declaration a hard error, so the headless check fails on it.

@@ -29,3 +29,10 @@ func exit() -> void:
 ## Return the next state's node name, or &"" to remain in this state.
 func physics_update(_delta: float) -> StringName:
 	return &""
+
+
+## Something landed on our hurtbox and i-frames did not eat it. Return the state
+## to switch to, or &"" to ignore. Taking a hit means hitstun unless a state has
+## a reason to say otherwise — Parry is the whole point of this being overridable.
+func on_hit(_hitbox: Hitbox) -> StringName:
+	return &"Hitstun"
