@@ -1,20 +1,19 @@
 # Roadmap
 
 ## Status
-- **Current milestone:** M4 — rooms and delve structure.
+- **Current milestone:** M4 built, awaiting Dustin's call. **M5 is design-blocked.**
 - **M0-M3 all PASSED.** M1 signed off 2026-07-14; M2 and M3 signed off 2026-07-15
   ("It's genuinely fun"), re-judged after the null-node-reference fix so the
   verdict was given against working telegraphs and counts. Movement, combat and
   juice values are all approved as-is — do not change them without a fresh call
   from Dustin.
-- **Last session:** 2026-07-15. Closed out M2 and M3, then found and fixed the bug
-  that had made both unjudgeable: exported node refs in hand-written `.tscn` files
-  silently resolve to null without `node_paths=PackedStringArray(...)`, which had
-  killed every enemy telegraph colour, every hit flash and the whole F3 overlay
-  since M2. Also added swing arcs, health bars, a HUD and corpse cleanup.
-- **Next step:** M4. Central seeded RNG service first — everything downstream
-  (daily seeds, ghost replays) depends on it, and retrofitting determinism is far
-  worse than building on it.
+- **Last session:** 2026-07-15. Closed M2 and M3 (after fixing the null-node-ref
+  bug that had made both unjudgeable), then built M4: the central seeded RNG
+  service with independent streams, a generated tileset with one-way platforms,
+  six ASCII-authored TileMap rooms, seeded delve assembly, room transitions and a
+  follow camera. Both halves of M4's exit criterion are pinned by tests.
+- **Next step:** Dustin plays the delve and judges it. Then **M5 needs a design
+  session before any code** — see below.
 - **Needs a design call from Dustin:**
   - `allow_air_roll` on the player, currently off. The GDD says roll is "always
     available" but never rules on mid-air, and air-rolling changes platforming a
@@ -27,9 +26,15 @@
     A test pins this. If Dustin rules the other way, the test changes with it.
   - Tuned feel-spec values should be written back into the GDD feel spec table,
     which still holds the untested starting values.
-  - **The GDD's five open questions (theme, death/extraction, meta shape, v1 scope,
-    name) block M5.** M4 does not need them. After M4 this is the critical path —
-    the extraction rules especially, per M5's own note.
+  - **M5 IS NOW BLOCKED on the GDD's open questions.** M5 is the run loop: death,
+    pickups, the extraction decision, a hub, one persistent upgrade. Open question 2
+    (death and extraction rules) and question 3 (meta progression shape) ARE that
+    milestone — there is no honest way to build it by guessing. This is the next
+    thing on the critical path and it is a claude.ai design session, not a coding
+    task. Questions 1 (theme), 4 (v1 scope) and 5 (name) can wait longer.
+  - Placeholders M5 will replace: `Player.respawn_delay_ms` (death currently just
+    puts you back), `Enemy.corpse_*` (no drops), and `Delve.auto_start` exists
+    precisely so a hub can choose the seed before the run begins.
 - **Deferred:** Godot MCP server. No official or registry-listed server exists; all
   candidates are unvetted third-party code. The headless CLI already covers running
   scenes and reading output. Revisit only if tuning feel outgrows the CLI.
@@ -99,6 +104,12 @@ climb for real overhangs.
 - Seeded assembly of rooms into a short delve (this is where procgen starts, using the central seeded RNG service)
 
 **Exit:** a seeded 5-room delve is playable start to finish, same seed produces the same delve.
+**Built 2026-07-15, awaiting Dustin's call.** Both halves pinned by tests
+(`tests/delve_test.tscn` for reproducibility, a headless walk for playability).
+Rooms are authored as ASCII in `tools/rooms/room_layouts.gd` and generated into
+`src/rooms/delve/` — edit the ASCII, not the scenes. The plan is computed up front
+from the seed rather than room by room, so nothing the player does can leak into
+the layout; lazy generation would silently break daily seeds.
 
 ## M5: Run loop
 - Death and restart, resource pickup, the extraction decision (design lands in GDD open question 2 first)
