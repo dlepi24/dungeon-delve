@@ -21,3 +21,9 @@ signal hit_landed(damage: float, was_riposte: bool)
 
 ## The player took a hit and entered hitstun.
 signal player_hurt(damage: float)
+
+## Movement beats. These exist because Sfx listens to them — the player should
+## not have to know audio exists in order to make a sound.
+signal player_jumped
+signal player_landed
+signal player_rolled

@@ -42,7 +42,7 @@ var health: float = 0.0
 var _state: State = State.IDLE
 var _elapsed: int = 0
 
-@onready var _visual: ColorRect = $Visual
+@onready var _juice: BodyJuice = $VisualRoot
 @onready var _hitbox: Hitbox = $Hitbox
 @onready var _hurtbox: Hurtbox = $Hurtbox
 
@@ -56,6 +56,11 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Opt in to the freeze, like every other gameplay system. Forget this and the
+	# dummy keeps swinging through a hitstop, which reads as a bug.
+	if Hitstop.is_frozen():
+		return
+
 	_elapsed += 1
 	_hitbox.damage = attack_damage
 
@@ -92,7 +97,7 @@ func _enter(next: State) -> void:
 	else:
 		_hitbox.deactivate()
 
-	_visual.color = _colour_for(next)
+	_juice.set_base_colour(_colour_for(next))
 
 
 func _colour_for(state: State) -> Color:
@@ -111,10 +116,13 @@ func _colour_for(state: State) -> Color:
 
 func _on_parried() -> void:
 	_enter(State.STAGGER)
+	_juice.punch(Vector2(0.78, 1.24))
 
 
 func _on_hurt(hitbox: Hitbox) -> void:
 	health = maxf(0.0, health - hitbox.damage)
+	_juice.flash()
+	_juice.punch(Vector2(1.24, 0.8) if hitbox.is_riposte else Vector2(1.12, 0.9))
 	Events.hit_landed.emit(hitbox.damage, hitbox.is_riposte)
 	# No death at M1 — a dummy you can kill is a dummy you cannot practise on.
 	# M3 owns health, death and hurt states properly.

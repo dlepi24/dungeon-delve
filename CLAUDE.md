@@ -57,9 +57,15 @@ Godot 4.7.1 installed via `brew install --cask godot`. Binary is on PATH at
   - Exits 0/1. Asserts coyote, input buffering and roll i-frames actually fire.
     Not a feel judgement — that is always Dustin's — just proof the mechanisms run,
     because all three fail silently and look like bad tuning when they break.
-- After adding or renaming any `class_name` script, run `godot --headless --editor --quit`
-  once before the checks. Global class names only register when the editor scans
-  the project, so a fresh `--script` run reports "Could not find type X" until then.
+- After adding or renaming any `class_name` script, or adding any asset, run
+  `godot --headless --editor --quit` once before the checks. Global class names
+  only register when the editor scans the project, so a fresh run reports "Could
+  not find type X" until then. New assets are the same story from the other side:
+  a script that `preload`s a not-yet-imported file fails with "no resource loaders
+  (unrecognized file extension)". Import first, then check.
+- Regenerate the placeholder SFX with `python3 tools/gen_sfx.py`. They are
+  synthesised, not sourced — reproducible and unmistakably placeholder. Real audio
+  is M9.
 
 Gotchas found in M0/M1, worth not rediscovering:
 - `godot --check-only --script foo.gd` exits 0 even on a syntax error. It is not a

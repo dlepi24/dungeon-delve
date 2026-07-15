@@ -104,6 +104,21 @@ const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll", "attack", "parry"]
 @export var hitstun_knockback: float = 220.0
 @export var hitstun_pop: float = 120.0
 
+@export_group("Juice")
+## GDD feel spec: 3 frames on a normal hit, 6 on a parry. "Half of crunchy lives
+## here." Counted in physics ticks, which at the locked 60 Hz are frames.
+@export var hitstop_hit_frames: int = 3
+@export var hitstop_parry_frames: int = 6
+@export var hitstop_hurt_frames: int = 4
+## Squash on landing: wide and short. Scales from the feet.
+@export var land_squash: Vector2 = Vector2(1.3, 0.72)
+## Stretch on take-off: tall and thin.
+@export var jump_stretch: Vector2 = Vector2(0.76, 1.28)
+## Held for the duration of a roll, on top of the tumble.
+@export var roll_squash: Vector2 = Vector2(1.22, 0.78)
+## Squash when you connect with something.
+@export var attack_punch: Vector2 = Vector2(1.18, 0.86)
+
 ## +1 right, -1 left. Combat will read this for attack direction.
 var facing: int = 1
 ## Driven by the roll's i-frame window. Nothing can hurt us yet; the overlay
@@ -112,6 +127,9 @@ var invulnerable: bool = false
 
 ## Direction the last hit came from, +1 if it pushed us right. Hitstun reads it.
 var last_hit_direction: int = 1
+## 0..1 through the current roll. Written by the Roll state, read by _process to
+## drive the tumble. Visual only.
+var roll_progress: float = 0.0
 
 var _tick: int = 0
 ## Deliberately far in the past so we do not start the game holding a coyote jump.
@@ -123,7 +141,10 @@ var _jump_velocity: float = 0.0
 var _jump_gravity: float = 0.0
 var _fall_gravity: float = 0.0
 
+var _was_on_floor: bool = true
+
 @onready var _state_machine: PlayerStateMachine = $StateMachine
+@onready var _juice: BodyJuice = $VisualRoot
 @onready var attack_hitbox: Hitbox = $AttackHitbox
 @onready var hurtbox: Hurtbox = $Hurtbox
 
@@ -133,15 +154,24 @@ func _ready() -> void:
 	_state_machine.setup(self)
 	attack_hitbox.deactivate()
 	hurtbox.hurt.connect(_on_hurt)
+	Events.hit_landed.connect(_on_hit_landed)
+	Events.parry_succeeded.connect(_on_parry_succeeded)
 
 
 func _physics_process(delta: float) -> void:
+	# Poll the buffer even while frozen, so a press during hitstop is remembered
+	# rather than eaten. Everything else stops dead.
+	_buffer.poll(_tick)
+	if Hitstop.is_frozen():
+		return
+
 	_tick += 1
 	_recalculate_derived()
-	_buffer.poll(_tick)
 
 	if is_on_floor():
 		_last_grounded_tick = _tick
+
+	_update_landing_juice()
 
 	attack_hitbox.position = Vector2(attack_hitbox_offset.x * float(facing), attack_hitbox_offset.y)
 
@@ -156,6 +186,47 @@ func _on_hurt(hitbox: Hitbox) -> void:
 		return
 	last_hit_direction = 1 if hitbox.global_position.x < global_position.x else -1
 	_state_machine.handle_hit(hitbox)
+	# Landing in Hitstun is the definition of "that hurt". A parry sends us to
+	# Idle instead, so a good read costs nothing — no flash, no shake, no freeze.
+	if _state_machine.get_current_name() == &"Hitstun":
+		Hitstop.request(hitstop_hurt_frames)
+		_juice.flash()
+		Events.player_hurt.emit(hitbox.damage)
+
+
+## We landed a hit on something.
+func _on_hit_landed(_damage: float, was_riposte: bool) -> void:
+	Hitstop.request(hitstop_parry_frames if was_riposte else hitstop_hit_frames)
+	_juice.punch(attack_punch)
+
+
+func _on_parry_succeeded() -> void:
+	Hitstop.request(hitstop_parry_frames)
+	_juice.flash()
+
+
+## Squash on touchdown, stretch on take-off. Requested from physics, animated in
+## _process — the request is a fact, the animation is a visual.
+func _update_landing_juice() -> void:
+	var on_floor: bool = is_on_floor()
+	if on_floor and not _was_on_floor:
+		_juice.punch(land_squash)
+		Events.player_landed.emit()
+	elif not on_floor and _was_on_floor and velocity.y < 0.0:
+		_juice.punch(jump_stretch)
+	_was_on_floor = on_floor
+
+
+## Visuals only, per the hard rule. Reads gameplay state, never writes it.
+func _process(_delta: float) -> void:
+	if _state_machine.get_current_name() == &"Roll":
+		# A capsule that tumbles reads as a roll; one that slides reads as a
+		# slide. This is the cheapest possible "it looks like a roll" in gray-box.
+		_juice.hold_spin(roll_progress * TAU * float(facing))
+		_juice.hold_scale(roll_squash)
+	else:
+		_juice.release_spin()
+		_juice.release_scale()
 
 
 ## Godot's y axis points down: a negative velocity is upward, gravity is positive.
@@ -230,6 +301,7 @@ func try_consume_jump() -> bool:
 	# Spend the coyote window too, or it would fund a second jump mid-air.
 	_last_grounded_tick = -10000
 	velocity.y = _jump_velocity
+	Events.player_jumped.emit()
 	return true
 
 

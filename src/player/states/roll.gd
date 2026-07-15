@@ -14,14 +14,18 @@ func enter() -> void:
 	_direction = player.facing if is_zero_approx(input) else (1 if input > 0.0 else -1)
 	player.facing = _direction
 	player.invulnerable = false
+	Events.player_rolled.emit()
 
 
 func exit() -> void:
 	player.invulnerable = false
+	player.roll_progress = 0.0
 
 
 func physics_update(delta: float) -> StringName:
 	_elapsed_ticks += 1
+	# Drives the visual tumble. Visual only — nothing reads this back.
+	player.roll_progress = float(_elapsed_ticks) / maxf(1.0, float(player.ms_to_ticks(player.roll_duration_ms)))
 
 	var iframe_start: int = player.ms_to_ticks(player.roll_iframe_start_ms)
 	var iframe_end: int = iframe_start + player.ms_to_ticks(player.roll_iframe_duration_ms)

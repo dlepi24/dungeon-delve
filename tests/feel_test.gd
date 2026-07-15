@@ -30,6 +30,8 @@ func _ready() -> void:
 	await _test_roll_cannot_cancel_parry_recovery()
 	await _test_attack_cancel_window()
 	await _test_riposte_multiplies_damage()
+	await _test_hitstop_freezes_for_exact_ticks()
+	await _test_hitstop_does_not_drain_timing_windows()
 	_report()
 
 
@@ -81,6 +83,8 @@ func _release_all() -> void:
 
 func _respawn(at: Vector2) -> void:
 	_release_all()
+	# A freeze left over from the previous case would silently stall the next one.
+	Hitstop.clear()
 	if _player != null:
 		_player.free()
 	_player = PLAYER.instantiate()
@@ -289,6 +293,43 @@ func _test_riposte_multiplies_damage() -> void:
 	_check(is_equal_approx(boosted, normal * _player.riposte_damage_multiplier),
 		"riposte damage is %.1fx normal (normal=%.1f, riposte=%.1f)" % [_player.riposte_damage_multiplier, normal, boosted])
 	_check(not _player.is_riposte_open(), "the riposte is spent once cashed in")
+
+
+## Hitstop is tick-counted rather than Engine.time_scale precisely so it stays
+## deterministic. If the count drifts, ghost replays drift with it.
+func _test_hitstop_freezes_for_exact_ticks() -> void:
+	print("hitstop: freezes for exactly the requested ticks")
+	await _respawn(Vector2(-150, 0))
+	Hitstop.request(3)
+	var frozen: int = 0
+	for i: int in 8:
+		await _tick()
+		if Hitstop.is_frozen():
+			frozen += 1
+	_check(frozen == 3, "request(3) freezes for exactly 3 ticks (got %d)" % frozen)
+
+
+## A freeze must not eat your parry window or your buffered input. If the
+## player's clock advanced during hitstop, a 6-frame parry freeze would silently
+## burn half of the 120 ms parry window.
+func _test_hitstop_does_not_drain_timing_windows() -> void:
+	print("hitstop: does not consume timing windows")
+	await _respawn(Vector2(-150, 0))
+	var before: int = _player.get_tick()
+	Hitstop.request(4)
+	await _tick(4)
+	var during: int = _player.get_tick()
+	_check(during == before, "player clock is paused during hitstop (%d -> %d)" % [before, during])
+	await _tick(4)
+	_check(_player.get_tick() > before, "player clock resumes after hitstop")
+
+	# And a press made during the freeze must survive it.
+	await _respawn(Vector2(-150, 0))
+	Hitstop.request(4)
+	_press(&"jump")
+	await _tick(8)
+	_check(_player.velocity.y < 0.0,
+		"a jump pressed during hitstop still fires on thaw (velocity.y=%.1f)" % _player.velocity.y)
 
 
 func _report() -> void:

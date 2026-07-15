@@ -26,7 +26,7 @@ const EXPECTED_LAYERS: PackedStringArray = [
 	"World", "Player", "Enemy", "PlayerAttack", "EnemyAttack", "Pickup",
 ]
 
-const EXPECTED_AUTOLOADS: PackedStringArray = ["Events", "GameState"]
+const EXPECTED_AUTOLOADS: PackedStringArray = ["Events", "GameState", "Hitstop", "Sfx"]
 
 var _failures: PackedStringArray = []
 
