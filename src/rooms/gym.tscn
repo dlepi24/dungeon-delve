@@ -1,21 +1,23 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=6 format=3]
+
+; Tuning gym. Every platform here is placed against the DEFAULT jump_height of
+; 104 px, with the tallest step at 95 px — deliberately near the limit, so a
+; sloppy jump misses and a good one lands. If you tune jump_height, expect the
+; spacing to want adjusting with it.
+;
+; No pits and no death traps: falling always returns you to the floor. This room
+; is for judging feel, not for punishing you while you judge it.
 
 [ext_resource type="PackedScene" path="res://src/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://src/ui/debug_overlay.tscn" id="2_overlay"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
-size = Vector2(1920, 80)
+size = Vector2(1840, 80)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(40, 1080)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ledge_low"]
-size = Vector2(300, 30)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ledge_mid"]
-size = Vector2(320, 30)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ledge_high"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_platform"]
 size = Vector2(240, 30)
 
 [node name="Gym" type="Node2D"]
@@ -41,23 +43,28 @@ shape = SubResource("RectangleShape2D_wall")
 position = Vector2(1900, 540)
 shape = SubResource("RectangleShape2D_wall")
 
-[node name="LedgeLowShape" type="CollisionShape2D" parent="Geometry"]
-position = Vector2(640, 780)
-shape = SubResource("RectangleShape2D_ledge_low")
+[node name="StepLowShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(420, 855)
+shape = SubResource("RectangleShape2D_platform")
 
-[node name="LedgeMidShape" type="CollisionShape2D" parent="Geometry"]
-position = Vector2(1200, 640)
-shape = SubResource("RectangleShape2D_ledge_mid")
+[node name="StepHighShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(760, 760)
+shape = SubResource("RectangleShape2D_platform")
 
-[node name="LedgeHighShape" type="CollisionShape2D" parent="Geometry"]
-position = Vector2(1650, 500)
-shape = SubResource("RectangleShape2D_ledge_high")
+[node name="PlatGapShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(1170, 760)
+shape = SubResource("RectangleShape2D_platform")
+
+[node name="PlatFarShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(1580, 675)
+shape = SubResource("RectangleShape2D_platform")
 
 [node name="GeometryVisuals" type="Node2D" parent="."]
 
 [node name="Floor" type="ColorRect" parent="GeometryVisuals"]
+offset_left = 40.0
 offset_top = 920.0
-offset_right = 1920.0
+offset_right = 1880.0
 offset_bottom = 1000.0
 color = Color(0.28, 0.3, 0.36, 1)
 
@@ -72,29 +79,36 @@ offset_right = 1920.0
 offset_bottom = 1080.0
 color = Color(0.28, 0.3, 0.36, 1)
 
-[node name="LedgeLow" type="ColorRect" parent="GeometryVisuals"]
-offset_left = 490.0
-offset_top = 765.0
-offset_right = 790.0
-offset_bottom = 795.0
+[node name="StepLow" type="ColorRect" parent="GeometryVisuals"]
+offset_left = 300.0
+offset_top = 840.0
+offset_right = 540.0
+offset_bottom = 870.0
 color = Color(0.34, 0.37, 0.44, 1)
 
-[node name="LedgeMid" type="ColorRect" parent="GeometryVisuals"]
-offset_left = 1040.0
-offset_top = 625.0
-offset_right = 1360.0
-offset_bottom = 655.0
+[node name="StepHigh" type="ColorRect" parent="GeometryVisuals"]
+offset_left = 640.0
+offset_top = 745.0
+offset_right = 880.0
+offset_bottom = 775.0
 color = Color(0.34, 0.37, 0.44, 1)
 
-[node name="LedgeHigh" type="ColorRect" parent="GeometryVisuals"]
-offset_left = 1530.0
-offset_top = 485.0
-offset_right = 1770.0
-offset_bottom = 515.0
+[node name="PlatGap" type="ColorRect" parent="GeometryVisuals"]
+offset_left = 1050.0
+offset_top = 745.0
+offset_right = 1290.0
+offset_bottom = 775.0
+color = Color(0.34, 0.37, 0.44, 1)
+
+[node name="PlatFar" type="ColorRect" parent="GeometryVisuals"]
+offset_left = 1460.0
+offset_top = 660.0
+offset_right = 1700.0
+offset_bottom = 690.0
 color = Color(0.34, 0.37, 0.44, 1)
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
-position = Vector2(220, 920)
+position = Vector2(150, 920)
 
 [node name="DebugOverlay" parent="." instance=ExtResource("2_overlay")]
 player = NodePath("../Player")
