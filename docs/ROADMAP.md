@@ -1,7 +1,13 @@
 # Roadmap
 
 ## Status
-- **Current milestone:** M2 built, awaiting Dustin's "is it crunchy" call.
+- **Current milestone:** M3 built (arena is the main scene). M2 and M3 both await
+  Dustin's call — he has not yet judged crunch, and had not found the attack
+  button when M2 was built.
+- **Worth remembering:** Dustin played two milestones without knowing attack was
+  bound to J/LMB, so the combat gates were being judged on movement alone. Both
+  rooms now show the controls on screen. Lesson: state the verbs in the build, not
+  in the handoff message.
   **M1 PASSED in full** — the movement gate 2026-07-14 ("it's fun"), and the
   combat half the same day ("OKAY IT'S FUN, i can dodge through the guy and jump
   over him"). Movement and combat timings are approved as-is; do not change them
@@ -13,11 +19,11 @@
   accel/decel, variable jump, 100 ms buffer, 80 ms coyote, roll with i-frames over
   the middle 200 ms. Debug overlay on F3. `tests/feel_test.tscn` proves coyote,
   buffering and i-frames actually fire (9 assertions, all green).
-- **Next step:** Dustin judges the M2 gate — does hitting the dummy feel crunchy?
-  Knobs live on the Player inspector under Juice (hitstop frames, squash amounts)
-  and on the gym's Camera2D (shake trauma). If it passes, art becomes permitted
-  (not required) and M3 starts: 2-3 real enemies with their own FSMs and
-  telegraphs, at least one built around parryable attacks.
+- **Next step:** Dustin judges two gates at once. **M2:** does hitting things feel
+  crunchy? (Knobs: Player inspector > Juice, and each room's Camera2D for shake.)
+  **M3:** is the 3-enemy arena a genuinely fun fight? (Knobs: the `.tres` files in
+  `src/enemies/data/` — telegraph_ms is the parry-fairness dial.) Then M4: rooms
+  and the seeded delve.
 - **Needs a design call from Dustin:**
   - `allow_air_roll` on the player, currently off. The GDD says roll is "always
     available" but never rules on mid-air, and air-rolling changes platforming a
@@ -82,6 +88,16 @@ by checking `Hitstop.is_frozen()`; one that forgets keeps moving through a freez
 - Damage, health, death, and hurt states in both directions
 
 **Exit:** a single room with 3 enemies is a genuinely fun fight.
+**Built 2026-07-14, awaiting Dustin's call.** Interpreted "their own FSMs" as one
+parameterised FSM plus `.tres` data, with subclasses only for genuinely different
+verbs (DartEnemy lunges). Three copies of approach/telegraph/swing would have
+broken the rule that new content is a resource file, not a system edit. If Dustin
+wants literally separate FSMs, this is the place to say so.
+**Geometry constraint discovered here:** a platform reachable from the floor
+(109 px jump, 30 px thick) leaves ~50 px of headroom, which is less than the
+player's 56 px body. Reachable platforms are STEPS; anything that walks under one
+gets stuck inside it. M4's rooms need a taller vertical budget and a two-stage
+climb for real overhangs.
 
 ## M4: Rooms and delve structure
 - TileMapLayer setup, 6 to 10 hand-built rooms, room-to-room transitions
