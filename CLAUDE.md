@@ -49,8 +49,15 @@ Godot 4.7.1 installed via `brew install --cask godot`. Binary is on PATH at
     tick 60, both autoloads registered, main scene loads, and every script under
     `src/` and `tools/` parses.
 - Headless smoke run (boots the main scene and quits): `godot --headless --path . --quit-after 3`
+- Feel stack behaviour test: `godot --headless --path . res://tests/feel_test.tscn`
+  - Exits 0/1. Asserts coyote, input buffering and roll i-frames actually fire.
+    Not a feel judgement — that is always Dustin's — just proof the mechanisms run,
+    because all three fail silently and look like bad tuning when they break.
+- After adding or renaming any `class_name` script, run `godot --headless --editor --quit`
+  once before the checks. Global class names only register when the editor scans
+  the project, so a fresh `--script` run reports "Could not find type X" until then.
 
-Gotchas found in M0, worth not rediscovering:
+Gotchas found in M0/M1, worth not rediscovering:
 - `godot --check-only --script foo.gd` exits 0 even on a syntax error. It is not a
   usable gate. `tools/check.gd` uses `GDScript.can_instantiate()` instead, which is
   the thing that actually goes false on a parse error (`load()` returns non-null
@@ -60,4 +67,11 @@ Gotchas found in M0, worth not rediscovering:
   declaration a hard error, so the headless check fails on it.
 - `ProjectSettings.save()` drops any setting equal to its engine default. The
   physics tick pin (60) is exactly such a value, so it carries a comment in
-  `project.godot`. If the editor ever strips that line, put it back.
+  `project.godot`. If the editor ever strips that line, put it back. (It already
+  happened once, in M1.)
+- `Input.action_press()` is not usable for testing `is_action_just_pressed()`. A
+  synthetic press is invisible to `_physics_process` on the tick it is injected
+  and surfaces around the *release* instead, so tests built on it pass and fail
+  for unrelated reasons. Held state (`is_action_pressed`, `get_axis`) is fine, so
+  simulated movement works. For one-shot verbs, drive `InputBuffer.press()`
+  directly — see the note in `src/systems/input_buffer.gd`.

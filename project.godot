@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="my-game"
-run/main_scene="res://src/main/main.tscn"
+run/main_scene="res://src/rooms/gym.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]
@@ -112,6 +112,11 @@ consumable_2={
 , Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"button_index":14,"pressure":0.0,"pressed":false,"script":null)
 ]
 }
+debug_toggle={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194334,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
 
 [layer_names]
 
@@ -126,7 +131,10 @@ consumable_2={
 
 ; Pinned per the GDD: daily seeds and ghost replays need a stable tick.
 ; This equals the engine default, so Godot's ProjectSettings.save() drops the
-; line whenever the editor rewrites this file. If it disappears, put it back.
+; line whenever the editor or a tool script rewrites this file. It has already
+; been stripped once. If it disappears again, put it back — tools/check.gd fails
+; loudly if the tick is ever actually wrong, so this is documentation of intent
+; rather than the enforcement mechanism.
 common/physics_ticks_per_second=60
 
 [rendering]

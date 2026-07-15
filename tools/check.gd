@@ -107,8 +107,9 @@ func _script_paths(dir_path: String, found: PackedStringArray) -> PackedStringAr
 func _check_scripts_parse() -> void:
 	var paths: PackedStringArray = _script_paths("res://src", PackedStringArray())
 	_script_paths("res://tools", paths)
+	_script_paths("res://tests", paths)
 	if paths.is_empty():
-		_fail("No scripts found under res://src or res://tools.")
+		_fail("No scripts found under res://src, res://tools or res://tests.")
 		return
 	for path: String in paths:
 		var script: GDScript = load(path) as GDScript

@@ -1,0 +1,31 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/ui/debug_overlay.gd" id="1_overlay"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0, 0, 0, 0.62)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="DebugOverlay" type="CanvasLayer"]
+script = ExtResource("1_overlay")
+
+[node name="Panel" type="PanelContainer" parent="."]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 300.0
+offset_bottom = 280.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="Label" type="Label" parent="Panel/Margin"]
+layout_mode = 2
+text = "waiting for player..."

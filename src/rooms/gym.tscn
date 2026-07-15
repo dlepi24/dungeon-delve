@@ -1,0 +1,100 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="PackedScene" path="res://src/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://src/ui/debug_overlay.tscn" id="2_overlay"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
+size = Vector2(1920, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(40, 1080)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ledge_low"]
+size = Vector2(300, 30)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ledge_mid"]
+size = Vector2(320, 30)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ledge_high"]
+size = Vector2(240, 30)
+
+[node name="Gym" type="Node2D"]
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.11, 0.12, 0.15, 1)
+
+[node name="Geometry" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="FloorShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(960, 960)
+shape = SubResource("RectangleShape2D_floor")
+
+[node name="LeftWallShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(20, 540)
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="RightWallShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(1900, 540)
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="LedgeLowShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(640, 780)
+shape = SubResource("RectangleShape2D_ledge_low")
+
+[node name="LedgeMidShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(1200, 640)
+shape = SubResource("RectangleShape2D_ledge_mid")
+
+[node name="LedgeHighShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(1650, 500)
+shape = SubResource("RectangleShape2D_ledge_high")
+
+[node name="GeometryVisuals" type="Node2D" parent="."]
+
+[node name="Floor" type="ColorRect" parent="GeometryVisuals"]
+offset_top = 920.0
+offset_right = 1920.0
+offset_bottom = 1000.0
+color = Color(0.28, 0.3, 0.36, 1)
+
+[node name="LeftWall" type="ColorRect" parent="GeometryVisuals"]
+offset_right = 40.0
+offset_bottom = 1080.0
+color = Color(0.28, 0.3, 0.36, 1)
+
+[node name="RightWall" type="ColorRect" parent="GeometryVisuals"]
+offset_left = 1880.0
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.28, 0.3, 0.36, 1)
+
+[node name="LedgeLow" type="ColorRect" parent="GeometryVisuals"]
+offset_left = 490.0
+offset_top = 765.0
+offset_right = 790.0
+offset_bottom = 795.0
+color = Color(0.34, 0.37, 0.44, 1)
+
+[node name="LedgeMid" type="ColorRect" parent="GeometryVisuals"]
+offset_left = 1040.0
+offset_top = 625.0
+offset_right = 1360.0
+offset_bottom = 655.0
+color = Color(0.34, 0.37, 0.44, 1)
+
+[node name="LedgeHigh" type="ColorRect" parent="GeometryVisuals"]
+offset_left = 1530.0
+offset_top = 485.0
+offset_right = 1770.0
+offset_bottom = 515.0
+color = Color(0.34, 0.37, 0.44, 1)
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(220, 920)
+
+[node name="DebugOverlay" parent="." instance=ExtResource("2_overlay")]
+player = NodePath("../Player")
