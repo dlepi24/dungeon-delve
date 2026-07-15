@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/ui/hud.gd" id="1_hud"]
+[ext_resource type="PackedScene" path="res://src/ui/health_bar.tscn" id="2_bar"]
+
+[node name="Hud" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+; Top-centre, out of the way of the F3 panel (top-left) and the controls hint
+; (bottom-left).
+[node name="Bar" parent="." instance=ExtResource("2_bar")]
+position = Vector2(960, 44)
+
+[node name="Label" type="Label" parent="."]
+offset_left = 820.0
+offset_top = 66.0
+offset_right = 1100.0
+offset_bottom = 92.0
+horizontal_alignment = 1
+text = "100 / 100"

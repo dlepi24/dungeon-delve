@@ -13,7 +13,14 @@ extends Node2D
 
 ## The rect to tint. Flashing lerps its colour rather than using modulate,
 ## because overbright modulate is not reliable across renderers.
-@export var rect: ColorRect
+##
+## Looked up by name rather than exported on purpose. An exported node reference
+## only resolves if the .tscn node header carries
+## `node_paths=PackedStringArray("rect")`; hand-written scenes miss that and the
+## property silently stays null — which is exactly how every telegraph colour and
+## hit flash in this project was dead without a single error. A fixed child does
+## not need to be configurable.
+@onready var rect: ColorRect = $Visual
 
 @export_group("Feel")
 ## How fast a flash fades. Higher = snappier.
@@ -72,9 +79,13 @@ func release_spin() -> void:
 
 
 func _process(delta: float) -> void:
-	_flash = move_toward(_flash, 0.0, flash_decay * delta)
+	# Draw BEFORE decaying, so a flash always gets at least one visible frame.
+	# Decaying first means a single long frame (a hitch, or an uncapped headless
+	# loop) can drive _flash to zero before it is ever drawn, and the flash
+	# silently never happens.
 	if rect != null:
 		rect.color = _base_colour.lerp(flash_colour, _flash)
+	_flash = move_toward(_flash, 0.0, flash_decay * delta)
 
 	scale = scale.lerp(_held_scale, minf(1.0, scale_recover * delta))
 

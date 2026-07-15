@@ -79,6 +79,23 @@ Gotchas found in M0/M1, worth not rediscovering:
   standing inside it, because `area_entered` only fires on a *new* overlap — the
   exact training-dummy case. `Hitbox` keeps monitoring on permanently and gates
   hits with a flag, sweeping `get_overlapping_areas()` when it opens.
+- **Exported node references in hand-written `.tscn` files silently resolve to
+  null** unless the node header carries `node_paths=PackedStringArray("prop")`:
+  ```
+  [node name="Hud" parent="." instance=ExtResource("1") node_paths=PackedStringArray("player")]
+  player = NodePath("../Player")
+  ```
+  Without it Godot assigns the literal NodePath to a property expecting a Node,
+  fails quietly, and leaves it null. **No error, no warning.** This killed every
+  enemy telegraph colour, every hit flash and the whole F3 overlay for three
+  milestones. If a node reference is a fixed child, prefer `@onready var x = $Child`
+  and skip the export entirely — that is what `BodyJuice` and `Hitbox` do now.
+- `SceneTree.process_frame` is emitted *before* node `_process` runs, so
+  `await get_tree().process_frame` resumes BEFORE the frame's `_process`. Awaiting
+  it once and then reading a visual value reads the previous frame's state. Await
+  twice. (`physics_frame` does not have this problem — it fires after.)
+- Fade/decay effects should apply the visual and THEN decay, never the reverse: one
+  long frame otherwise drives the effect to zero before it is ever drawn.
 - Static typing is enforced by the engine, not by convention:
   `gdscript/warnings/untyped_declaration=2` in `project.godot` makes an untyped
   declaration a hard error, so the headless check fails on it.

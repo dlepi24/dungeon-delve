@@ -32,6 +32,7 @@ var _player: Player = null
 @onready var _hitbox_shape: CollisionShape2D = $Hitbox/CollisionShape2D
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _hurtbox_shape: CollisionShape2D = $Hurtbox/CollisionShape2D
+@onready var _health_bar: HealthBar = $HealthBar
 
 
 func _ready() -> void:
@@ -68,6 +69,18 @@ func _apply_stats_to_body() -> void:
 	var rect: RectangleShape2D = RectangleShape2D.new()
 	rect.size = stats.hitbox_size
 	_hitbox_shape.shape = rect
+
+	# The swing arc is drawn at the hitbox's real size, so what you see is
+	# genuinely what will hit you. A lying tell is worse than no tell.
+	var swing: ColorRect = _hitbox.visual as ColorRect
+	if swing != null:
+		swing.size = stats.hitbox_size
+		swing.position = -stats.hitbox_size * 0.5
+		swing.color = stats.colour_attack
+
+	# Sit the bar above the head, whatever height the stats made this thing.
+	_health_bar.position = Vector2(0, -stats.body_size.y - 14.0)
+	_health_bar.bar_size = Vector2(maxf(38.0, stats.body_size.x * 1.35), 6.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -119,8 +132,23 @@ func _physics_process(delta: float) -> void:
 				_enter(State.IDLE)
 		State.DEAD:
 			_decelerate(delta)
+			_update_corpse()
 
 	move_and_slide()
+
+
+## Corpses linger a beat so the kill registers, then fade and free themselves.
+## Leaving them lying around forever reads as a bug, and M5's real drops and
+## cleanup will replace this wholesale.
+func _update_corpse() -> void:
+	var linger: int = Ticks.from_ms(stats.corpse_linger_ms)
+	var fade: int = Ticks.from_ms(stats.corpse_fade_ms)
+	if _elapsed <= linger:
+		return
+	var progress: float = float(_elapsed - linger) / maxf(1.0, float(fade))
+	_juice.modulate.a = clampf(1.0 - progress, 0.0, 1.0)
+	if _elapsed >= linger + fade:
+		queue_free()
 
 
 func _enter(next: State) -> void:
@@ -227,6 +255,7 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	if _state == State.DEAD:
 		return
 	health = maxf(0.0, health - hitbox.damage)
+	_health_bar.set_ratio(health / stats.max_health)
 	_juice.flash()
 	_juice.punch(Vector2(1.24, 0.8) if hitbox.is_riposte else Vector2(1.12, 0.9))
 	Events.hit_landed.emit(hitbox.damage, hitbox.is_riposte)
@@ -243,6 +272,7 @@ func _on_hurt(hitbox: Hitbox) -> void:
 
 func _on_death() -> void:
 	_hitbox.deactivate()
+	_health_bar.visible = false
 	# Stop colliding with the player and stop being hittable, but stay visible so
 	# the kill reads. M5 owns corpses, drops and cleanup properly.
 	_hurtbox.set_deferred(&"monitorable", false)

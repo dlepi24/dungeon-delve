@@ -54,6 +54,12 @@ extends Resource
 @export var colour_recover: Color = Color(0.5, 0.35, 0.35)
 @export var colour_stagger: Color = Color(0.35, 0.65, 1.0)
 
+@export_group("Death")
+## How long the corpse lingers before fading out and freeing itself. Long enough
+## that the kill registers, short enough that the room does not fill with debris.
+@export var corpse_linger_ms: int = 260
+@export var corpse_fade_ms: int = 420
+
 @export_group("Body")
 @export var body_size: Vector2 = Vector2(32, 64)
 @export var hitbox_size: Vector2 = Vector2(70, 56)

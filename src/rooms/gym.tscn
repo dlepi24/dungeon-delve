@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 ; Tuning gym. Every platform here is placed against the DEFAULT jump_height of
 ; 104 px, with the tallest step at 95 px — deliberately near the limit, so a
@@ -10,6 +10,7 @@
 
 [ext_resource type="PackedScene" path="res://src/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://src/ui/debug_overlay.tscn" id="2_overlay"]
+[ext_resource type="PackedScene" path="res://src/ui/hud.tscn" id="9_hud"]
 [ext_resource type="PackedScene" path="res://src/enemies/training_dummy.tscn" id="3_dummy"]
 [ext_resource type="Script" path="res://src/systems/screen_shake.gd" id="4_shake"]
 
@@ -125,7 +126,7 @@ position = Vector2(150, 920)
 [node name="TrainingDummy" parent="." instance=ExtResource("3_dummy")]
 position = Vector2(980, 920)
 
-[node name="DebugOverlay" parent="." instance=ExtResource("2_overlay")]
+[node name="DebugOverlay" parent="." instance=ExtResource("2_overlay") node_paths=PackedStringArray("player", "dummy")]
 player = NodePath("../Player")
 dummy = NodePath("../TrainingDummy")
 
@@ -160,3 +161,6 @@ LMB / J attack
 RMB / K parry
 
 F3      debug"
+
+[node name="Hud" parent="." instance=ExtResource("9_hud") node_paths=PackedStringArray("player")]
+player = NodePath("../Player")

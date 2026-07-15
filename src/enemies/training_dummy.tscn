@@ -24,7 +24,6 @@ script = ExtResource("1_dummy")
 
 [node name="VisualRoot" type="Node2D" parent="."]
 script = ExtResource("4_juice")
-rect = NodePath("Visual")
 
 [node name="Visual" type="ColorRect" parent="VisualRoot"]
 offset_left = -16.0

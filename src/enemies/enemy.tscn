@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 ; Shapes are built from the EnemyStats resource at _ready, so the placeholders
 ; here are irrelevant — a bigger enemy is a data change, not a new scene.
@@ -11,6 +11,7 @@
 [ext_resource type="Script" path="res://src/systems/hitbox.gd" id="2_hitbox"]
 [ext_resource type="Script" path="res://src/systems/hurtbox.gd" id="3_hurtbox"]
 [ext_resource type="Script" path="res://src/systems/body_juice.gd" id="4_juice"]
+[ext_resource type="PackedScene" path="res://src/ui/health_bar.tscn" id="5_bar"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_placeholder"]
 radius = 16.0
@@ -23,7 +24,6 @@ script = ExtResource("1_enemy")
 
 [node name="VisualRoot" type="Node2D" parent="."]
 script = ExtResource("4_juice")
-rect = NodePath("Visual")
 
 [node name="Visual" type="ColorRect" parent="VisualRoot"]
 offset_left = -16.0
@@ -51,3 +51,11 @@ script = ExtResource("2_hitbox")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
 shape = SubResource("CapsuleShape2D_placeholder")
+
+; Sized and coloured from the stats at _ready, so the arc always matches the
+; real hitbox. Drawn only while the swing is live.
+[node name="Swing" type="ColorRect" parent="Hitbox"]
+color = Color(0.95, 0.2, 0.2, 1)
+
+[node name="HealthBar" parent="." instance=ExtResource("5_bar")]
+position = Vector2(0, -78)

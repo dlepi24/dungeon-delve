@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 ; The M3 gate room: "a single room with 3 enemies is a genuinely fun fight."
 ;
@@ -20,6 +20,7 @@
 
 [ext_resource type="PackedScene" path="res://src/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://src/ui/debug_overlay.tscn" id="2_overlay"]
+[ext_resource type="PackedScene" path="res://src/ui/hud.tscn" id="9_hud"]
 [ext_resource type="Script" path="res://src/systems/screen_shake.gd" id="3_shake"]
 [ext_resource type="PackedScene" path="res://src/enemies/enemy.tscn" id="4_enemy"]
 [ext_resource type="PackedScene" path="res://src/enemies/dart_enemy.tscn" id="5_dart"]
@@ -95,7 +96,7 @@ stats = ExtResource("7_brute")
 position = Vector2(1180, 920)
 stats = ExtResource("8_dart")
 
-[node name="DebugOverlay" parent="." instance=ExtResource("2_overlay")]
+[node name="DebugOverlay" parent="." instance=ExtResource("2_overlay") node_paths=PackedStringArray("player")]
 player = NodePath("../Player")
 
 [node name="ControlsHint" type="CanvasLayer" parent="."]
@@ -126,3 +127,6 @@ LMB / J attack
 RMB / K parry
 
 F3      debug"
+
+[node name="Hud" parent="." instance=ExtResource("9_hud") node_paths=PackedStringArray("player")]
+player = NodePath("../Player")
