@@ -8,6 +8,12 @@
   bound to J/LMB, so the combat gates were being judged on movement alone. Both
   rooms now show the controls on screen. Lesson: state the verbs in the build, not
   in the handoff message.
+- **Nothing about M2/M3 feel has been fairly judged yet.** Until 2026-07-14, every
+  enemy telegraph colour, every hit flash and the whole F3 overlay were dead —
+  exported node refs in hand-written .tscn files silently resolved to null (see
+  CLAUDE.md). Parry was literally unreadable, which explains "pretty fun in some
+  ways". Any earlier verdict on crunch or on the fight predates working telegraphs
+  and should be re-taken from scratch.
   **M1 PASSED in full** — the movement gate 2026-07-14 ("it's fun"), and the
   combat half the same day ("OKAY IT'S FUN, i can dodge through the guy and jump
   over him"). Movement and combat timings are approved as-is; do not change them
