@@ -1,9 +1,21 @@
 # Roadmap
 
 ## Status
-- **Current milestone:** M0
-- **Last session:** none yet
-- **Next step:** execute M0
+- **Current milestone:** M0 complete. M1 is next.
+- **Last session:** 2026-07-14. Scaffolded the project: Godot 4.7.1 installed via
+  Homebrew, project boots clean windowed, headless, and via editor import. All 13
+  InputMap actions, the 6 named collision layers, physics tick pinned to 60,
+  `Events` and `GameState` autoload stubs. `tools/check.gd` is a real gate
+  (exits non-zero, negative-tested). Static typing is engine-enforced. Commands
+  documented in CLAUDE.md. First commit landed.
+- **Next step:** M1. Start with the player FSM and movement, since the M1 exit gate
+  is about how movement alone feels, before any combat verb exists.
+- **Deferred:** Godot MCP server. No official or registry-listed server exists; all
+  candidates are unvetted third-party code. The headless CLI already covers running
+  scenes and reading output. Revisit in M1 only if tuning feel outgrows the CLI.
+- **Open, needs Dustin:** confirm the project opens and plays from the Godot editor
+  GUI. Headless import is clean and the windowed CLI run uses the same path as the
+  editor's play button, so this is expected to pass, but a human has not clicked it.
 
 Update this section at the end of every session: date, what got done, what's next. Feel gates require Dustin's explicit sign-off, not Claude's judgment.
 
@@ -13,9 +25,11 @@ Update this section at the end of every session: date, what got done, what's nex
 - All InputMap actions from the GDD input table defined and bound (KB+M plus provisional gamepad)
 - Autoload stubs: `GameState`, `Events` (signal bus)
 - Headless CLI check working, exact commands documented in CLAUDE.md Commands section
-- Optional: Godot MCP server wired so Claude can run scenes and read output directly
+- ~~Optional: Godot MCP server wired so Claude can run scenes and read output directly~~
+  Deferred (2026-07-14): no official server exists, the CLI already covers it.
 
 **Exit:** an empty scene runs from both editor and CLI, repo is clean, commands documented.
+**Met 2026-07-14**, with the editor-GUI half awaiting Dustin's click (see Status).
 
 ## M1: Gray-box movement and combat core (find the fun)
 - Player as a ColorRect capsule with an FSM: idle, run, air, roll, attack, parry, hitstun
