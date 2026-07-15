@@ -12,16 +12,25 @@
   accel/decel, variable jump, 100 ms buffer, 80 ms coyote, roll with i-frames over
   the middle 200 ms. Debug overlay on F3. `tests/feel_test.tscn` proves coyote,
   buffering and i-frames actually fire (9 assertions, all green).
-- **Next step:** Dustin plays `src/rooms/gym.tscn` and judges the gate. Tune the
-  exports in the inspector while playing; commit whatever values win. Only once
-  movement is fun by itself does the M1 combat half (attack with commitment and
-  cancel windows, parry, training dummy) get built.
+- **Next step:** Dustin plays the gym and judges combat. Read the dummy's yellow
+  telegraph, parry on the red swing, cash the riposte. Tune in the inspector. When
+  it holds up, M1 is done and M2 (the feel pass) starts — that is where the roll
+  finally gets a visual identity.
 - **Needs a design call from Dustin:**
   - `allow_air_roll` on the player, currently off. The GDD says roll is "always
     available" but never rules on mid-air, and air-rolling changes platforming a
     lot. Feel both, then it goes in the GDD decision log.
+  - **GDD tension, interpreted but not ruled on:** roll is "always available" and a
+    parry whiff is "punishable" cannot both be literally true — free roll cancels
+    would erase the whiff punish. Implemented as: "always available" means no
+    stamina or cooldown gating it, not that it cancels any state. So roll does not
+    cancel parry recovery, and cancels an attack only inside its cancel window.
+    A test pins this. If Dustin rules the other way, the test changes with it.
   - Whatever tuned feel-spec values win should be written back into the GDD feel
     spec table, which still holds the untested starting values.
+  - The GDD's five open questions (theme, death/extraction, meta shape, v1 scope,
+    name) still block M5. M2-M4 do not need them. Worth a claude.ai design session
+    within the next few milestones, not today.
 - **Deferred:** Godot MCP server. No official or registry-listed server exists; all
   candidates are unvetted third-party code. The headless CLI already covers running
   scenes and reading output. Revisit only if tuning feel outgrows the CLI.
