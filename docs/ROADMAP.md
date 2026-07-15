@@ -1,8 +1,10 @@
 # Roadmap
 
 ## Status
-- **Current milestone:** M1, first half built. **Blocked on the feel gate — Dustin's
-  call.** Nothing further gets built until movement is fun on its own.
+- **Current milestone:** M1, second half (combat verbs). The **feel gate PASSED**
+  — Dustin signed off 2026-07-14: moving, jumping and rolling around an empty room
+  is fun on its own. Movement values are approved as-is; do not change jump feel
+  without a fresh call from him.
 - **Last session:** 2026-07-14. M0 scaffold complete (Godot 4.7.1 via Homebrew, 13
   InputMap actions, 6 named collision layers, tick pinned to 60, autoload stubs,
   `tools/check.gd` as a real negative-tested gate, static typing engine-enforced).
@@ -48,6 +50,10 @@ Update this section at the end of every session: date, what got done, what's nex
 - Every value from the GDD feel spec exposed as `@export`
 
 **Exit gate (Dustin):** moving, jumping, and rolling around an empty room is fun by itself, before any enemy exists. Do not proceed until this is true. This gate is the whole project.
+**PASSED 2026-07-14.** Dustin's words: "it's fun". Noted at the same time: the roll
+reads as "moving but slightly different" — legible, but it has no visual identity
+until M2's squash/stretch pass. Not a blocker, and deliberately not fixed early:
+M2 cannot be judged ("hitting the dummy feels crunchy") until the dummy exists.
 
 ## M2: Feel pass
 - Hitstop, screenshake, squash/stretch, hit flashes on placeholder shapes, placeholder sound effects
