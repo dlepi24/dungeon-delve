@@ -76,13 +76,33 @@ Screenshake, squash/stretch, and flashes arrive in Milestone 2.
 | 5 | EnemyAttack |
 | 6 | Pickup |
 
+### Setting (locked 2026-07-15)
+**A collapsing mine. You go down for ore and relics while the shaft fails behind you.**
+
+Why this and not the alternatives: it makes the greed pillar *literal* rather than
+abstract. Deeper is richer and less stable, so "extract or push on" is a fact of
+the fiction and not a rule bolted onto it. It also fits the Spelunky-style
+daily-seed DNA the GDD already commits to.
+
+What it settles:
+- **Why you go:** the haul. Ore, relics, whatever is worth carrying up.
+- **Why you leave:** the mine is failing. Depth is the timer.
+- **Visual language:** rock, timber supports, ore veins, lantern light against
+  cold dark. Warm = yours and safe; cold = the mine. Amber = value.
+- **What the enemies are:** things that live down there, or things the digging
+  woke. Not yet ruled on — that is a roster question for M6.
+
+Still open, and NOT implied by this: death and extraction rules (question 2), the
+meta shape (question 3), and the name (question 5). Locking the theme does not
+lock those.
+
 ### Run structure
 - Delve levels are procedurally assembled from hand-built rooms (rooms first, assembly logic later).
 - Persistent hub between runs.
 - An extraction decision exists mid-run. Exact mechanism is open (see below).
 
 ## Open questions
-1. **Theme and setting.** What are we delving into and why. Drives art, naming, and motivation. Next design session topic.
+1. ~~**Theme and setting.**~~ **ANSWERED 2026-07-15 — see Setting below.**
 2. **Death and extraction rules.** What you keep, what you lose, how extraction works mechanically.
 3. **Meta progression shape.** What the hub does: vendor, crafting, base-building, or a mix. What persists.
 4. **V1 scope line.** What ships in the first itch.io build.
@@ -97,3 +117,5 @@ Screenshake, squash/stretch, and flashes arrive in Milestone 2.
 - 2026-07-14: Gray-box before art. Feel stack (buffer, coyote, hitstop, cancel windows) mandatory from Milestone 1.
 - 2026-07-15: **Poise / hyper armor added**, Dustin's call after playtesting M4. Enemies keep swinging through pokes during a committed attack; light enemies have little poise, heavy ones a lot. Poise applies ONLY during telegraph/attack, so enemies still flinch when idle and combat stays at the Dead Cells pace rather than drifting to Dark Souls weight. A poise break staggers but gives no riposte; only a parry does. Reason: attack-spam trivially beat everything, which made parry decorative and broke its pillar status.
 - 2026-07-15: Enemy attacks are data (`EnemyAttackData` resources) chosen by range, not one hard-coded swing. Folds the Dart's lunge in as a `dash_speed` value rather than a subclass — it turned out to be a number, not a verb. Adding an attack or an enemy variant is now a resource file.
+- 2026-07-15: **Setting locked: a collapsing mine.** Dustin's call. You delve for ore and relics while the shaft fails behind you. Chosen because it makes the greed pillar literal — deeper is richer and less stable — rather than a rule sitting on top of an unrelated fiction. Unblocks art, which had been gated on this since M2's gate passed. Does not settle extraction, meta shape or the name.
+- 2026-07-15: Key rebinding pulled forward from M7, Dustin's call after finding J/K awkward. The GDD's KB+M table stays the DEFAULT rather than the only option, so the locked layout is now a starting point players can override.

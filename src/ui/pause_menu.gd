@@ -17,13 +17,18 @@ extends CanvasLayer
 @onready var _resume: Button = $Panel/Margin/Rows/Buttons/Resume
 @onready var _replay: Button = $Panel/Margin/Rows/Buttons/Replay
 @onready var _fresh: Button = $Panel/Margin/Rows/Buttons/Fresh
+@onready var _controls: Button = $Panel/Margin/Rows/Controls
 @onready var _status: Label = $Panel/Margin/Rows/Status
+@onready var _keybinds: Control = $KeybindScreen
 
 
 func _ready() -> void:
 	# The tree is paused when this is up, so it must keep processing.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
+	_keybinds.visible = false
+	_keybinds.closed.connect(_on_keybinds_closed)
+	_controls.pressed.connect(_on_controls)
 	_resume.pressed.connect(_close)
 	_replay.pressed.connect(_on_replay)
 	_fresh.pressed.connect(_on_fresh)
@@ -40,7 +45,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		_open()
 
 
+func _on_controls() -> void:
+	_panel.visible = false
+	_keybinds.visible = true
+
+
+func _on_keybinds_closed() -> void:
+	_keybinds.visible = false
+	_panel.visible = true
+
+
 func _open() -> void:
+	_panel.visible = true
+	_keybinds.visible = false
 	_seed_field.text = GameState.seed_text()
 	_status.text = "room %d of %d" % [GameState.depth + 1, maxi(1, GameState.run_plan.size())]
 	visible = true

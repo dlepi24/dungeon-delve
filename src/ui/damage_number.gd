@@ -9,9 +9,13 @@ extends Node2D
 ##
 ## Frees itself. Nothing owns these.
 
-@export var rise: float = 46.0
-@export var lifetime: float = 0.7
-@export var drift: float = 18.0
+@export var rise: float = 74.0
+@export var lifetime: float = 0.95
+@export var drift: float = 22.0
+## Size on a normal hit and on a riposte. The gap between them IS the readout:
+## the riposte number should be obviously bigger, not just a different figure.
+@export var font_size: int = 34
+@export var riposte_font_size: int = 54
 
 var _elapsed: float = 0.0
 var _drift_x: float = 0.0
@@ -27,17 +31,30 @@ static func spawn(parent: Node, at: Vector2, amount: float, is_riposte: bool) ->
 	number.setup(amount, is_riposte)
 
 
+func _ready() -> void:
+	# Above the tiles and the bodies. Without this a number can be drawn behind
+	# whatever it was spawned next to, which is indistinguishable from it never
+	# having appeared at all — the first version was 20 px of white text for 0.7 s
+	# during a hitstop and a screenshake, and Dustin could not tell whether it was
+	# firing.
+	z_index = 100
+
+
 func setup(amount: float, is_riposte: bool) -> void:
 	# @onready has not run if setup is called right after instantiate.
 	var label: Label = get_node("Label")
 	label.text = str(roundi(amount))
+	# A dark outline, so the number reads against a pale tile or a bright flash.
+	# Plain white text on gray-box is nearly invisible at speed.
+	label.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.9))
+	label.add_theme_constant_override(&"outline_size", 8)
 	if is_riposte:
 		label.text += "!"
-		label.add_theme_color_override(&"font_color", Color(1.0, 0.85, 0.3))
-		label.add_theme_font_size_override(&"font_size", 30)
+		label.add_theme_color_override(&"font_color", Color(1.0, 0.82, 0.2))
+		label.add_theme_font_size_override(&"font_size", riposte_font_size)
 	else:
 		label.add_theme_color_override(&"font_color", Color(1, 1, 1))
-		label.add_theme_font_size_override(&"font_size", 20)
+		label.add_theme_font_size_override(&"font_size", font_size)
 	# Scatter sideways so a flurry of hits does not stack into one unreadable blob.
 	_drift_x = randf_range(-drift, drift)
 
@@ -51,4 +68,8 @@ func _process(delta: float) -> void:
 		return
 	position.y -= rise * delta * (1.0 - t * 0.5)
 	position.x += _drift_x * delta
-	modulate.a = 1.0 - t * t
+	# Pop in, then fade only at the end — fading from the first frame is what made
+	# these ghosts. Full opacity for the first two thirds.
+	modulate.a = 1.0 if t < 0.66 else 1.0 - (t - 0.66) / 0.34
+	var pop: float = 1.0 + 0.35 * maxf(0.0, 1.0 - t * 6.0)
+	scale = Vector2(pop, pop)

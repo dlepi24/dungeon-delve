@@ -20,7 +20,7 @@ layer = -10
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.07, 0.07, 0.1, 1)
+color = Color(0.055, 0.042, 0.035, 1)
 
 [node name="Delve" type="Node2D" parent="."]
 script = ExtResource("1_delve")
@@ -69,7 +69,7 @@ SHIFT   roll
 LMB / J attack
 RMB / K parry
 
-ESC     pause / seed
+ESC     pause / seed / rebind
 F3      debug"
 
 [node name="PauseMenu" parent="." instance=ExtResource("7_pause") node_paths=PackedStringArray("delve")]

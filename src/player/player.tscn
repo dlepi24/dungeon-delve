@@ -41,7 +41,7 @@ script = ExtResource("12_juice")
 offset_left = -14.0
 offset_top = -56.0
 offset_right = 14.0
-color = Color(0.36, 0.76, 1, 1)
+color = Color(0.96, 0.88, 0.72, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -28)

@@ -19,6 +19,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 Events="*res://src/autoload/events.gd"
 GameState="*res://src/autoload/game_state.gd"
 Hitstop="*res://src/systems/hitstop.gd"
+Keybinds="*res://src/systems/keybinds.gd"
 Rng="*res://src/systems/rng.gd"
 Sfx="*res://src/systems/sfx.gd"
 
@@ -139,11 +140,10 @@ pause={
 [physics]
 
 ; Pinned per the GDD: daily seeds and ghost replays need a stable tick.
-; This equals the engine default, so Godot's ProjectSettings.save() drops the
-; line whenever the editor or a tool script rewrites this file. It has been
-; stripped four times now. If it disappears again, put it back — tools/check.tscn
-; fails loudly if the tick is ever actually wrong, so this is documentation of
-; intent rather than the enforcement mechanism.
+; This equals the engine default, so Godot drops the line whenever anything
+; re-saves this file. It has been stripped FIVE times now. If it disappears
+; again, put it back — tools/check.tscn fails loudly if the tick is ever
+; actually wrong, so this is documentation of intent, not the enforcement.
 common/physics_ticks_per_second=60
 
 [rendering]

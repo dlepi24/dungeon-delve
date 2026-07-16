@@ -15,6 +15,13 @@ extends Node
 const TILE: int = 32
 const SOLID: Vector2i = Vector2i(0, 0)
 const ONE_WAY: Vector2i = Vector2i(1, 0)
+const ORE: Vector2i = Vector2i(2, 0)
+## Roughly one rock tile in this many becomes an ore vein. Purely visual — ore
+## collides exactly like rock — so it is scattered deterministically from the
+## tile's own coordinates rather than from the seeded RNG. Two players on one
+## seed see the same veins because the maths is the same, not because a stream
+## was consumed; keeping it out of Rng means it can never shift layout draws.
+const ORE_EVERY: int = 9
 const OUT_DIR: String = "res://src/rooms/delve"
 const TILESET: String = "res://src/rooms/world_tileset.tres"
 
@@ -157,6 +164,11 @@ func _validate(id: StringName, rows: Array) -> bool:
 	return ok
 
 
+## Rock, with a vein every so often. Deterministic in the cell coordinates.
+func _rock(x: int, y: int) -> Vector2i:
+	return ORE if (x * 7 + y * 13) % ORE_EVERY == 0 else SOLID
+
+
 func _cell(x: int, y: int) -> Vector2i:
 	# +1 for the border the generator wraps around every room.
 	return Vector2i(x + 1, y + 1)
@@ -182,11 +194,11 @@ func _build(id: StringName, rows: Array, tile_set: TileSet) -> void:
 	var w: int = RoomLayouts.WIDTH + 2
 	var h: int = RoomLayouts.HEIGHT + 2
 	for x: int in w:
-		layer.set_cell(Vector2i(x, 0), 0, SOLID)
-		layer.set_cell(Vector2i(x, h - 1), 0, SOLID)
+		layer.set_cell(Vector2i(x, 0), 0, _rock(x, 0))
+		layer.set_cell(Vector2i(x, h - 1), 0, _rock(x, h - 1))
 	for y: int in h:
-		layer.set_cell(Vector2i(0, y), 0, SOLID)
-		layer.set_cell(Vector2i(w - 1, y), 0, SOLID)
+		layer.set_cell(Vector2i(0, y), 0, _rock(0, y))
+		layer.set_cell(Vector2i(w - 1, y), 0, _rock(w - 1, y))
 
 	var spawns: Array[Dictionary] = []
 	var entry: Vector2 = Vector2.ZERO
@@ -197,7 +209,8 @@ func _build(id: StringName, rows: Array, tile_set: TileSet) -> void:
 		for x: int in row.length():
 			match row[x]:
 				"#":
-					layer.set_cell(_cell(x, y), 0, SOLID)
+					var cell: Vector2i = _cell(x, y)
+					layer.set_cell(cell, 0, _rock(cell.x, cell.y))
 				"=":
 					layer.set_cell(_cell(x, y), 0, ONE_WAY)
 				"P":
