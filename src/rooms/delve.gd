@@ -86,6 +86,11 @@ func start(seed_value: int) -> void:
 	_plan = plan_for_seed(seed_value, room_count)
 	_index = -1
 	GameState.begin_run(seed_value, _plan)
+	# A restart must be a clean slate, or you carry your last run's health and
+	# riposte into the new one and the comparison is worthless.
+	var player: Player = _get_player()
+	if player != null:
+		player.reset_for_new_run()
 	_advance()
 
 
@@ -98,6 +103,7 @@ func _get_player() -> Player:
 
 
 func _ready() -> void:
+	Events.run_restart_requested.connect(start)
 	if auto_start and _plan.is_empty():
 		# DEFERRED, not called directly. Starting inside _ready runs before the
 		# Player's own _ready, so its @onready nodes are still null and placing it

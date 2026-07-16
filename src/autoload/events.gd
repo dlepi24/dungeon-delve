@@ -38,6 +38,10 @@ signal enemy_died(enemy: Node2D)
 ## the room just puts you back.
 signal player_died
 
+## Someone asked for a restart on this seed. The Delve listens, so the pause menu
+## does not need to know how a run is assembled.
+signal run_restart_requested(seed_value: int)
+
 ## A run began, from this seed. The seed is shareable and reproduces the delve.
 signal run_started(seed_value: int)
 ## The player entered room `index` of the plan.

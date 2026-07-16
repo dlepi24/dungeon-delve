@@ -256,6 +256,18 @@ func _respawn() -> void:
 	_state_machine.transition_to(&"Idle")
 
 
+## Wipe everything a run accumulates. Called by the Delve when a run starts, so
+## replaying a seed compares like with like.
+func reset_for_new_run() -> void:
+	health = max_health
+	invulnerable = false
+	velocity = Vector2.ZERO
+	_respawn_at_tick = -1
+	consume_riposte()
+	if _state_machine != null:
+		_state_machine.transition_to(&"Idle")
+
+
 ## Drop the player somewhere with a clean slate. Used by the Delve when moving
 ## between rooms: carrying velocity or a half-finished roll across a transition
 ## would make you arrive already moving, which reads as losing control.

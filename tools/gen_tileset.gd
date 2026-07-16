@@ -27,25 +27,42 @@ func _make_texture() -> void:
 	DirAccess.make_dir_recursive_absolute("res://assets/tiles")
 	var image: Image = Image.create(TILE * 2, TILE, false, Image.FORMAT_RGBA8)
 
-	# Tile 0: solid. Body with a lighter top edge so surfaces read at a glance.
+	# Tile 0: solid. Bevelled — a lit top edge, a shaded bottom-right, and a
+	# subtle grain. Still unmistakably gray-box, but the surfaces read at a
+	# glance instead of dissolving into one flat slab. Deliberately colourless:
+	# a palette would be a theme decision, and the theme is Dustin's open
+	# question 1, not mine to answer with a hex code.
 	for x: int in TILE:
 		for y: int in TILE:
-			var body: Color = Color(0.26, 0.27, 0.33)
-			if y < 3:
-				body = Color(0.42, 0.45, 0.54)
-			elif x == 0 or x == TILE - 1 or y == TILE - 1:
-				body = Color(0.19, 0.2, 0.25)
+			var body: Color = Color(0.24, 0.25, 0.31)
+			# Grain: a cheap deterministic dither so large walls do not band.
+			if (x * 7 + y * 13) % 11 == 0:
+				body = body.lightened(0.06)
+			elif (x * 5 + y * 3) % 17 == 0:
+				body = body.darkened(0.06)
+			if y < 4:
+				body = Color(0.46, 0.5, 0.6)          # lit top face
+			elif y < 6:
+				body = Color(0.34, 0.36, 0.44)        # falloff under the light
+			if x == 0 or y == 0:
+				body = body.lightened(0.12)            # top-left highlight
+			if x == TILE - 1 or y == TILE - 1:
+				body = Color(0.15, 0.16, 0.2)          # bottom-right shadow
 			image.set_pixel(x, y, body)
 
-	# Tile 1: one-way platform. Deliberately reads as a thin ledge with empty
-	# space beneath, because that is exactly how it behaves.
+	# Tile 1: one-way platform. Reads as a thin lit ledge with empty space
+	# beneath, because that is exactly how it behaves — you pass up through it.
 	for x: int in TILE:
 		for y: int in TILE:
 			var colour: Color = Color(0, 0, 0, 0)
 			if y < 8:
-				colour = Color(0.5, 0.54, 0.62)
+				colour = Color(0.44, 0.47, 0.56)
 				if y < 2:
-					colour = Color(0.66, 0.71, 0.8)
+					colour = Color(0.72, 0.77, 0.88)   # bright lip: "land here"
+				elif y >= 6:
+					colour = Color(0.26, 0.28, 0.34)   # underside shadow
+				if x == 0 or x == TILE - 1:
+					colour = colour.darkened(0.15)
 			image.set_pixel(TILE + x, y, colour)
 
 	var err: int = image.save_png(OUT_TEXTURE)

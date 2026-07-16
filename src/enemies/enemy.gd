@@ -345,6 +345,14 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	_juice.punch(Vector2(1.24, 0.8) if hitbox.is_riposte else Vector2(1.12, 0.9))
 	Events.hit_landed.emit(hitbox.damage, hitbox.is_riposte)
 
+	# Parented to our parent, not to us: a number or a spark stuck to a corpse
+	# would fade out with it, and the kill is exactly when you want to read them.
+	var host: Node = get_parent()
+	var at: Vector2 = global_position - Vector2(0, stats.body_size.y * 0.6)
+	if host != null:
+		DamageNumber.spawn(host, at, hitbox.damage, hitbox.is_riposte)
+		HitSpark.burst(host, at, _away_from(hitbox), hitbox.is_riposte)
+
 	if health <= 0.0:
 		_enter(State.DEAD)
 		return
