@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 ; Shapes are built from the EnemyStats resource at _ready, so the placeholders
 ; here are irrelevant — a bigger enemy is a data change, not a new scene.
@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://src/systems/hurtbox.gd" id="3_hurtbox"]
 [ext_resource type="Script" path="res://src/systems/body_juice.gd" id="4_juice"]
 [ext_resource type="PackedScene" path="res://src/ui/health_bar.tscn" id="5_bar"]
+[ext_resource type="Script" path="res://src/enemies/enemy_sprite.gd" id="6_sprite"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_placeholder"]
 radius = 16.0
@@ -24,12 +25,21 @@ script = ExtResource("1_enemy")
 
 [node name="VisualRoot" type="Node2D" parent="."]
 script = ExtResource("4_juice")
+tint_sprite_with_base_colour = true
 
+; Still BodyJuice's flash target, now invisible. Keeping it means squash, stretch
+; and the flash all still run through VisualRoot and the sprite inherits them.
 [node name="Visual" type="ColorRect" parent="VisualRoot"]
+visible = false
 offset_left = -16.0
 offset_top = -64.0
 offset_right = 16.0
 color = Color(0.75, 0.4, 0.4, 1)
+
+; Sizes and positions itself from its sheet's manifest at _ready.
+[node name="Sprite" type="AnimatedSprite2D" parent="VisualRoot"]
+texture_filter = 1
+script = ExtResource("6_sprite")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -32)

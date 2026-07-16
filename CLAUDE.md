@@ -86,9 +86,18 @@ Godot 4.7.1 installed via `brew install --cask godot`. Binary is on PATH at
   a script that `preload`s a not-yet-imported file fails with "no resource loaders
   (unrecognized file extension)". Import first, then check.
 - Regenerate character sprites: `python3 tools/gen_sprites.py`
-  - Frames are authored as ASCII in `tools/sprites/player_frames.py` — that is the
-    source of truth, same discipline as the rooms. It validates and refuses to bake
-    a broken sheet. Writes the PNG by hand (zlib+struct), so no Pillow needed.
+  - Frames are authored as ASCII in `tools/sprites/player_frames.py` and
+    `tools/sprites/enemy_frames.py` — those are the source of truth, same
+    discipline as the rooms. Validates and refuses to bake a broken sheet. Writes
+    the PNG by hand (zlib+struct), so no Pillow needed.
+  - **Enemy art is GREYSCALE on purpose.** `BodyJuice` tints it from `EnemyStats`
+    — idle colour, yellow wind-up, red swing, blue stagger, white flash. That tint
+    IS the telegraph the GDD demands, so it has to survive the art. Pre-coloured
+    enemy sprites would fight the tint and turn to mud. The player is full colour
+    and is never base-tinted (`tint_sprite_with_base_colour = false`), only flashed.
+  - Part heights must ADD UP to the canvas height and feet must land on the last
+    row. Get it wrong and the character floats above the floor or wears its legs
+    as detached stilts — both shipped once.
   - Animation names match the player's FSM state names lowercased. `PlayerSprite`
     reads the live state and plays it, so there is no second animation state
     machine to fall out of sync with the real one.

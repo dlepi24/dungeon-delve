@@ -23,6 +23,7 @@ import zlib
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "sprites"))
 import player_frames  # noqa: E402
+import enemy_frames  # noqa: E402
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "assets", "sprites")
 
@@ -62,16 +63,12 @@ def write_png(path, width, height, pixels):
         f.write(png)
 
 
-def main():
-    mod = player_frames
-    w, h, palette = mod.W, mod.H, mod.PALETTE
-    frames = mod.FRAMES
-
+def bake(sheet_name, w, h, palette, frames):
     errors = []
     for name, group in frames.items():
-        errors += validate(name, group, w, h, palette)
+        errors += validate(f"{sheet_name}.{name}", group, w, h, palette)
     if errors:
-        print("INVALID — refusing to write a broken sheet:")
+        print(f"INVALID {sheet_name} — refusing to write a broken sheet:")
         for e in errors:
             print("  " + e)
         return 1
@@ -95,15 +92,23 @@ def main():
                     canvas[r * h + y][c * w + x] = palette[ch]
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    png_path = os.path.join(OUT_DIR, "player.png")
-    write_png(png_path, sheet_w, sheet_h, canvas)
-    with open(os.path.join(OUT_DIR, "player.json"), "w") as f:
+    write_png(os.path.join(OUT_DIR, f"{sheet_name}.png"), sheet_w, sheet_h, canvas)
+    with open(os.path.join(OUT_DIR, f"{sheet_name}.json"), "w") as f:
         json.dump(manifest, f, indent=2)
 
-    print(f"player.png  {sheet_w}x{sheet_h}  ({rows} animations, up to {cols} frames each)")
+    print(f"{sheet_name}.png  {sheet_w}x{sheet_h}  ({rows} animations, up to {cols} frames each)")
     for name in names:
-        print(f"  {name:8s} {len(frames[name])} frame(s)")
+        print(f"    {name:10s} {len(frames[name])} frame(s)")
     return 0
+
+
+def main():
+    bad = bake("player", player_frames.W, player_frames.H,
+               player_frames.PALETTE, player_frames.FRAMES)
+    for sheet_name, spec in enemy_frames.SHEETS.items():
+        w, h = spec["size"]
+        bad |= bake(sheet_name, w, h, spec["palette"], spec["frames"])
+    return bad
 
 
 if __name__ == "__main__":

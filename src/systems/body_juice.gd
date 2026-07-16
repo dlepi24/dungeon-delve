@@ -21,6 +21,16 @@ extends Node2D
 ## hit flash in this project was dead without a single error. A fixed child does
 ## not need to be configurable.
 @onready var rect: ColorRect = $Visual
+## Optional sibling sprite. Looked up, not exported — see the note above.
+@onready var sprite: CanvasItem = get_node_or_null(^"Sprite")
+
+## Enemies are drawn in GREYSCALE and take their colour from here — their idle
+## colour, the yellow wind-up, the red swing. That tint IS the telegraph the GDD
+## demands, so it must survive them having real art.
+##
+## The player is drawn in full colour and must never be tinted, or the miner
+## turns a flat monochrome. He still flashes; he just does not take a base tint.
+@export var tint_sprite_with_base_colour: bool = false
 
 @export_group("Feel")
 ## How fast a flash fades. Higher = snappier.
@@ -85,6 +95,11 @@ func _process(delta: float) -> void:
 	# silently never happens.
 	if rect != null:
 		rect.color = _base_colour.lerp(flash_colour, _flash)
+	if sprite != null:
+		var base: Color = _base_colour if tint_sprite_with_base_colour else Color.WHITE
+		# Overbright on the flash: modulate above 1.0 blows the sprite out to white
+		# rather than merely tinting it, which is what makes a hit read.
+		sprite.modulate = base.lerp(Color(2.2, 2.2, 2.2), _flash)
 	_flash = move_toward(_flash, 0.0, flash_decay * delta)
 
 	scale = scale.lerp(_held_scale, minf(1.0, scale_recover * delta))

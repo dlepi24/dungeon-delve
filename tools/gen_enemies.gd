@@ -41,6 +41,7 @@ func _ready() -> void:
 	# not for free. Two attacks so it stops reading like a metronome.
 	var grunt: EnemyStats = EnemyStats.new()
 	grunt.display_name = "Grunt"
+	grunt.sprite_sheet = "grunt"
 	grunt.max_health = 60.0
 	grunt.hurt_ms = 160
 	grunt.knockback = 170.0
@@ -67,6 +68,7 @@ func _ready() -> void:
 	# roll. This is the enemy that makes the pillar matter.
 	var brute: EnemyStats = EnemyStats.new()
 	brute.display_name = "Brute"
+	brute.sprite_sheet = "brute"
 	brute.max_health = 150.0
 	brute.hurt_ms = 120
 	brute.knockback = 90.0
@@ -93,6 +95,7 @@ func _ready() -> void:
 	# Fast and committed: roll through the lunge and it sails past.
 	var dart: EnemyStats = EnemyStats.new()
 	dart.display_name = "Dart"
+	dart.sprite_sheet = "dart"
 	dart.max_health = 38.0
 	dart.hurt_ms = 200
 	dart.knockback = 260.0

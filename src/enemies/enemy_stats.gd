@@ -52,6 +52,11 @@ extends Resource
 @export var corpse_linger_ms: int = 260
 @export var corpse_fade_ms: int = 420
 
+@export_group("Art")
+## Which sprite sheet under assets/sprites/. The art is greyscale; the colours
+## below tint it, so a new enemy skin is a sheet plus a palette in this file.
+@export var sprite_sheet: String = "grunt"
+
 @export_group("Readability")
 @export var colour_idle: Color = Color(0.75, 0.4, 0.4)
 @export var colour_recover: Color = Color(0.5, 0.35, 0.35)
