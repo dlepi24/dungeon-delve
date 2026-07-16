@@ -17,14 +17,15 @@
 - **Next step:** re-play the delve to judge poise (ESC now lets you replay one
   exact seed, which is how to A/B a tuning change fairly). Then M5, which cannot
   start without the design session below.
-- **Art is blocked on the theme, not on permission.** M2's gate unlocked art, but
-  GDD open question 1 drives what the art IS. Building a tileset or palette now
-  would silently decide whether this is a mine, a ship or a crypt. Theme is a much
-  smaller question than extraction — answering it unlocks the M9 art pass early.
-- **Scope pulled forward, on purpose:** the pause menu (M7) and seed entry (M8)
-  exist now as dev affordances, because being able to replay one delve is what
-  makes a feel judgement trustworthy. M7/M8 replace them with real product UI —
-  do not mistake them for those milestones being done.
+- **Theme is LOCKED (2026-07-15): a collapsing mine.** Art is unblocked. The
+  environment has had a first pass (rock/timber/ore tiles, lantern palette).
+  **Character art is the remaining gap** — bodies are still ColorRect capsules,
+  and real sprites/animation need either an artist or a decision to use generated
+  assets. That is M9's pass and it is a resourcing question, not a coding one.
+- **Scope pulled forward, on purpose:** the pause menu and key rebinding (M7) and
+  seed entry (M8) exist now. Rebinding is real and persists; the rest are dev
+  affordances. M7/M8 still own the full product shell — do not mistake these for
+  those milestones being done.
 - **Needs a design call from Dustin:**
   - `allow_air_roll` on the player, currently off. The GDD says roll is "always
     available" but never rules on mid-air, and air-rolling changes platforming a
