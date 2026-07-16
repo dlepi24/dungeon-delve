@@ -85,6 +85,13 @@ Godot 4.7.1 installed via `brew install --cask godot`. Binary is on PATH at
   not find type X" until then. New assets are the same story from the other side:
   a script that `preload`s a not-yet-imported file fails with "no resource loaders
   (unrecognized file extension)". Import first, then check.
+- Regenerate character sprites: `python3 tools/gen_sprites.py`
+  - Frames are authored as ASCII in `tools/sprites/player_frames.py` — that is the
+    source of truth, same discipline as the rooms. It validates and refuses to bake
+    a broken sheet. Writes the PNG by hand (zlib+struct), so no Pillow needed.
+  - Animation names match the player's FSM state names lowercased. `PlayerSprite`
+    reads the live state and plays it, so there is no second animation state
+    machine to fall out of sync with the real one.
 - Regenerate the placeholder SFX with `python3 tools/gen_sfx.py`. They are
   synthesised, not sourced — reproducible and unmistakably placeholder. Real audio
   is M9.

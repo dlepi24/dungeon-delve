@@ -140,10 +140,9 @@ pause={
 [physics]
 
 ; Pinned per the GDD: daily seeds and ghost replays need a stable tick.
-; This equals the engine default, so Godot drops the line whenever anything
-; re-saves this file. It has been stripped FIVE times now. If it disappears
-; again, put it back — tools/check.tscn fails loudly if the tick is ever
-; actually wrong, so this is documentation of intent, not the enforcement.
+; Equals the engine default, so Godot drops it whenever anything re-saves this
+; file. Stripped SIX times now. If it vanishes again, put it back —
+; tools/check.tscn fails loudly if the tick is ever actually wrong.
 common/physics_ticks_per_second=60
 
 [rendering]

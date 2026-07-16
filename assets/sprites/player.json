@@ -1,0 +1,36 @@
+{
+  "frame_size": [
+    20,
+    28
+  ],
+  "animations": {
+    "idle": {
+      "row": 0,
+      "count": 2
+    },
+    "run": {
+      "row": 1,
+      "count": 4
+    },
+    "air": {
+      "row": 2,
+      "count": 1
+    },
+    "roll": {
+      "row": 3,
+      "count": 2
+    },
+    "attack": {
+      "row": 4,
+      "count": 3
+    },
+    "parry": {
+      "row": 5,
+      "count": 1
+    },
+    "hitstun": {
+      "row": 6,
+      "count": 1
+    }
+  }
+}
