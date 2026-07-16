@@ -14,8 +14,17 @@
   His playtest then found a pillar violation — attack-spam beat everything —
   which produced the poise/hyper-armor system, attacks as `EnemyAttackData`
   resources chosen by range, and enemy jumping. See the GDD decision log.
-- **Next step:** re-play the delve to judge poise. Then M5, which cannot start
-  without the design session below.
+- **Next step:** re-play the delve to judge poise (ESC now lets you replay one
+  exact seed, which is how to A/B a tuning change fairly). Then M5, which cannot
+  start without the design session below.
+- **Art is blocked on the theme, not on permission.** M2's gate unlocked art, but
+  GDD open question 1 drives what the art IS. Building a tileset or palette now
+  would silently decide whether this is a mine, a ship or a crypt. Theme is a much
+  smaller question than extraction — answering it unlocks the M9 art pass early.
+- **Scope pulled forward, on purpose:** the pause menu (M7) and seed entry (M8)
+  exist now as dev affordances, because being able to replay one delve is what
+  makes a feel judgement trustworthy. M7/M8 replace them with real product UI —
+  do not mistake them for those milestones being done.
 - **Needs a design call from Dustin:**
   - `allow_air_roll` on the player, currently off. The GDD says roll is "always
     available" but never rules on mid-air, and air-rolling changes platforming a
