@@ -29,6 +29,7 @@ func _ready() -> void:
 		_player.reset_for_new_run()
 		_player.global_position = $PlayerStart.global_position
 	_vendor_panel.visible = false
+	Cursor.gameplay()
 	Music.play(&"hub")
 	_refresh_banked()
 	Events.upgrade_purchased.connect(func(_id: StringName, _lvl: int) -> void: _refresh_banked())

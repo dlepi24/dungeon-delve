@@ -38,11 +38,13 @@ func _add_row(upgrade: UpgradeData) -> void:
 
 func open() -> void:
 	visible = true
+	Cursor.menu()
 	_refresh()
 
 
 func close() -> void:
 	visible = false
+	Cursor.gameplay()
 
 
 func _buy(upgrade: UpgradeData) -> void:

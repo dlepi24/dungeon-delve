@@ -56,6 +56,7 @@ func _on_keybinds_closed() -> void:
 
 
 func _open() -> void:
+	Cursor.menu()
 	_panel.visible = true
 	_keybinds.visible = false
 	_seed_field.text = GameState.seed_text()
@@ -68,6 +69,7 @@ func _open() -> void:
 func _close() -> void:
 	visible = false
 	get_tree().paused = false
+	Cursor.gameplay()
 
 
 ## Replay whatever is in the field. Accepts a number or a word — Rng hashes text,

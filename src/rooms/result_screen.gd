@@ -39,6 +39,7 @@ func show_result(outcome: StringName, amount: int) -> void:
 	_hint.text = "[F] Return to the surface"
 	visible = true
 	get_tree().paused = true
+	Cursor.menu()
 
 
 func _unhandled_input(event: InputEvent) -> void:
