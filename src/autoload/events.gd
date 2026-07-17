@@ -34,6 +34,10 @@ signal poise_broken(enemy: Node2D)
 ## An enemy's health hit zero.
 signal enemy_died(enemy: Node2D)
 
+## A boss noticed the player and the fight is on. The HUD raises the big named
+## health bar; it lowers itself when the boss dies or stops existing.
+signal boss_engaged(enemy: Node2D)
+
 ## The player's health hit zero. M5 owns the real run-loss consequences; for now
 ## the room just puts you back.
 signal player_died

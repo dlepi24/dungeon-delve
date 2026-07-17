@@ -49,6 +49,7 @@ var _attack: EnemyAttackData = null
 var _poise: float = 0.0
 var _dash_direction: int = 1
 var _last_jump_tick: int = -10000
+var _boss_announced: bool = false
 var _tick: int = 0
 
 @onready var _juice: BodyJuice = $VisualRoot
@@ -114,6 +115,11 @@ func _physics_process(delta: float) -> void:
 			_face_player()
 			if _player_distance() <= stats.aggro_range and _elapsed >= Ticks.from_ms(stats.idle_ms):
 				_enter(State.CHASE)
+				# A boss announces itself the FIRST time the fight starts, not
+				# every time you kite out of range and back in.
+				if stats.is_boss and not _boss_announced:
+					_boss_announced = true
+					Events.boss_engaged.emit(self)
 		State.CHASE:
 			_chase(delta)
 			var attack: EnemyAttackData = _pick_attack()

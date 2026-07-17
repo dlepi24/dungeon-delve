@@ -31,9 +31,20 @@ const PICKAXE_ICON: Texture2D = preload("res://assets/icons/pickaxe.png")
 @onready var _debuff_rows: VBoxContainer = $DebuffRows
 @onready var _depth_panel: Panel = $DepthPanel
 @onready var _depth: Label = $DepthPanel/Depth
+@onready var _boss_bar: Control = $BossBar
+@onready var _boss_name: Label = $BossBar/BossName
+@onready var _boss_fill: ColorRect = $BossBar/BarFill
+
+## The live boss while its bar is up. The bar polls it and lowers itself when
+## the boss dies or stops existing (room change, run end).
+var _boss: Enemy = null
+
+## Inner fill width when the boss is at full health (BarBack minus the inset).
+const BOSS_FILL_WIDTH: float = 794.0
 
 
 func _ready() -> void:
+	Events.boss_engaged.connect(_on_boss_engaged)
 	if player == null:
 		return
 	_bar.hide_when_full = false
@@ -59,12 +70,32 @@ func _process(_delta: float) -> void:
 			GameState.depth + 1, maxi(1, GameState.run_plan.size()), GameState.depth_haul_multiplier(),
 		]
 
+	_update_boss_bar()
 	_reconcile_rows(_buff_rows, player.active_buffs())
 	# Debuffs: scaffolding only. No debuff exists yet — when one does, give the
 	# player an active_debuffs() -> [{buff, fraction}] symmetric to active_buffs()
 	# (a DebuffData resource, red-styled) and feed it here. The slot is reserved
 	# so the layout does not reflow when the first debuff ships.
 	_reconcile_rows(_debuff_rows, [])
+
+
+func _on_boss_engaged(enemy: Node2D) -> void:
+	_boss = enemy as Enemy
+	if _boss == null:
+		return
+	_boss_name.text = _boss.stats.display_name.to_upper()
+	_boss_bar.visible = true
+
+
+func _update_boss_bar() -> void:
+	if _boss == null:
+		return
+	if not is_instance_valid(_boss) or _boss.is_dead():
+		_boss = null
+		_boss_bar.visible = false
+		return
+	var ratio: float = clampf(_boss.health / maxf(1.0, _boss.stats.max_health), 0.0, 1.0)
+	_boss_fill.size.x = BOSS_FILL_WIDTH * ratio
 
 
 ## Active square always shows the hand (pickaxe by default); the stowed square

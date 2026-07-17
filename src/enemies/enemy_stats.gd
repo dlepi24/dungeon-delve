@@ -47,6 +47,12 @@ extends Resource
 ## Chosen by range each time the enemy commits. Empty means it never attacks.
 @export var attacks: Array[EnemyAttackData] = []
 
+@export_group("Boss")
+## Bosses announce themselves: engaging one shows the big named health bar
+## (Events.boss_engaged -> the HUD). Content rule holds — a miniboss is still
+## just a .tres with this flipped on.
+@export var is_boss: bool = false
+
 @export_group("Death")
 ## Haul this enemy drops when killed. The Brute is worth more than the Dart, so
 ## fighting the dangerous thing pays — which is what makes pushing deeper tempting.

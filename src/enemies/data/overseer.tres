@@ -61,7 +61,8 @@ hitbox_offset = Vector2(50, -48)
 
 [resource]
 script = ExtResource("2_stats")
-display_name = "Overseer"
+display_name = "Varok, the Overseer"
+is_boss = true
 max_health = 340.0
 hurt_ms = 100
 knockback = 55.0
