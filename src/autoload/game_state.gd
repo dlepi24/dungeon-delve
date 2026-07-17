@@ -33,6 +33,20 @@ var banked_haul: int = 0
 ## Permanent upgrade levels bought at the hub, by id. Stacks across runs.
 var upgrade_levels: Dictionary[StringName, int] = {}
 
+# --- Meta stats (persistent) ---
+# The career record: the game remembering you played it. Shown on the title
+# screen. Updated INSIDE extract()/lose_run() rather than via Events listeners,
+# because those methods save_game() before their signals fire — a listener would
+# always be one save behind.
+## Runs finished, by either exit: extraction or death.
+var total_runs: int = 0
+## Deepest room ever reached, 1-based ("room 3"). 0 = never delved.
+var deepest_room: int = 0
+## Most haul banked in a single extract.
+var best_haul: int = 0
+## Enemies killed, ever. Counted here (not per-run) via enemy_died.
+var total_kills: int = 0
+
 ## How much richer each room deeper is. Room 0 (entry) pays 1x; each step down
 ## adds this. At the default 0.35 the deep room pays ~2.4x, which is the whole
 ## mechanical reason to push your luck rather than extract early. Tune to taste.
@@ -46,6 +60,10 @@ func depth_haul_multiplier() -> float:
 
 func _ready() -> void:
 	load_game()
+	# Kills are the one stat no run-end method sees, so they are counted here.
+	# Persisted by the next save (run end or vendor purchase) — a mid-run quit
+	# loses them, same as it loses the run, which is the roguelite contract.
+	Events.enemy_died.connect(func(_enemy: Node2D) -> void: total_kills += 1)
 
 
 func begin_run(seed_value: int, plan: Array[StringName]) -> void:
@@ -71,17 +89,26 @@ func extract() -> void:
 	var extracted: int = carried_haul
 	carried_haul = 0
 	run_active = false
+	_record_run_end()
+	best_haul = maxi(best_haul, extracted)
 	save_game()
 	Events.run_extracted.emit(extracted)
 
 
 ## Died in the mine. Everything carried is lost — only banked survives.
+## The depth still counts: you reached it, dying there does not unreach it.
 func lose_run() -> void:
 	var lost: int = carried_haul
 	carried_haul = 0
 	run_active = false
+	_record_run_end()
 	save_game()
 	Events.run_lost.emit(lost)
+
+
+func _record_run_end() -> void:
+	total_runs += 1
+	deepest_room = maxi(deepest_room, depth + 1)
 
 
 func end_run() -> void:
@@ -128,6 +155,10 @@ func save_game() -> void:
 	config.set_value("meta", "banked_haul", banked_haul)
 	for id: StringName in upgrade_levels:
 		config.set_value("upgrades", String(id), upgrade_levels[id])
+	config.set_value("stats", "total_runs", total_runs)
+	config.set_value("stats", "deepest_room", deepest_room)
+	config.set_value("stats", "best_haul", best_haul)
+	config.set_value("stats", "total_kills", total_kills)
 	config.save(SAVE_PATH)
 
 
@@ -140,11 +171,19 @@ func load_game() -> void:
 	if config.has_section("upgrades"):
 		for key: String in config.get_section_keys("upgrades"):
 			upgrade_levels[StringName(key)] = int(config.get_value("upgrades", key))
+	total_runs = int(config.get_value("stats", "total_runs", 0))
+	deepest_room = int(config.get_value("stats", "deepest_room", 0))
+	best_haul = int(config.get_value("stats", "best_haul", 0))
+	total_kills = int(config.get_value("stats", "total_kills", 0))
 
 
-## Wipe the save. Dev affordance for testing the loop from zero.
+## Wipe the save. "New game" on the title, and the tests' clean slate.
 func reset_save() -> void:
 	banked_haul = 0
 	upgrade_levels.clear()
 	carried_haul = 0
+	total_runs = 0
+	deepest_room = 0
+	best_haul = 0
+	total_kills = 0
 	DirAccess.remove_absolute(SAVE_PATH)

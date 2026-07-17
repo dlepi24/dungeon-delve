@@ -91,6 +91,31 @@ func _ready() -> void:
 	pl.queue_free()
 	GameState.reset_save()
 
+	print("meta stats track the career")
+	GameState.reset_save()
+	_check(GameState.total_runs == 0 and GameState.deepest_room == 0
+		and GameState.best_haul == 0 and GameState.total_kills == 0, "a fresh save starts at zero")
+	GameState.begin_run(7, [&"a", &"b", &"c"])
+	GameState.depth = 2
+	GameState.add_haul(40)
+	Events.enemy_died.emit(null)
+	GameState.extract()
+	_check(GameState.total_runs == 1, "an extract counts as a finished run")
+	_check(GameState.deepest_room == 3, "deepest room recorded, 1-based")
+	_check(GameState.best_haul == 40, "best single extract recorded")
+	_check(GameState.total_kills == 1, "kills counted via enemy_died")
+	GameState.begin_run(8, [&"a"])
+	GameState.add_haul(500)
+	GameState.lose_run()
+	_check(GameState.total_runs == 2, "a death still counts as a finished run")
+	_check(GameState.best_haul == 40, "haul lost to death never beats the best extract")
+	GameState.total_runs = -1
+	GameState.total_kills = -1
+	GameState.load_game()
+	_check(GameState.total_runs == 2 and GameState.total_kills == 1, "stats survive save/reload")
+	GameState.reset_save()
+	_check(GameState.total_runs == 0 and GameState.best_haul == 0, "reset_save wipes the stats")
+
 	if _failures.is_empty():
 		print("\nLOOP TEST OK")
 		get_tree().quit(0)

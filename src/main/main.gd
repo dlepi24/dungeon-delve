@@ -19,6 +19,7 @@ const HUB_SCENE: String = "res://src/hub/hub.tscn"
 @onready var _menu: VBoxContainer = $Menu
 @onready var _quit: Button = $Menu/Quit
 @onready var _controls: Label = $Controls
+@onready var _stats: Label = $Stats
 @onready var _confirm: PanelContainer = $Confirm
 @onready var _confirm_yes: Button = $Confirm/Margin/Rows/Buttons/Yes
 @onready var _confirm_cancel: Button = $Confirm/Margin/Rows/Buttons/Cancel
@@ -42,6 +43,7 @@ func _ready() -> void:
 	if GameState.banked_haul > 0 or not GameState.upgrade_levels.is_empty():
 		_play.text = "Continue"
 	_refresh_controls_line()
+	_refresh_stats_line()
 	_play.grab_focus()
 
 
@@ -53,6 +55,17 @@ func _refresh_controls_line() -> void:
 		Keybinds.label_for(&"move_left"), Keybinds.label_for(&"move_right"),
 		Keybinds.label_for(&"jump"), Keybinds.label_for(&"roll"),
 		Keybinds.label_for(&"attack"), Keybinds.label_for(&"parry"),
+	]
+
+
+## The career record — the game remembering you played it. Silent until the
+## first run ends, so a brand-new player is not greeted with a wall of zeroes.
+func _refresh_stats_line() -> void:
+	if GameState.total_runs <= 0:
+		_stats.text = ""
+		return
+	_stats.text = "runs %d   ·   deepest room %d   ·   best extract %d ore   ·   kills %d" % [
+		GameState.total_runs, GameState.deepest_room, GameState.best_haul, GameState.total_kills,
 	]
 
 
@@ -75,5 +88,6 @@ func _on_settings_closed() -> void:
 
 func _on_wipe_confirmed() -> void:
 	GameState.reset_save()
+	_refresh_stats_line()
 	_confirm.visible = false
 	get_tree().change_scene_to_file.call_deferred(HUB_SCENE)
