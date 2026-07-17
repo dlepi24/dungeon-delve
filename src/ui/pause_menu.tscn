@@ -90,5 +90,9 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "New run"
 
+[node name="QuitTitle" type="Button" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = "Quit to title"
+
 [node name="SettingsMenu" parent="." instance=ExtResource("2_set")]
 visible = false

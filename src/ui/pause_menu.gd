@@ -18,6 +18,7 @@ extends CanvasLayer
 @onready var _replay: Button = $Panel/Margin/Rows/Buttons/Replay
 @onready var _fresh: Button = $Panel/Margin/Rows/Buttons/Fresh
 @onready var _controls: Button = $Panel/Margin/Rows/Controls
+@onready var _quit_title: Button = $Panel/Margin/Rows/QuitTitle
 @onready var _status: Label = $Panel/Margin/Rows/Status
 @onready var _settings: Control = $SettingsMenu
 
@@ -32,6 +33,7 @@ func _ready() -> void:
 	_resume.pressed.connect(_close)
 	_replay.pressed.connect(_on_replay)
 	_fresh.pressed.connect(_on_fresh)
+	_quit_title.pressed.connect(_on_quit_to_title)
 	_seed_field.text_submitted.connect(func(_t: String) -> void: _on_replay())
 
 
@@ -89,3 +91,11 @@ func _on_fresh() -> void:
 	GameState.end_run()
 	_close()
 	get_tree().change_scene_to_file.call_deferred("res://src/hub/hub.tscn")
+
+
+## Souls-style exit: back to the title, and the full app quit lives there. Same
+## forfeit rules as abandoning to the hub — quitting mid-run is walking away.
+func _on_quit_to_title() -> void:
+	GameState.end_run()
+	_close()
+	get_tree().change_scene_to_file.call_deferred("res://src/main/main.tscn")
