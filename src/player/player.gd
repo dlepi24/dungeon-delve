@@ -329,8 +329,9 @@ func attack_cancel_ticks() -> int:
 # run-scoped: reset_for_new_run drops back to the pickaxe, while permanent stat
 # upgrades persist. That is the roguelite split — the weapon is this run's flavour.
 #
-# M7: you hold up to TWO found weapons (a loadout) and swap live with the skill
-# slots (Q/E by default). Still run-scoped — the loadout dies with the run.
+# M7: you hold up to TWO found weapons (a loadout) and swap live with ONE key
+# (skill_1, Q by default) that toggles between them — one verb, like Dead
+# Cells' backpack swap, rather than one key per slot you have to remember.
 # equipped_weapon stays the single source of truth for "what am I swinging";
 # held_weapons is just where the inactive one waits.
 
@@ -359,8 +360,7 @@ func equip_weapon(weapon: WeaponData) -> void:
 	_wield(weapon)
 
 
-## Swap to a loadout slot (skill_1 -> 0, skill_2 -> 1). No-op on an empty slot
-## or the slot already in hand.
+## Swap to a loadout slot. No-op on an empty slot or the slot already in hand.
 func select_weapon_slot(slot: int) -> void:
 	if slot < 0 or slot >= held_weapons.size() or slot == active_slot:
 		return
@@ -384,9 +384,7 @@ func _handle_weapon_select() -> void:
 	if _state_machine.get_current_name() == &"Attack":
 		return
 	if Input.is_action_just_pressed(&"skill_1"):
-		select_weapon_slot(0)
-	elif Input.is_action_just_pressed(&"skill_2"):
-		select_weapon_slot(1)
+		select_weapon_slot(1 - active_slot)
 
 
 func weapon_name() -> String:
