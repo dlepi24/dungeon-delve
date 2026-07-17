@@ -50,6 +50,9 @@ signal run_extracted(amount: int)
 signal run_lost(amount: int)
 ## A haul pickup was collected in the world.
 signal haul_collected(amount: int, at: Vector2)
+## The player recovered health (a heart pickup). Amount actually restored, after
+## the cap — a heart at full health heals 0 and emits nothing.
+signal player_healed(amount: float)
 ## An upgrade was bought at the vendor.
 signal upgrade_purchased(id: StringName, new_level: int)
 

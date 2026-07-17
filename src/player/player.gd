@@ -269,8 +269,11 @@ func _on_hurt(hitbox: Hitbox) -> void:
 func heal(amount: float) -> void:
 	if _dead or amount <= 0.0:
 		return
+	var before: float = health
 	health = minf(effective_max_health(), health + amount)
 	_juice.flash()
+	if health > before:
+		Events.player_healed.emit(health - before)
 
 
 ## Base health plus whatever the persistent max-health upgrade adds. Reading it
