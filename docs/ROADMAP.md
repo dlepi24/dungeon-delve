@@ -1,7 +1,30 @@
 # Roadmap
 
 ## Status
-- **Current milestone:** M6 content underway. The full loop is proven fun but
+- **M7 product shell BUILT 2026-07-17, awaiting Dustin's by-eye pass.** The game
+  now boots to a title screen (Play/Continue, New-game-with-wipe-confirm,
+  Settings, Quit, career stats, live-keybind controls line), runs fullscreen
+  borderless with the cursor hidden during play, and ships the debug overlay
+  OFF (F3 still toggles it; it absorbed the old dev delve HUD's seed/plan).
+  One unified HUD (health, haul, weapon loadout, buff timers, room/depth, a
+  reserved debuff column) replaced the four scattered pieces. Pickups now toast
+  what you got (FloatingText + PickupFeedback over the previously-unconsumed
+  signals, plus a new player_healed). New Settings autoload persists music
+  volume and window mode in user://settings.cfg (deliberately outside the
+  wipeable save); the settings menu embeds the keybinder and is reachable from
+  title and pause. NEW MECHANIC (Dustin's call): in-run 2-weapon loadout —
+  hold two found weapons, swap live on Q/E (skill slots repurposed, see GDD
+  decision log), still run-scoped; swap blocked mid-swing to protect attack
+  commitment. Career stats (runs/deepest/best extract/kills) persist and show
+  on the title. All tests + the check gate green; weapon_test and loop_test
+  extended to pin the loadout and the stats.
+  - **For Dustin to judge by eye:** fullscreen + hidden cursor feel, title
+    flow, HUD layout/readability, toast feel, swap feel (Q/E), settings
+    persistence across restart.
+  - Remaining M7 scraps: controller glyphs; gamepad bindings for menus are
+    untested; the WASD controls wall was removed from the delve (verbs now live
+    on the title screen + rebind screen — a first-run in-world hint is still open).
+- **Previous: M6 content underway.** The full loop is proven fun but
   Dustin finds it repetitive after several loops. Landed 2026-07-17: combat-feel
   fixes (attack aim-assist, damage-taken numbers), the weapon upgrade now grants
   attack speed, temporary buffs (Haste/Might/Iron Skin/Frenzy), and WEAPON VARIETY
