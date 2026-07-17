@@ -1,6 +1,16 @@
 # Roadmap
 
 ## Status
+- **Round 4 BUILT 2026-07-17 (late): SHRINES + silent run history.** Design
+  locked with Dustin in-session (all recommendations accepted): rest-of-run
+  bargains, stacking, all three flavours (stat trade / pay-carried-ore /
+  curse). Four .tres bargains ship; `S` glyphs in five middle layouts are
+  candidate spots and the delve lights ~1 altar per run from the seeded
+  stream. Boons show in the HUD buff column; the reserved red debuff column
+  now shows banes. Every finished run also appends a silent JSON record to
+  user://run_history.jsonl for M8's leaderboards — logging now, ranking later,
+  per Dustin ("too early to care about leaderboards, but log if cheap").
+  Tuning knobs for Dustin: shrine_chance on the Delve, the four .tres files.
 - **M7 round 3 BUILT 2026-07-17 (evening), from Dustin's second playtest pass.**
   - Pause menu slimmed to Resume / Settings… / Quit to title; seed replay and
     abandon-run moved into the settings screen's run section (mid-run only).
