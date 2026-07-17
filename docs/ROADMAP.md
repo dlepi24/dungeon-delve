@@ -2,11 +2,12 @@
 
 ## Status
 - **Current milestone:** M6 content underway. The full loop is proven fun but
-  Dustin finds it repetitive after several loops ("keep doing the same thing").
-  Landed 2026-07-17: attack aim-assist + damage-taken numbers (combat feel), the
-  weapon upgrade now grants attack speed (upgrades that change FEEL), and a
-  temporary buff system (Haste/Might/Iron Skin/Frenzy) that drops in runs. The
-  open question now is which anti-repetition direction to build next — see below.
+  Dustin finds it repetitive after several loops. Landed 2026-07-17: combat-feel
+  fixes (attack aim-assist, damage-taken numbers), the weapon upgrade now grants
+  attack speed, temporary buffs (Haste/Might/Iron Skin/Frenzy), and WEAPON VARIETY
+  (Dagger/Maul/Spear — run-scoped drops that reshape combat). Dustin picked weapon
+  variety as the anti-repetition direction; it is built. Next: more enemies + an
+  elite, and/or run modifiers — his call after playing.
 - **M0-M3 all PASSED.** M1 signed off 2026-07-14; M2 and M3 signed off 2026-07-15
   ("It's genuinely fun"), re-judged after the null-node-reference fix so the
   verdict was given against working telegraphs and counts. Movement, combat and
@@ -27,11 +28,10 @@
   - MUSIC: placeholder synthwave DONE (tools/gen_music.py). Real track is M9.
   - **The repetition problem is the priority.** Same 3 enemies, 6 rooms, 3
     permanent upgrades every run. Highest-leverage fixes, roughly in order:
-    (1) more enemy types + an elite/miniboss (data-driven, cheap); (2) WEAPON
-    VARIETY — different weapons that change playstyle, not +% damage (build
-    variety, and the root fix for "upgrades feel flat"); (3) run modifiers /
-    events (shrines, risk rooms, a real choice); (4) more/variable rooms. Awaiting
-    Dustin's pick on which to build first.
+    (1) more enemy types + an elite/miniboss (data-driven, cheap); (2) ~~weapon
+    variety~~ DONE 2026-07-17 (Dagger/Maul/Spear, run-scoped drops); (3) run
+    modifiers / events (shrines, risk rooms, a real choice); (4) more/variable
+    rooms. Weapons could also become vendor-buyable "start-with" unlocks (deferred).
   - Deferred by Dustin, do NOT touch without a fresh call: combat difficulty /
     stunlock (afraid of overcorrection), and heal-on-descend (he said it is fine,
     but flagged a Diablo-well alternative as a maybe-later).
