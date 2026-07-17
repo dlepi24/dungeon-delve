@@ -1,0 +1,83 @@
+[gd_resource type="Resource" script_class="EnemyStats" format=3]
+
+; The Overseer: the miniboss that guards the deep room. Everything the poise
+; system teaches, examined: crush must be parried or rolled (140 poise), quake
+; punishes standing at "safe" range, and the charge closes the gap when you try
+; to snipe. Dies rich — the deep room's payoff made flesh.
+;
+; Reuses the brute's greyscale sheet; the tint IS the identity (ember red vs
+; the Brute's purple), same discipline as the rest of the enemy art.
+
+[ext_resource type="Script" path="res://src/enemies/enemy_attack_data.gd" id="1_atk"]
+[ext_resource type="Script" path="res://src/enemies/enemy_stats.gd" id="2_stats"]
+
+[sub_resource type="Resource" id="Resource_crush"]
+script = ExtResource("1_atk")
+display_name = "crush"
+max_range = 110.0
+weight = 2.0
+telegraph_ms = 680
+active_ms = 140
+recover_ms = 620
+damage = 34.0
+poise = 140.0
+colour_telegraph = Color(1, 0.85, 0.3, 1)
+colour_attack = Color(1, 0.12, 0.3, 1)
+hitbox_size = Vector2(130, 96)
+hitbox_offset = Vector2(74, -52)
+
+[sub_resource type="Resource" id="Resource_quake"]
+script = ExtResource("1_atk")
+display_name = "quake"
+min_range = 80.0
+max_range = 230.0
+weight = 1.4
+telegraph_ms = 820
+active_ms = 170
+recover_ms = 760
+damage = 22.0
+poise = 110.0
+colour_telegraph = Color(1, 0.6, 0.2, 1)
+colour_attack = Color(1, 0.3, 0.4, 1)
+hitbox_size = Vector2(230, 42)
+hitbox_offset = Vector2(118, -21)
+
+[sub_resource type="Resource" id="Resource_charge"]
+script = ExtResource("1_atk")
+display_name = "charge"
+min_range = 200.0
+max_range = 520.0
+weight = 1.0
+telegraph_ms = 560
+active_ms = 300
+recover_ms = 800
+damage = 26.0
+dash_speed = 520.0
+poise = 120.0
+colour_telegraph = Color(1, 0.95, 0.5, 1)
+colour_attack = Color(1, 0.2, 0.2, 1)
+hitbox_size = Vector2(86, 90)
+hitbox_offset = Vector2(50, -48)
+
+[resource]
+script = ExtResource("2_stats")
+display_name = "Overseer"
+max_health = 340.0
+hurt_ms = 100
+knockback = 55.0
+move_speed = 74.0
+acceleration = 420.0
+aggro_range = 900.0
+idle_ms = 380
+stagger_ms = 1000
+can_jump = false
+attacks = Array[ExtResource("1_atk")]([SubResource("Resource_crush"), SubResource("Resource_quake"), SubResource("Resource_charge")])
+haul_reward = 30
+heart_chance = 0.8
+heart_heal = 40
+buff_chance = 0.5
+weapon_chance = 0.5
+sprite_sheet = "brute"
+colour_idle = Color(0.85, 0.28, 0.18, 1)
+colour_recover = Color(0.55, 0.22, 0.16, 1)
+body_size = Vector2(64, 112)

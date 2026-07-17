@@ -28,6 +28,7 @@ const ENEMY_STATS: Dictionary[String, String] = {
 	"grunt": "res://src/enemies/data/grunt.tres",
 	"brute": "res://src/enemies/data/brute.tres",
 	"dart": "res://src/enemies/data/dart.tres",
+	"overseer": "res://src/enemies/data/overseer.tres",
 }
 
 ## Total rooms in a delve, including entry and deep.

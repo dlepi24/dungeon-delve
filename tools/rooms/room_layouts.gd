@@ -14,7 +14,7 @@ extends Object
 ##   .  empty
 ##   P  player entry
 ##   X  exit
-##   g  grunt spawn    b  brute spawn    d  dart spawn
+##   g  grunt spawn    b  brute spawn    d  dart spawn    E  Overseer (miniboss)
 ##
 ## Design budget, and it is not advisory — tools/gen_rooms.gd runs a reachability
 ## analysis and refuses to build a room that violates it:
@@ -155,7 +155,10 @@ const CORRIDOR: Array[String] = [
 	"##########################################################",
 ]
 
-## The deep room. Biggest fight in the delve, three tiers, then out.
+## The deep room. The Overseer's arena: the miniboss holds the floor with two
+## grunts for pressure, and the tiers are your escape valves. The Dart was cut
+## when the boss moved in — a lunging add plus a charging boss crossed from
+## pressure into chaos.
 const DEEP: Array[String] = [
 	"..........................................................",
 	"..........................................................",
@@ -173,7 +176,7 @@ const DEEP: Array[String] = [
 	"..........................................................",
 	"......======..............................======..........",
 	"..........................................................",
-	"...P.....g...........b...........d..............g.....X...",
+	"...P.....g...........E..........................g.....X...",
 	"##########################################################",
 ]
 
