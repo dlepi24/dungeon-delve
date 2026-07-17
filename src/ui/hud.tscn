@@ -6,31 +6,53 @@
 [node name="Hud" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
-; Top-centre, out of the way of the F3 panel (top-left) and the controls hint
-; (bottom-left).
+; Everything clusters top-left, under where the F3 panel would cover it —
+; deliberate: the debug overlay is an occasional tool, the HUD is permanent,
+; and stacking them would hide the HUD exactly when you are diagnosing it.
+; The health bar is a Node2D, centred on its position, hence x = 40 + 140.
 [node name="Bar" parent="." instance=ExtResource("2_bar")]
-position = Vector2(960, 44)
+position = Vector2(180, 40)
 
-[node name="Label" type="Label" parent="."]
-offset_left = 820.0
-offset_top = 66.0
-offset_right = 1100.0
-offset_bottom = 92.0
-horizontal_alignment = 1
+[node name="HealthLabel" type="Label" parent="."]
+offset_left = 40.0
+offset_top = 62.0
+offset_right = 320.0
+offset_bottom = 88.0
 text = "100 / 100"
 
 [node name="Haul" type="Label" parent="."]
-offset_left = 820.0
-offset_top = 94.0
-offset_right = 1100.0
-offset_bottom = 120.0
-horizontal_alignment = 1
+offset_left = 40.0
+offset_top = 90.0
+offset_right = 320.0
+offset_bottom = 116.0
 text = "Haul: 0"
 
 [node name="Weapon" type="Label" parent="."]
-offset_left = 820.0
-offset_top = 120.0
-offset_right = 1100.0
-offset_bottom = 146.0
-horizontal_alignment = 1
+offset_left = 40.0
+offset_top = 118.0
+offset_right = 420.0
+offset_bottom = 144.0
 text = "Pickaxe"
+
+[node name="BuffRows" type="VBoxContainer" parent="."]
+offset_left = 40.0
+offset_top = 156.0
+offset_right = 220.0
+offset_bottom = 400.0
+theme_override_constants/separation = 8
+
+; Reserved for debuffs — empty until a DebuffData exists. See hud.gd.
+[node name="DebuffRows" type="VBoxContainer" parent="."]
+offset_left = 40.0
+offset_top = 420.0
+offset_right = 220.0
+offset_bottom = 560.0
+theme_override_constants/separation = 8
+
+[node name="Depth" type="Label" parent="."]
+offset_left = 1480.0
+offset_top = 36.0
+offset_right = 1880.0
+offset_bottom = 62.0
+horizontal_alignment = 2
+text = "Room 1/5"
