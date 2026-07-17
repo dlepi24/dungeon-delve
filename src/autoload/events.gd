@@ -57,6 +57,9 @@ signal upgrade_purchased(id: StringName, new_level: int)
 signal buff_gained(buff: BuffData)
 signal buff_expired(id: StringName)
 
+## The player picked up and equipped a weapon this run.
+signal weapon_equipped(weapon: WeaponData)
+
 ## A run began, from this seed. The seed is shareable and reproduces the delve.
 signal run_started(seed_value: int)
 ## The player entered room `index` of the plan.

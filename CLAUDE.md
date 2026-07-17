@@ -79,6 +79,10 @@ Godot 4.7.1 installed via `brew install --cask godot`. Binary is on PATH at
   - Pins M5's greed pillar: extract banks carried haul, death forfeits it, the
     vendor spends banked haul, and meta persists while run state does not. If any
     of that breaks, the whole game's tension is gone and nothing else catches it.
+- Weapon variety test: `godot --headless --path . res://tests/weapon_test.tscn`
+  - Weapons are WeaponData resources; the player's own exports are the base
+    pickaxe, and equipping overrides them for the run (run-scoped). A new weapon is
+    a `.tres`, added to the drop pool in `enemy.gd`.
 - Feel stack behaviour test: `godot --headless --path . res://tests/feel_test.tscn`
   - Exits 0/1. Asserts coyote, input buffering and roll i-frames actually fire.
     Not a feel judgement — that is always Dustin's — just proof the mechanisms run,

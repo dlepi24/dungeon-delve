@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://src/systems/weapon_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+display_name = "Maul"
+damage = 28.0
+poise_damage = 45.0
+startup_ms = 210
+active_ms = 110
+recovery_ms = 330
+cancel_start_ms = 310
+hitbox_size = Vector2(74, 64)
+hitbox_offset = Vector2(46, -30)
+move_control = 0.05
+swing_colour = Color(1.0, 0.7, 0.4, 0.85)

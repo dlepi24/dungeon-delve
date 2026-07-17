@@ -26,3 +26,11 @@ offset_right = 1100.0
 offset_bottom = 120.0
 horizontal_alignment = 1
 text = "Haul: 0"
+
+[node name="Weapon" type="Label" parent="."]
+offset_left = 820.0
+offset_top = 120.0
+offset_right = 1100.0
+offset_bottom = 146.0
+horizontal_alignment = 1
+text = "Pickaxe"

@@ -60,6 +60,9 @@ extends Resource
 ## Chance (0..1) this enemy drops a temporary buff. Rare — buffs are a treat, and
 ## the run should be mostly about your own skill, not power-ups raining down.
 @export var buff_chance: float = 0.06
+## Chance (0..1) this enemy drops a weapon you can pick up and wield for the run.
+## Uncommon: a found weapon should feel like a real find, and reshape the run.
+@export var weapon_chance: float = 0.08
 ## How long the corpse lingers before fading out and freeing itself.
 @export var corpse_linger_ms: int = 260
 @export var corpse_fade_ms: int = 420

@@ -230,7 +230,8 @@ func _physics_process(delta: float) -> void:
 	_tick_buffs()
 	_update_landing_juice()
 
-	attack_hitbox.position = Vector2(attack_hitbox_offset.x * float(facing), attack_hitbox_offset.y)
+	var off: Vector2 = weapon_hitbox_offset()
+	attack_hitbox.position = Vector2(off.x * float(facing), off.y)
 
 	_state_machine.physics_update(delta)
 	move_and_slide()
@@ -305,17 +306,77 @@ func attack_speed_multiplier() -> float:
 	return weapon * _buff_product(&"attack_speed_mult")
 
 
-## Attack timing helpers: base ms scaled by attack speed, then to ticks. The
-## attack state reads these instead of the raw exports so speed buffs and the
-## weapon upgrade actually shorten the swing.
+## Attack timing helpers: the equipped weapon's ms, scaled by attack speed, to
+## ticks. The attack state reads these so a heavy Maul is genuinely slow and a
+## Dagger genuinely fast, and so speed buffs and the weapon upgrade shorten both.
 func attack_startup_ticks() -> int:
-	return ms_to_ticks(roundi(float(attack_startup_ms) / attack_speed_multiplier()))
+	return ms_to_ticks(roundi(float(_w_startup()) / attack_speed_multiplier()))
 func attack_active_ticks() -> int:
-	return ms_to_ticks(roundi(float(attack_active_ms) / attack_speed_multiplier()))
+	return ms_to_ticks(roundi(float(_w_active()) / attack_speed_multiplier()))
 func attack_recovery_ticks() -> int:
-	return ms_to_ticks(roundi(float(attack_recovery_ms) / attack_speed_multiplier()))
+	return ms_to_ticks(roundi(float(_w_recovery()) / attack_speed_multiplier()))
 func attack_cancel_ticks() -> int:
-	return ms_to_ticks(roundi(float(attack_cancel_start_ms) / attack_speed_multiplier()))
+	return ms_to_ticks(roundi(float(_w_cancel()) / attack_speed_multiplier()))
+
+
+# --- Weapons ---
+# The player's own exports ARE the base pickaxe. Equipping a WeaponData overrides
+# them for the run; a null equipped_weapon means the pickaxe. Found weapons are
+# run-scoped: reset_for_new_run drops back to the pickaxe, while permanent stat
+# upgrades persist. That is the roguelite split — the weapon is this run's flavour.
+
+## Base pickaxe hitbox size when no weapon is equipped. Matches player.tscn.
+@export var base_hitbox_size: Vector2 = Vector2(46, 44)
+
+var equipped_weapon: WeaponData = null
+
+
+func equip_weapon(weapon: WeaponData) -> void:
+	equipped_weapon = weapon
+	_resize_attack_hitbox()
+	_juice.flash()
+	Events.weapon_equipped.emit(weapon)
+
+
+func weapon_name() -> String:
+	return equipped_weapon.display_name if equipped_weapon != null else "Pickaxe"
+
+
+func weapon_damage() -> float:
+	return equipped_weapon.damage if equipped_weapon != null else attack_damage
+func weapon_poise_damage() -> float:
+	return equipped_weapon.poise_damage if equipped_weapon != null else attack_poise_damage
+func weapon_move_control() -> float:
+	return equipped_weapon.move_control if equipped_weapon != null else attack_move_control
+func weapon_hitbox_offset() -> Vector2:
+	return equipped_weapon.hitbox_offset if equipped_weapon != null else attack_hitbox_offset
+func weapon_hitbox_size() -> Vector2:
+	return equipped_weapon.hitbox_size if equipped_weapon != null else base_hitbox_size
+func weapon_swing_colour() -> Color:
+	return equipped_weapon.swing_colour if equipped_weapon != null else Color(0.85, 0.95, 1.0, 0.85)
+
+func _w_startup() -> int:
+	return equipped_weapon.startup_ms if equipped_weapon != null else attack_startup_ms
+func _w_active() -> int:
+	return equipped_weapon.active_ms if equipped_weapon != null else attack_active_ms
+func _w_recovery() -> int:
+	return equipped_weapon.recovery_ms if equipped_weapon != null else attack_recovery_ms
+func _w_cancel() -> int:
+	return equipped_weapon.cancel_start_ms if equipped_weapon != null else attack_cancel_start_ms
+
+
+## Resize the physical hitbox and its swing arc to the equipped weapon, so a
+## Spear really does reach further than a Dagger.
+func _resize_attack_hitbox() -> void:
+	var size: Vector2 = weapon_hitbox_size()
+	var shape: RectangleShape2D = attack_hitbox.get_node("CollisionShape2D").shape as RectangleShape2D
+	if shape != null:
+		shape.size = size
+	var swing: ColorRect = attack_hitbox.visual as ColorRect
+	if swing != null:
+		swing.size = size
+		swing.position = -size * 0.5
+		swing.color = weapon_swing_colour()
 
 
 func _upgrade_value(upgrade: UpgradeData) -> float:
@@ -399,6 +460,9 @@ func reset_for_new_run() -> void:
 	# Buffs are per-run: a fresh run starts with none.
 	_buffs.clear()
 	_buff_expiry.clear()
+	# Found weapons are per-run too — back to the pickaxe.
+	equipped_weapon = null
+	_resize_attack_hitbox()
 	if _state_machine != null:
 		_state_machine.transition_to(&"Idle")
 

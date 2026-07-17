@@ -14,6 +14,7 @@ extends CanvasLayer
 @onready var _bar: HealthBar = $Bar
 @onready var _label: Label = $Label
 @onready var _haul: Label = $Haul
+@onready var _weapon: Label = $Weapon
 
 
 func _ready() -> void:
@@ -28,5 +29,6 @@ func _process(_delta: float) -> void:
 	if player == null:
 		return
 	_haul.text = "Haul: %d" % GameState.carried_haul
+	_weapon.text = player.weapon_name()
 	_bar.set_ratio(player.health / maxf(1.0, player.effective_max_health()))
 	_label.text = "%d / %d" % [roundi(player.health), roundi(player.effective_max_health())]

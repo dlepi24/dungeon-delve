@@ -27,10 +27,10 @@ func enter() -> void:
 	var was_riposte: bool = player.is_riposte_open()
 	# Riposte bonus and the permanent damage upgrade stack multiplicatively.
 	var multiplier: float = (player.riposte_damage_multiplier if was_riposte else 1.0) * player.damage_multiplier()
-	player.attack_hitbox.damage = player.attack_damage * multiplier
+	player.attack_hitbox.damage = player.weapon_damage() * multiplier
 	# A riposte chips poise just as hard as it damages, so cashing one in also
 	# blows through armor. Parry already broke their stance; this keeps it broken.
-	player.attack_hitbox.poise_damage = player.attack_poise_damage * multiplier
+	player.attack_hitbox.poise_damage = player.weapon_poise_damage() * multiplier
 	player.attack_hitbox.is_riposte = was_riposte
 	player.consume_riposte()
 
@@ -43,7 +43,7 @@ func exit() -> void:
 func physics_update(delta: float) -> StringName:
 	_elapsed += 1
 	player.apply_gravity(delta)
-	player.apply_horizontal(delta, player.get_input_direction() * player.attack_move_control)
+	player.apply_horizontal(delta, player.get_input_direction() * player.weapon_move_control())
 
 	# Scaled by attack speed (weapon upgrade + Haste/Frenzy), so a faster swing is
 	# genuinely faster, not just bigger numbers.

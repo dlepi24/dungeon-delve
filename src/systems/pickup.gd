@@ -12,13 +12,15 @@ extends Area2D
 ## Drop RNG is seeded (see Enemy._drop_haul) so two players on one daily seed get
 ## the same drops — drops are gameplay, not decoration.
 
-enum Kind { HAUL, HEAL, BUFF }
+enum Kind { HAUL, HEAL, BUFF, WEAPON }
 
 @export var kind: Kind = Kind.HAUL
 ## Haul value, or health restored, depending on kind.
 @export var amount: int = 1
 ## The buff granted when kind is BUFF. Also colours the pickup.
 @export var buff: BuffData
+## The weapon granted when kind is WEAPON.
+@export var weapon: WeaponData
 
 @export_group("Feel")
 @export var magnet_range: float = 120.0
@@ -52,6 +54,9 @@ func _apply_style() -> void:
 		Kind.BUFF:
 			size = 20.0
 			colour = buff.colour if buff != null else Color(0.6, 0.8, 1.0)
+		Kind.WEAPON:
+			size = 24.0
+			colour = weapon.swing_colour if weapon != null else Color(0.8, 0.9, 1.0)
 	_visual.color = colour
 	_visual.custom_minimum_size = Vector2(size, size)
 	_visual.size = Vector2(size, size)
@@ -92,6 +97,9 @@ func _collect() -> void:
 		Kind.BUFF:
 			if _player != null and buff != null:
 				_player.apply_buff(buff)
+		Kind.WEAPON:
+			if _player != null and weapon != null:
+				_player.equip_weapon(weapon)
 	queue_free()
 
 

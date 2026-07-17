@@ -27,6 +27,12 @@ const BUFF_POOL: Array[String] = [
 	"res://src/systems/buffs/ironskin.tres",
 	"res://src/systems/buffs/frenzy.tres",
 ]
+## The weapons an enemy can drop. A new weapon is a .tres path here.
+const WEAPON_POOL: Array[String] = [
+	"res://src/systems/weapons/dagger.tres",
+	"res://src/systems/weapons/maul.tres",
+	"res://src/systems/weapons/spear.tres",
+]
 
 @export var stats: EnemyStats
 
@@ -442,3 +448,11 @@ func _drop_haul() -> void:
 		b.buff = load(choice) as BuffData
 		b.global_position = origin
 		host.add_child(b)
+
+	if rng.randf() < stats.weapon_chance and not WEAPON_POOL.is_empty():
+		var wchoice: String = WEAPON_POOL[rng.randi_range(0, WEAPON_POOL.size() - 1)]
+		var w: Pickup = scene.instantiate() as Pickup
+		w.kind = Pickup.Kind.WEAPON
+		w.weapon = load(wchoice) as WeaponData
+		w.global_position = origin
+		host.add_child(w)
