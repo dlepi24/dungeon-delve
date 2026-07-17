@@ -401,8 +401,10 @@ func _drop_haul() -> void:
 	var scene: PackedScene = load("res://src/systems/haul_pickup.tscn") as PackedScene
 	if scene == null:
 		return
+	# Each nugget is worth more the deeper you are — the incentive to push on.
+	var per_nugget: int = maxi(1, roundi(GameState.depth_haul_multiplier()))
 	for i: int in stats.haul_reward:
 		var nugget: HaulPickup = scene.instantiate() as HaulPickup
-		nugget.amount = 1
+		nugget.amount = per_nugget
 		nugget.global_position = global_position + Vector2(0, -stats.body_size.y * 0.5)
 		host.add_child(nugget)

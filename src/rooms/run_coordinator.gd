@@ -8,6 +8,10 @@ extends Node
 ## (bank carried haul, end the run safe) and DOWN descends (deeper, richer,
 ## deadlier). Death loses all carried haul. Up/down maps to the mine — surface is
 ## up, ore is down — so it needs no tutorial.
+##
+## Death and extraction both pass through a result screen, so the outcome (what
+## you lost, what you banked) is legible before the hub — without it a death read
+## as a silent bug.
 
 const HUB_SCENE: String = "res://src/hub/hub.tscn"
 
@@ -17,12 +21,14 @@ var _at_exit: bool = false
 var _ending: bool = false
 
 @onready var _prompt: CanvasLayer = $ExtractPrompt
+@onready var _result: CanvasLayer = $ResultScreen
 
 
 func _ready() -> void:
 	Events.player_died.connect(_on_player_died)
 	Events.delve_completed.connect(_on_delve_completed)
 	_prompt.visible = false
+	_result.dismissed.connect(_to_hub)
 
 
 func _physics_process(_delta: float) -> void:
@@ -57,16 +63,20 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _extract() -> void:
 	_ending = true
+	_prompt.visible = false
+	var banked: int = GameState.carried_haul
 	GameState.extract()
-	_to_hub()
+	_result.show_result(&"extracted", banked)
 
 
 func _on_player_died() -> void:
 	if _ending:
 		return
 	_ending = true
+	_prompt.visible = false
+	var lost: int = GameState.carried_haul
 	GameState.lose_run()
-	_to_hub()
+	_result.show_result(&"died", lost)
 
 
 ## Reaching the bottom of the mine alive is a forced, triumphant extract — you
@@ -75,8 +85,10 @@ func _on_delve_completed() -> void:
 	if _ending:
 		return
 	_ending = true
+	_prompt.visible = false
+	var banked: int = GameState.carried_haul
 	GameState.extract()
-	_to_hub()
+	_result.show_result(&"cleared", banked)
 
 
 func _to_hub() -> void:

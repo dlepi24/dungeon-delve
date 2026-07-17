@@ -33,6 +33,16 @@ var banked_haul: int = 0
 ## Permanent upgrade levels bought at the hub, by id. Stacks across runs.
 var upgrade_levels: Dictionary[StringName, int] = {}
 
+## How much richer each room deeper is. Room 0 (entry) pays 1x; each step down
+## adds this. At the default 0.35 the deep room pays ~2.4x, which is the whole
+## mechanical reason to push your luck rather than extract early. Tune to taste.
+var depth_haul_bonus: float = 0.35
+
+
+## The haul multiplier at the current depth. Deeper = more, so greed pays.
+func depth_haul_multiplier() -> float:
+	return 1.0 + float(depth) * depth_haul_bonus
+
 
 func _ready() -> void:
 	load_game()

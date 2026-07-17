@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/systems/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"armor"
+display_name = "Plated Coat"
+description = "-6% damage taken per level"
+per_level = 0.06
+max_level = 5
+base_cost = 50
+cost_step = 45

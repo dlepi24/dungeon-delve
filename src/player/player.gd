@@ -110,6 +110,12 @@ const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll", "attack", "parry"]
 ## The max-health upgrade resource, so the bonus per level stays data, not a magic
 ## number here. Optional — if unset (e.g. the gym), only base health applies.
 @export var max_health_upgrade: UpgradeData
+## Permanent damage upgrade. Multiplies outgoing attack damage. Data, not a magic
+## number, so the vendor and the effect read from the same resource.
+@export var damage_upgrade: UpgradeData
+## Permanent armor upgrade. Reduces incoming damage. Capped below 100% by the
+## resource's max_level, so armor can never make you invincible.
+@export var armor_upgrade: UpgradeData
 ## How long the death beat lasts before the run hands off to the hub. Long enough
 ## that a death registers, short enough that it does not drag.
 @export var death_beat_ms: int = 900
@@ -238,8 +244,9 @@ func _on_hurt(hitbox: Hitbox) -> void:
 
 	Hitstop.request(hitstop_hurt_frames)
 	_juice.flash()
-	health = maxf(0.0, health - hitbox.damage)
-	Events.player_hurt.emit(hitbox.damage)
+	var taken: float = hitbox.damage * incoming_multiplier()
+	health = maxf(0.0, health - taken)
+	Events.player_hurt.emit(taken)
 	if health <= 0.0:
 		_die()
 
@@ -247,11 +254,26 @@ func _on_hurt(hitbox: Hitbox) -> void:
 ## Base health plus whatever the persistent max-health upgrade adds. Reading it
 ## through the resource keeps the per-level value as data, not a constant here.
 func effective_max_health() -> float:
-	var bonus: float = 0.0
-	if max_health_upgrade != null:
-		var level: int = GameState.upgrade_level(max_health_upgrade.id)
-		bonus = max_health_upgrade.value_at_level(level)
-	return max_health + bonus
+	return max_health + _upgrade_value(max_health_upgrade)
+
+
+## Outgoing damage multiplier from the damage upgrade. 1.0 with no upgrade.
+func damage_multiplier() -> float:
+	return 1.0 + _upgrade_value(damage_upgrade)
+
+
+## Fraction of incoming damage that gets through, after armor. 1.0 with no armor;
+## clamped so it can never reach zero (the resource's max_level does the capping).
+func incoming_multiplier() -> float:
+	return maxf(0.05, 1.0 - _upgrade_value(armor_upgrade))
+
+
+## The applied value of an upgrade at its current bought level. Central so every
+## effect reads the level and the resource the same way.
+func _upgrade_value(upgrade: UpgradeData) -> float:
+	if upgrade == null:
+		return 0.0
+	return upgrade.value_at_level(GameState.upgrade_level(upgrade.id))
 
 
 func is_dead() -> bool:

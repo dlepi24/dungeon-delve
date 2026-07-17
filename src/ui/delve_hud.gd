@@ -33,6 +33,7 @@ func _refresh() -> void:
 	var plan: String = ""
 	for id: StringName in GameState.run_plan:
 		plan += "%s " % id
-	_label.text = "seed %s\nroom %d/%d  %s\nplan: %s" % [
-		GameState.seed_text(), _index + 1, GameState.run_plan.size(), _room_id, plan.strip_edges(),
+	_label.text = "seed %s\nroom %d/%d  %s   (haul x%.2f)\nplan: %s" % [
+		GameState.seed_text(), _index + 1, GameState.run_plan.size(), _room_id,
+		GameState.depth_haul_multiplier(), plan.strip_edges(),
 	]

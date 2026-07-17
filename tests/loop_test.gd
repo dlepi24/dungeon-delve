@@ -54,6 +54,27 @@ func _ready() -> void:
 	GameState.reset_save()
 	_check(GameState.banked_haul == 0 and GameState.upgrade_level(up.id) == 0, "reset_save wipes meta")
 
+	print("upgrades change gameplay, and depth pays")
+	var player: Player = (load("res://src/player/player.tscn") as PackedScene).instantiate()
+	add_child(player)
+	await get_tree().physics_frame
+	var base_hp: float = player.effective_max_health()
+	GameState.upgrade_levels[&"damage"] = 2
+	GameState.upgrade_levels[&"armor"] = 3
+	GameState.upgrade_levels[&"max_health"] = 1
+	_check(is_equal_approx(player.damage_multiplier(), 1.30), "damage upgrade raises outgoing damage")
+	_check(player.incoming_multiplier() < 1.0, "armor upgrade lowers incoming damage")
+	_check(player.effective_max_health() > base_hp, "max-health upgrade raises max health")
+	GameState.upgrade_levels[&"armor"] = 9999
+	_check(player.incoming_multiplier() > 0.0, "armor can never reach full invulnerability")
+	player.queue_free()
+
+	GameState.depth = 0
+	_check(is_equal_approx(GameState.depth_haul_multiplier(), 1.0), "depth 0 pays 1x")
+	GameState.depth = 4
+	_check(GameState.depth_haul_multiplier() > 2.0, "deep rooms pay more (the pull downward)")
+	GameState.reset_save()
+
 	if _failures.is_empty():
 		print("\nLOOP TEST OK")
 		get_tree().quit(0)
