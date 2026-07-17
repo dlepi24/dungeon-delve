@@ -23,6 +23,7 @@ Keybinds="*res://src/systems/keybinds.gd"
 Music="*res://src/systems/music.gd"
 Rng="*res://src/systems/rng.gd"
 Sfx="*res://src/systems/sfx.gd"
+Settings="*res://src/systems/settings.gd"
 
 [debug]
 

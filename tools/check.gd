@@ -26,7 +26,10 @@ const EXPECTED_LAYERS: PackedStringArray = [
 	"World", "Player", "Enemy", "PlayerAttack", "EnemyAttack", "Pickup",
 ]
 
-const EXPECTED_AUTOLOADS: PackedStringArray = ["Events", "GameState", "Hitstop", "Keybinds", "Music", "Rng", "Sfx"]
+## Settings is deliberately LAST in project.godot's [autoload] block: its _ready
+## pushes prefs onto Music, so Music must be initialised first. Autoloads load in
+## file order, not this list's order.
+const EXPECTED_AUTOLOADS: PackedStringArray = ["Events", "GameState", "Hitstop", "Keybinds", "Music", "Rng", "Sfx", "Settings"]
 
 var _failures: PackedStringArray = []
 

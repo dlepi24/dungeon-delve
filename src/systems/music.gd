@@ -19,6 +19,9 @@ var _players: Array[AudioStreamPlayer] = []
 var _active: int = 0
 var _current: StringName = &""
 var _muted: bool = false
+## The player's volume slider, 0..1, applied on top of the tuned bed level.
+## Owned and persisted by the Settings autoload; this just enacts it.
+var _user_volume: float = 1.0
 
 
 func _ready() -> void:
@@ -48,7 +51,7 @@ func play(track: StringName) -> void:
 
 	incoming.stream = stream
 	incoming.play()
-	_fade(incoming, -80.0, volume_db if not _muted else -80.0)
+	_fade(incoming, -80.0, _target_db())
 	_fade(outgoing, outgoing.volume_db, -80.0)
 
 
@@ -69,7 +72,23 @@ func _looped(path: String) -> AudioStreamWAV:
 
 func set_muted(muted: bool) -> void:
 	_muted = muted
-	_fade(_players[_active], _players[_active].volume_db, -80.0 if muted else volume_db)
+	_fade(_players[_active], _players[_active].volume_db, _target_db())
+
+
+## Live volume from the settings slider. Applied instantly, not faded — a slider
+## that lags its own drag reads as broken.
+func set_user_volume(value: float) -> void:
+	_user_volume = clampf(value, 0.0, 1.0)
+	if not _players.is_empty():
+		_players[_active].volume_db = _target_db()
+
+
+## The level the active player should sit at: the tuned bed (volume_db) scaled
+## by the user's slider, or silence when muted / slid to zero.
+func _target_db() -> float:
+	if _muted or _user_volume <= 0.001:
+		return -80.0
+	return volume_db + linear_to_db(_user_volume)
 
 
 func _fade(player: AudioStreamPlayer, from_db: float, to_db: float) -> void:

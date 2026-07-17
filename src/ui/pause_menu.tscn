@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/ui/pause_menu.gd" id="1_pause"]
-[ext_resource type="PackedScene" path="res://src/ui/keybind_screen.tscn" id="2_kb"]
+[ext_resource type="PackedScene" path="res://src/ui/settings_menu.tscn" id="2_set"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.05, 0.05, 0.07, 0.94)
@@ -69,7 +69,7 @@ placeholder_text = "a number, or any word"
 
 [node name="Controls" type="Button" parent="Panel/Margin/Rows"]
 layout_mode = 2
-text = "Controls…"
+text = "Settings…"
 
 [node name="Buttons" type="HBoxContainer" parent="Panel/Margin/Rows"]
 layout_mode = 2
@@ -90,5 +90,5 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "New run"
 
-[node name="KeybindScreen" parent="." instance=ExtResource("2_kb")]
+[node name="SettingsMenu" parent="." instance=ExtResource("2_set")]
 visible = false

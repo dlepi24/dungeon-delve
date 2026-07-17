@@ -1,0 +1,97 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/ui/settings_menu.gd" id="1_set"]
+[ext_resource type="PackedScene" path="res://src/ui/keybind_screen.tscn" id="2_kb"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_set"]
+bg_color = Color(0.05, 0.05, 0.07, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.44, 0.52, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="SettingsMenu" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_set")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -160.0
+offset_right = 260.0
+offset_bottom = 160.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_set")
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="Rows" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = "SETTINGS"
+horizontal_alignment = 1
+
+[node name="VolumeRow" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Margin/Rows/VolumeRow"]
+layout_mode = 2
+text = "Music"
+
+[node name="Slider" type="HSlider" parent="Panel/Margin/Rows/VolumeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 100.0
+value = 100.0
+
+[node name="Value" type="Label" parent="Panel/Margin/Rows/VolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(52, 0)
+text = "100%"
+horizontal_alignment = 2
+
+[node name="FullscreenRow" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Margin/Rows/FullscreenRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Fullscreen"
+
+[node name="Toggle" type="CheckButton" parent="Panel/Margin/Rows/FullscreenRow"]
+layout_mode = 2
+button_pressed = true
+
+[node name="Controls" type="Button" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = "Controls / rebind keys…"
+
+[node name="Back" type="Button" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = "Back"
+
+[node name="KeybindScreen" parent="." instance=ExtResource("2_kb")]
+visible = false

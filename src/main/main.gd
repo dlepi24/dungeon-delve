@@ -14,6 +14,9 @@ const HUB_SCENE: String = "res://src/hub/hub.tscn"
 
 @onready var _play: Button = $Menu/Play
 @onready var _new_game: Button = $Menu/NewGame
+@onready var _settings_button: Button = $Menu/Settings
+@onready var _settings: Control = $SettingsMenu
+@onready var _menu: VBoxContainer = $Menu
 @onready var _quit: Button = $Menu/Quit
 @onready var _controls: Label = $Controls
 @onready var _confirm: PanelContainer = $Confirm
@@ -30,6 +33,8 @@ func _ready() -> void:
 	_play.pressed.connect(_on_play)
 	_new_game.pressed.connect(func() -> void: _confirm.visible = true; _confirm_cancel.grab_focus())
 	_quit.pressed.connect(func() -> void: get_tree().quit())
+	_settings_button.pressed.connect(_on_settings)
+	_settings.closed.connect(_on_settings_closed)
 	_confirm_yes.pressed.connect(_on_wipe_confirmed)
 	_confirm_cancel.pressed.connect(func() -> void: _confirm.visible = false; _play.grab_focus())
 	# "Continue" when there is a save worth continuing; the distinction tells the
@@ -53,6 +58,19 @@ func _refresh_controls_line() -> void:
 
 func _on_play() -> void:
 	get_tree().change_scene_to_file.call_deferred(HUB_SCENE)
+
+
+func _on_settings() -> void:
+	_menu.visible = false
+	_settings.open()
+
+
+func _on_settings_closed() -> void:
+	_settings.visible = false
+	_menu.visible = true
+	# Rebinding may have happened in there; the verbs line must not lie.
+	_refresh_controls_line()
+	_play.grab_focus()
 
 
 func _on_wipe_confirmed() -> void:
