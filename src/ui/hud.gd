@@ -71,12 +71,20 @@ func _process(_delta: float) -> void:
 		]
 
 	_update_boss_bar()
-	_reconcile_rows(_buff_rows, player.active_buffs())
-	# Debuffs: scaffolding only. No debuff exists yet — when one does, give the
-	# player an active_debuffs() -> [{buff, fraction}] symmetric to active_buffs()
-	# (a DebuffData resource, red-styled) and feed it here. The slot is reserved
-	# so the layout does not reflow when the first debuff ships.
-	_reconcile_rows(_debuff_rows, [])
+	# Boon column: timed buffs (shrinking bar) plus accepted shrine boons (full
+	# bar — they last the run). Bane column: each bargain's price, in red. The
+	# column that sat reserved for debuffs since round 1 finally earns its keep.
+	var boons: Array[Dictionary] = []
+	for entry: Dictionary in player.active_buffs():
+		var buff: BuffData = entry["buff"]
+		boons.append({"name": buff.display_name, "colour": buff.colour, "fraction": entry["fraction"]})
+	var banes: Array[Dictionary] = []
+	for shrine: ShrineData in GameState.active_modifiers:
+		boons.append({"name": shrine.display_name, "colour": shrine.colour, "fraction": 1.0})
+		if shrine.bane_text != "":
+			banes.append({"name": shrine.bane_text, "colour": Color(0.95, 0.35, 0.3), "fraction": 1.0})
+	_reconcile_rows(_buff_rows, boons)
+	_reconcile_rows(_debuff_rows, banes)
 
 
 func _on_boss_engaged(enemy: Node2D) -> void:
@@ -131,8 +139,10 @@ func _apply_icon(rect: TextureRect, weapon: WeaponData) -> void:
 		rect.modulate = weapon.swing_colour
 
 
-## One row per active timed effect: name plus a shrinking colour bar. Rebuilt by
-## reconciliation each frame — cheap, there are never more than a handful.
+## One row per active effect: name plus a colour bar (shrinking for timed
+## effects, full for run-long ones). Rows carry plain {name, colour, fraction}
+## so buffs and shrine bargains share the renderer. Rebuilt by reconciliation
+## each frame — cheap, there are never more than a handful.
 func _reconcile_rows(rows: VBoxContainer, active: Array[Dictionary]) -> void:
 	while rows.get_child_count() < active.size():
 		rows.add_child(_make_row())
@@ -140,14 +150,13 @@ func _reconcile_rows(rows: VBoxContainer, active: Array[Dictionary]) -> void:
 		var row: Control = rows.get_child(i) as Control
 		row.visible = i < active.size()
 		if i < active.size():
-			var buff: BuffData = active[i]["buff"]
-			var frac: float = active[i]["fraction"]
+			var colour: Color = active[i]["colour"]
 			var label: Label = row.get_node("Label")
 			var bar: ColorRect = row.get_node("Bar")
-			label.text = buff.display_name
-			label.add_theme_color_override(&"font_color", buff.colour)
-			bar.color = buff.colour
-			bar.size.x = 150.0 * frac
+			label.text = active[i]["name"]
+			label.add_theme_color_override(&"font_color", colour)
+			bar.color = colour
+			bar.size.x = 150.0 * float(active[i]["fraction"])
 
 
 func _make_row() -> Control:

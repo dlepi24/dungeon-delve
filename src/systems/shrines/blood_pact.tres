@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ShrineData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://src/systems/shrine_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"blood_pact"
+display_name = "Blood Pact"
+bargain_text = "+50% damage dealt — but +50% damage taken"
+bane_text = "+50% damage taken"
+damage_mult = 1.5
+incoming_mult = 1.5
+colour = Color(0.9, 0.25, 0.3, 1)

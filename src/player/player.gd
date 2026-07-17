@@ -277,37 +277,40 @@ func heal(amount: float) -> void:
 		Events.player_healed.emit(health - before)
 
 
-## Base health plus whatever the persistent max-health upgrade adds. Reading it
-## through the resource keeps the per-level value as data, not a constant here.
+## Base health plus whatever the persistent max-health upgrade adds, scaled by
+## any shrine bargain that traded max health away. Reading it through the
+## resource keeps the per-level value as data, not a constant here.
 func effective_max_health() -> float:
-	return max_health + _upgrade_value(max_health_upgrade)
+	return (max_health + _upgrade_value(max_health_upgrade)) * GameState.modifier_product(&"max_health_mult")
 
 
-## Outgoing damage: permanent upgrade times any active buffs. Central so the
-## attack, the buffs and the vendor all agree.
+## Outgoing damage: permanent upgrade times buffs times shrine bargains.
+## Central so the attack, the buffs and the vendor all agree.
 func damage_multiplier() -> float:
-	return (1.0 + _upgrade_value(damage_upgrade)) * _buff_product(&"damage_mult")
+	return (1.0 + _upgrade_value(damage_upgrade)) * _buff_product(&"damage_mult") \
+		* GameState.modifier_product(&"damage_mult")
 
 
 ## Fraction of incoming damage that gets through: permanent armor times buff
-## armor. Clamped above zero unless a buff grants outright invulnerability.
+## armor times shrine banes. Clamped above zero unless a buff grants outright
+## invulnerability — a bargain can raise it past 1, that is the price.
 func incoming_multiplier() -> float:
 	var buffed: float = _buff_product(&"incoming_mult")
 	if buffed <= 0.0:
 		return 0.0
-	return maxf(0.05, (1.0 - _upgrade_value(armor_upgrade)) * buffed)
+	return maxf(0.05, (1.0 - _upgrade_value(armor_upgrade)) * buffed * GameState.modifier_product(&"incoming_mult"))
 
 
-## Move-speed multiplier from active buffs. 1.0 with none.
+## Move-speed multiplier from active buffs and shrine bargains. 1.0 with none.
 func move_speed_multiplier() -> float:
-	return _buff_product(&"move_mult")
+	return _buff_product(&"move_mult") * GameState.modifier_product(&"move_mult")
 
 
-## Attack-speed multiplier: the weapon upgrade's per-level bonus, times buffs.
-## Higher = faster swings. Attack states divide their timings by this.
+## Attack-speed multiplier: the weapon upgrade's per-level bonus, times buffs,
+## times bargains. Higher = faster swings. Attack states divide timings by this.
 func attack_speed_multiplier() -> float:
 	var weapon: float = 1.0 + float(GameState.upgrade_level(&"damage")) * weapon_speed_per_level
-	return weapon * _buff_product(&"attack_speed_mult")
+	return weapon * _buff_product(&"attack_speed_mult") * GameState.modifier_product(&"attack_speed_mult")
 
 
 ## Attack timing helpers: the equipped weapon's ms, scaled by attack speed, to

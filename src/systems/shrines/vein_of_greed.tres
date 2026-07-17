@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ShrineData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://src/systems/shrine_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"vein_of_greed"
+display_name = "Vein of Greed"
+bargain_text = "+40% ore this run — but -25% max health"
+bane_text = "-25% max health"
+ore_mult = 1.4
+max_health_mult = 0.75
+colour = Color(1.0, 0.8, 0.3, 1)

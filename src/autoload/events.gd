@@ -67,6 +67,9 @@ signal buff_expired(id: StringName)
 ## The player picked up and equipped a weapon this run.
 signal weapon_equipped(weapon: WeaponData)
 
+## A shrine bargain was accepted. The HUD lists it; PickupFeedback toasts it.
+signal shrine_accepted(shrine: ShrineData)
+
 ## A run began, from this seed. The seed is shareable and reproduces the delve.
 signal run_started(seed_value: int)
 ## The player entered room `index` of the plan.

@@ -116,6 +116,45 @@ func _ready() -> void:
 	GameState.reset_save()
 	_check(GameState.total_runs == 0 and GameState.best_haul == 0, "reset_save wipes the stats")
 
+	print("shrine bargains shape the run, then die with it")
+	GameState.reset_save()
+	GameState.begin_run(11, [&"a"])
+	var pl3: Player = (load("res://src/player/player.tscn") as PackedScene).instantiate()
+	add_child(pl3)
+	await get_tree().physics_frame
+	var base_max: float = pl3.effective_max_health()
+	var vein: ShrineData = load("res://src/systems/shrines/vein_of_greed.tres")
+	GameState.apply_modifier(vein)
+	_check(is_equal_approx(GameState.depth_haul_multiplier(), 1.4), "ore bargain multiplies haul at depth 0")
+	_check(pl3.effective_max_health() < base_max, "the bane cuts max health")
+	GameState.apply_modifier(load("res://src/systems/shrines/blood_pact.tres") as ShrineData)
+	_check(pl3.damage_multiplier() > 1.4 and pl3.incoming_multiplier() > 1.0, "bargains stack, boon and bane")
+	GameState.add_haul(50)
+	_check(GameState.spend_carried(30) and GameState.carried_haul == 20, "pay-now shrines spend carried ore")
+	_check(not GameState.spend_carried(999), "cannot pay ore you do not carry")
+	GameState.begin_run(12, [&"a"])
+	_check(GameState.active_modifiers.is_empty(), "a new run starts unbargained")
+	_check(is_equal_approx(pl3.effective_max_health(), base_max), "stats recover when the bargains clear")
+	pl3.queue_free()
+
+	print("runs leave a history record")
+	GameState.begin_run(13, [&"a", &"b"])
+	GameState.depth = 1
+	GameState.add_haul(25)
+	GameState.extract()
+	_check(FileAccess.file_exists(GameState.HISTORY_PATH), "history file exists after a run")
+	var reader: FileAccess = FileAccess.open(GameState.HISTORY_PATH, FileAccess.READ)
+	var last: String = ""
+	while not reader.eof_reached():
+		var line: String = reader.get_line()
+		if not line.is_empty():
+			last = line
+	var rec: Dictionary = JSON.parse_string(last)
+	_check(rec["outcome"] == "extracted" and int(rec["amount"]) == 25 and int(rec["room"]) == 2,
+		"the record carries outcome, amount and depth")
+	GameState.reset_save()
+	_check(not FileAccess.file_exists(GameState.HISTORY_PATH), "reset_save wipes the history")
+
 	if _failures.is_empty():
 		print("\nLOOP TEST OK")
 		get_tree().quit(0)

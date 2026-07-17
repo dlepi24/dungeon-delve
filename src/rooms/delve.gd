@@ -26,6 +26,19 @@ const MIDDLE_POOL: Array[StringName] = [
 
 ## One scene for every enemy: there are no enemy subclasses any more, only data.
 const ENEMY_SCENE: String = "res://src/enemies/enemy.tscn"
+
+## Shrine altars. A room's `S` glyph is a CANDIDATE spot; this chance decides
+## per-spot (seeded) whether an altar actually stands there, so shrines are an
+## event, not furniture. ~2 spots appear across a 5-room run at 5 spots / 7
+## middle rooms, so 0.55 yields roughly one lit altar per delve.
+const SHRINE_SCENE: String = "res://src/systems/shrine.tscn"
+const SHRINE_POOL: Array[String] = [
+	"res://src/systems/shrines/vein_of_greed.tres",
+	"res://src/systems/shrines/blood_pact.tres",
+	"res://src/systems/shrines/overseers_whisper.tres",
+	"res://src/systems/shrines/misers_candle.tres",
+]
+@export_range(0.0, 1.0) var shrine_chance: float = 0.55
 const ENEMY_STATS: Dictionary[String, String] = {
 	"grunt": "res://src/enemies/data/grunt.tres",
 	"brute": "res://src/enemies/data/brute.tres",
@@ -179,6 +192,9 @@ func _load_room(id: StringName) -> void:
 func _spawn_enemies(room: Room) -> void:
 	var rng: RandomNumberGenerator = Rng.stream(&"spawns")
 	for point: Dictionary in room.spawn_points():
+		if point["kind"] == "shrine":
+			_maybe_place_shrine(room, point["position"], rng)
+			continue
 		var kind: String = _vary_kind(point["kind"], rng)
 		if not ENEMY_STATS.has(kind):
 			push_error("Delve: unknown enemy kind '%s'" % kind)
@@ -188,6 +204,20 @@ func _spawn_enemies(room: Room) -> void:
 		enemy.stats = load(ENEMY_STATS[kind]) as EnemyStats
 		enemy.global_position = point["position"]
 		room.add_child(enemy)
+
+
+## Seeded twice per spot: once for whether the altar is lit, once for which
+## bargain it offers. Both draws ALWAYS happen so the stream stays aligned
+## whether or not the altar appears.
+func _maybe_place_shrine(room: Room, at: Vector2, rng: RandomNumberGenerator) -> void:
+	var lit: bool = rng.randf() < shrine_chance
+	var pick: int = rng.randi_range(0, SHRINE_POOL.size() - 1)
+	if not lit:
+		return
+	var shrine: Shrine = (load(SHRINE_SCENE) as PackedScene).instantiate() as Shrine
+	shrine.data = load(SHRINE_POOL[pick]) as ShrineData
+	shrine.global_position = at
+	room.add_child(shrine)
 
 
 ## Seeded, depth-scaled variation on the authored spawns, so the same layout
@@ -208,8 +238,9 @@ func _vary_kind(kind: String, rng: RandomNumberGenerator) -> String:
 			kind = "dart"
 		elif kind == "dart":
 			kind = "grunt"
-	# Depth promotion: the mine grows meaner as it pays better.
-	if kind != "brute" and rng.randf() < 0.08 * float(_index):
+	# Depth promotion: the mine grows meaner as it pays better — and meaner
+	# still under a curse bargain (Overseer's Whisper).
+	if kind != "brute" and rng.randf() < 0.08 * float(_index) + GameState.modifier_promote_bonus():
 		kind = "brute"
 	return kind
 

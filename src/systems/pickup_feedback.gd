@@ -24,6 +24,7 @@ func _ready() -> void:
 	Events.player_healed.connect(_on_healed)
 	Events.buff_gained.connect(_on_buff)
 	Events.weapon_equipped.connect(_on_weapon)
+	Events.shrine_accepted.connect(_on_shrine)
 
 
 func _on_haul(amount: int, at: Vector2) -> void:
@@ -48,6 +49,12 @@ func _on_weapon(weapon: WeaponData) -> void:
 		var colour: Color = weapon.swing_colour
 		colour.a = 1.0
 		FloatingText.spawn(get_parent(), at, "%s!" % weapon.display_name, colour, 32)
+
+
+func _on_shrine(shrine: ShrineData) -> void:
+	var at: Vector2 = _player_head()
+	if at != Vector2.INF:
+		FloatingText.spawn(get_parent(), at, "%s!" % shrine.display_name, shrine.colour, 32)
 
 
 func _player_head() -> Vector2:

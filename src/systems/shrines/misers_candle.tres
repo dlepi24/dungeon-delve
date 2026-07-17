@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ShrineData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://src/systems/shrine_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"misers_candle"
+display_name = "Miser's Candle"
+bargain_text = "Pay 30 carried ore — gain +20% move and attack speed"
+ore_cost = 30
+move_mult = 1.2
+attack_speed_mult = 1.2
+colour = Color(1.0, 0.95, 0.6, 1)
