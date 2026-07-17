@@ -152,6 +152,16 @@ func can_afford(cost: int) -> bool:
 	return banked_haul >= cost
 
 
+## Spend banked haul on something that is not an upgrade (the blacksmith's
+## weapons). Returns whether it happened.
+func spend_banked(amount: int) -> bool:
+	if not can_afford(amount):
+		return false
+	banked_haul -= amount
+	save_game()
+	return true
+
+
 ## Spend banked haul to raise an upgrade a level. Returns whether it happened, so
 ## the vendor UI does not have to re-check affordability itself.
 func buy_upgrade(id: StringName, cost: int) -> bool:

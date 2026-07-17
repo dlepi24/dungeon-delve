@@ -13,6 +13,9 @@ extends Resource
 @export var display_name: String = "Weapon"
 @export var damage: float = 12.0
 @export var poise_damage: float = 12.0
+## Blacksmith price, in banked haul. Weapons bought or found are the same thing
+## afterwards — session-scoped, lost on death.
+@export var cost: int = 40
 
 @export_group("Timing (ms)")
 @export var startup_ms: int = 90

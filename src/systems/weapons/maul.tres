@@ -15,3 +15,4 @@ hitbox_offset = Vector2(46, -30)
 move_control = 0.05
 swing_colour = Color(1.0, 0.7, 0.4, 0.85)
 icon = ExtResource("2")
+cost = 55

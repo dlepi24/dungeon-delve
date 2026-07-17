@@ -14,8 +14,10 @@ var _player: Player = null
 var _near: StringName = &""
 
 @onready var _vendor_marker: Marker2D = $VendorMarker
+@onready var _smithy_marker: Marker2D = $SmithyMarker
 @onready var _mine_marker: Marker2D = $MineMarker
 @onready var _vendor_panel: CanvasLayer = $VendorPanel
+@onready var _blacksmith_panel: CanvasLayer = $BlacksmithPanel
 @onready var _prompt: Label = $HubHud/Prompt
 @onready var _banked_label: Label = $HubHud/Banked
 
@@ -29,6 +31,7 @@ func _ready() -> void:
 		_player.reset_for_new_run()
 		_player.global_position = $PlayerStart.global_position
 	_vendor_panel.visible = false
+	_blacksmith_panel.visible = false
 	Cursor.gameplay()
 	Music.play(&"hub")
 	_refresh_banked()
@@ -40,18 +43,22 @@ func _refresh_banked() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if _player == null or _vendor_panel.visible:
+	if _player == null or _vendor_panel.visible or _blacksmith_panel.visible:
 		_prompt.text = ""
 		return
 	var near: StringName = &""
 	if _player.global_position.distance_to(_vendor_marker.global_position) <= interact_range:
 		near = &"vendor"
+	elif _player.global_position.distance_to(_smithy_marker.global_position) <= interact_range:
+		near = &"blacksmith"
 	elif _player.global_position.distance_to(_mine_marker.global_position) <= interact_range:
 		near = &"mine"
 	_near = near
 	match near:
 		&"vendor":
 			_prompt.text = "[F] Trade"
+		&"blacksmith":
+			_prompt.text = "[F] Blacksmith"
 		&"mine":
 			_prompt.text = "[F] Descend into the mine"
 		_:
@@ -59,7 +66,7 @@ func _physics_process(_delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _vendor_panel.visible:
+	if _vendor_panel.visible or _blacksmith_panel.visible:
 		return
 	if not event.is_action_pressed(&"interact"):
 		return
@@ -67,6 +74,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_vendor_panel.visible = true
 		_vendor_panel.open()
+	elif _near == &"blacksmith":
+		get_viewport().set_input_as_handled()
+		_blacksmith_panel.open()
 	elif _near == &"mine":
 		get_viewport().set_input_as_handled()
 		_descend()
