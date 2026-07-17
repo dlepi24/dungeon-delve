@@ -1,23 +1,18 @@
 extends CanvasLayer
-## Pause, restart, and seed entry.
-##
-## Scope note: pause and menus are M7's milestone and seed entry is M8's. This is
-## deliberately pulled forward as a DEV AFFORDANCE, because it makes Dustin's
-## judgement better right now — being able to replay one exact delve is the only
-## way to A/B a tuning change against the same rooms rather than against a
-## different level. M7 replaces this with real product UI.
+## The pause menu: Resume, Settings, Quit to title. Nothing else — the seed
+## replay and new-run dev affordances moved into the settings screen's run
+## section, so pausing reads like a product, not a debug panel.
 ##
 ## Everything here runs with process_mode = ALWAYS, since the tree is paused
 ## while it is open; a paused node cannot un-pause itself.
-
-@export var delve: Delve
+##
+## Instanced in every playable scene (delve AND hub) — pause is a promise the
+## whole game makes, not a delve feature. It found this out the hard way:
+## round 2 shipped with ESC only working underground.
 
 @onready var _panel: PanelContainer = $Panel
-@onready var _seed_field: LineEdit = $Panel/Margin/Rows/SeedRow/SeedField
-@onready var _resume: Button = $Panel/Margin/Rows/Buttons/Resume
-@onready var _replay: Button = $Panel/Margin/Rows/Buttons/Replay
-@onready var _fresh: Button = $Panel/Margin/Rows/Buttons/Fresh
-@onready var _controls: Button = $Panel/Margin/Rows/Controls
+@onready var _resume: Button = $Panel/Margin/Rows/Resume
+@onready var _settings_button: Button = $Panel/Margin/Rows/Settings
 @onready var _quit_title: Button = $Panel/Margin/Rows/QuitTitle
 @onready var _status: Label = $Panel/Margin/Rows/Status
 @onready var _settings: Control = $SettingsMenu
@@ -29,12 +24,10 @@ func _ready() -> void:
 	visible = false
 	_settings.visible = false
 	_settings.closed.connect(_on_settings_closed)
-	_controls.pressed.connect(_on_controls)
+	_settings.run_action_taken.connect(_on_settings_run_action)
+	_settings_button.pressed.connect(_on_settings)
 	_resume.pressed.connect(_close)
-	_replay.pressed.connect(_on_replay)
-	_fresh.pressed.connect(_on_fresh)
 	_quit_title.pressed.connect(_on_quit_to_title)
-	_seed_field.text_submitted.connect(func(_t: String) -> void: _on_replay())
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -47,7 +40,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_open()
 
 
-func _on_controls() -> void:
+func _on_settings() -> void:
 	_panel.visible = false
 	_settings.open()
 
@@ -57,40 +50,26 @@ func _on_settings_closed() -> void:
 	_panel.visible = true
 
 
+## The settings run section restarted or abandoned the run: the pause state is
+## already torn down by the settings menu, we just need to stop being visible.
+func _on_settings_run_action() -> void:
+	visible = false
+
+
 func _open() -> void:
 	Cursor.menu()
 	_panel.visible = true
 	_settings.visible = false
-	_seed_field.text = GameState.seed_text()
-	_status.text = "room %d of %d" % [GameState.depth + 1, maxi(1, GameState.run_plan.size())]
+	_status.text = "room %d of %d" % [GameState.depth + 1, maxi(1, GameState.run_plan.size())] \
+		if GameState.run_active else "the surface"
 	visible = true
 	get_tree().paused = true
-	_seed_field.grab_focus()
 
 
 func _close() -> void:
 	visible = false
 	get_tree().paused = false
 	Cursor.gameplay()
-
-
-## Replay whatever is in the field. Accepts a number or a word — Rng hashes text,
-## so "cavern" is a perfectly good seed to share.
-func _on_replay() -> void:
-	if delve == null:
-		_status.text = "no delve to restart"
-		return
-	var seed_value: int = Rng.seed_from_text(_seed_field.text)
-	_close()
-	Events.run_restart_requested.emit(seed_value)
-
-
-func _on_fresh() -> void:
-	# Abandon this run and go back to the hub. Abandoning is NOT extracting: you
-	# forfeit the carried haul, same as walking away from the mine.
-	GameState.end_run()
-	_close()
-	get_tree().change_scene_to_file.call_deferred("res://src/hub/hub.tscn")
 
 
 ## Souls-style exit: back to the title, and the full app quit lives there. Same

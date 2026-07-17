@@ -46,8 +46,7 @@ player = NodePath("../Player")
 [node name="PickupFeedback" type="Node" parent="."]
 script = ExtResource("24_pfb")
 
-[node name="PauseMenu" parent="." instance=ExtResource("7_pause") node_paths=PackedStringArray("delve")]
-delve = NodePath("../Delve")
+[node name="PauseMenu" parent="." instance=ExtResource("7_pause")]
 
 [node name="RunCoordinator" type="Node" parent="." node_paths=PackedStringArray("delve")]
 script = ExtResource("20_coord")

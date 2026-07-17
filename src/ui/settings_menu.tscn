@@ -89,6 +89,38 @@ button_pressed = true
 layout_mode = 2
 text = "Controls / rebind keys…"
 
+; Run tools: only visible mid-run (see settings_menu.gd). Moved here from the
+; pause menu so pausing reads like a product and the dev affordances keep a home.
+[node name="RunSep" type="HSeparator" parent="Panel/Margin/Rows"]
+layout_mode = 2
+
+[node name="SeedRow" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SeedLabel" type="Label" parent="Panel/Margin/Rows/SeedRow"]
+layout_mode = 2
+text = "seed"
+
+[node name="SeedField" type="LineEdit" parent="Panel/Margin/Rows/SeedRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "a number, or any word"
+
+[node name="RunButtons" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Replay" type="Button" parent="Panel/Margin/Rows/RunButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Replay seed"
+
+[node name="Fresh" type="Button" parent="Panel/Margin/Rows/RunButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Abandon run"
+
 [node name="Back" type="Button" parent="Panel/Margin/Rows"]
 layout_mode = 2
 text = "Back"
