@@ -13,9 +13,14 @@ var _hitbox_open: bool = false
 func enter() -> void:
 	_elapsed = 0
 	_hitbox_open = false
-	# Lock facing now. Committing to a direction is half of what gives an attack
-	# weight; being able to spin mid-swing would undo the commitment entirely.
-	player.update_facing(player.get_input_direction())
+	# Lock facing now. Holding a direction commits to it (weight); with no
+	# direction, aim at the nearest enemy so a deliberate swing lands instead of
+	# whiffing behind you.
+	var dir: float = player.get_input_direction()
+	if is_zero_approx(dir):
+		player.aim_at_nearest_enemy()
+	else:
+		player.update_facing(dir)
 
 	# The riposte is spent on this swing whether or not it lands. Cashing it in
 	# is a decision, so a panicked whiff burns it.
@@ -40,9 +45,11 @@ func physics_update(delta: float) -> StringName:
 	player.apply_gravity(delta)
 	player.apply_horizontal(delta, player.get_input_direction() * player.attack_move_control)
 
-	var startup: int = player.ms_to_ticks(player.attack_startup_ms)
-	var active_end: int = startup + player.ms_to_ticks(player.attack_active_ms)
-	var total: int = active_end + player.ms_to_ticks(player.attack_recovery_ms)
+	# Scaled by attack speed (weapon upgrade + Haste/Frenzy), so a faster swing is
+	# genuinely faster, not just bigger numbers.
+	var startup: int = player.attack_startup_ticks()
+	var active_end: int = startup + player.attack_active_ticks()
+	var total: int = active_end + player.attack_recovery_ticks()
 
 	var should_be_open: bool = _elapsed > startup and _elapsed <= active_end
 	if should_be_open and not _hitbox_open:
@@ -52,7 +59,7 @@ func physics_update(delta: float) -> StringName:
 		_hitbox_open = false
 		player.attack_hitbox.deactivate()
 
-	if _elapsed >= player.ms_to_ticks(player.attack_cancel_start_ms) and player.try_consume_roll():
+	if _elapsed >= player.attack_cancel_ticks() and player.try_consume_roll():
 		return &"Roll"
 
 	if _elapsed >= total:

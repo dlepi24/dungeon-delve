@@ -75,6 +75,22 @@ func _ready() -> void:
 	_check(GameState.depth_haul_multiplier() > 2.0, "deep rooms pay more (the pull downward)")
 	GameState.reset_save()
 
+	print("weapon upgrade changes feel; buffs stack and expire")
+	var pl: Player = (load("res://src/player/player.tscn") as PackedScene).instantiate()
+	add_child(pl)
+	await get_tree().physics_frame
+	var base_swing: int = pl.attack_startup_ticks()
+	GameState.upgrade_levels[&"damage"] = 5
+	_check(pl.attack_speed_multiplier() > 1.0, "weapon upgrade adds attack speed, not just damage")
+	_check(pl.attack_startup_ticks() <= base_swing, "faster swing shortens the wind-up")
+	GameState.upgrade_levels.clear()
+	pl.apply_buff(load("res://src/systems/buffs/might.tres") as BuffData)
+	_check(is_equal_approx(pl.damage_multiplier(), 2.0), "Might buff doubles damage")
+	pl.reset_for_new_run()
+	_check(pl.active_buffs().is_empty(), "buffs clear on a new run")
+	pl.queue_free()
+	GameState.reset_save()
+
 	if _failures.is_empty():
 		print("\nLOOP TEST OK")
 		get_tree().quit(0)

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BuffData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://src/systems/buff_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"frenzy"
+display_name = "Frenzy"
+duration_ms = 6000
+attack_speed_mult = 2.0
+move_mult = 1.2
+colour = Color(1.0, 0.8, 0.2, 1)

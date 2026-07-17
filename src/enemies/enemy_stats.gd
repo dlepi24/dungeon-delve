@@ -57,6 +57,9 @@ extends Resource
 @export var heart_chance: float = 0.12
 ## Health a dropped heart restores.
 @export var heart_heal: int = 20
+## Chance (0..1) this enemy drops a temporary buff. Rare — buffs are a treat, and
+## the run should be mostly about your own skill, not power-ups raining down.
+@export var buff_chance: float = 0.06
 ## How long the corpse lingers before fading out and freeing itself.
 @export var corpse_linger_ms: int = 260
 @export var corpse_fade_ms: int = 420

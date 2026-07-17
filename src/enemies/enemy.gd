@@ -20,6 +20,14 @@ enum State { IDLE, CHASE, TELEGRAPH, ATTACK, RECOVER, HURT, STAGGER, DEAD }
 
 const GRAVITY: float = 1800.0
 
+## The buffs an enemy can drop. A new buff for the pool is a .tres path here.
+const BUFF_POOL: Array[String] = [
+	"res://src/systems/buffs/haste.tres",
+	"res://src/systems/buffs/might.tres",
+	"res://src/systems/buffs/ironskin.tres",
+	"res://src/systems/buffs/frenzy.tres",
+]
+
 @export var stats: EnemyStats
 
 var health: float = 0.0
@@ -50,6 +58,7 @@ var _tick: int = 0
 
 func _ready() -> void:
 	assert(stats != null, "Enemy has no EnemyStats resource assigned.")
+	add_to_group(&"enemies")
 	health = stats.max_health
 	_apply_stats_to_body()
 	_hitbox.deactivate()
@@ -425,3 +434,11 @@ func _drop_haul() -> void:
 		heart.amount = stats.heart_heal
 		heart.global_position = origin
 		host.add_child(heart)
+
+	if rng.randf() < stats.buff_chance and not BUFF_POOL.is_empty():
+		var choice: String = BUFF_POOL[rng.randi_range(0, BUFF_POOL.size() - 1)]
+		var b: Pickup = scene.instantiate() as Pickup
+		b.kind = Pickup.Kind.BUFF
+		b.buff = load(choice) as BuffData
+		b.global_position = origin
+		host.add_child(b)

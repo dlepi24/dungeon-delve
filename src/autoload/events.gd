@@ -53,6 +53,10 @@ signal haul_collected(amount: int, at: Vector2)
 ## An upgrade was bought at the vendor.
 signal upgrade_purchased(id: StringName, new_level: int)
 
+## A temporary buff was picked up, or expired. The HUD listens.
+signal buff_gained(buff: BuffData)
+signal buff_expired(id: StringName)
+
 ## A run began, from this seed. The seed is shareable and reproduces the delve.
 signal run_started(seed_value: int)
 ## The player entered room `index` of the plan.

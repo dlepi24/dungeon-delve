@@ -116,6 +116,11 @@ const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll", "attack", "parry"]
 ## Permanent armor upgrade. Reduces incoming damage. Capped below 100% by the
 ## resource's max_level, so armor can never make you invincible.
 @export var armor_upgrade: UpgradeData
+## Attack-speed granted by the DAMAGE upgrade, per level. This is the fix for
+## "the weapon upgrade does more damage but feels the same": a Honed Pick also
+## swings faster, so upgrading it changes the feel of combat, not just the number
+## over an enemy's head. Kept modest so five levels is +30%, not a machine gun.
+@export var weapon_speed_per_level: float = 0.06
 ## How long the death beat lasts before the run hands off to the hub. Long enough
 ## that a death registers, short enough that it does not drag.
 @export var death_beat_ms: int = 900
@@ -222,6 +227,7 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor():
 		_last_grounded_tick = _tick
 
+	_tick_buffs()
 	_update_landing_juice()
 
 	attack_hitbox.position = Vector2(attack_hitbox_offset.x * float(facing), attack_hitbox_offset.y)
@@ -247,6 +253,12 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	var taken: float = hitbox.damage * incoming_multiplier()
 	health = maxf(0.0, health - taken)
 	Events.player_hurt.emit(taken)
+	# Show the damage you actually took, over your own head — this is how armor
+	# becomes visible. Without a number, a 6% reduction is invisible and reads as
+	# "armor does nothing".
+	var host: Node = get_parent()
+	if host != null:
+		DamageNumber.spawn(host, global_position - Vector2(0, 70), taken, false)
 	if health <= 0.0:
 		_die()
 
@@ -266,23 +278,95 @@ func effective_max_health() -> float:
 	return max_health + _upgrade_value(max_health_upgrade)
 
 
-## Outgoing damage multiplier from the damage upgrade. 1.0 with no upgrade.
+## Outgoing damage: permanent upgrade times any active buffs. Central so the
+## attack, the buffs and the vendor all agree.
 func damage_multiplier() -> float:
-	return 1.0 + _upgrade_value(damage_upgrade)
+	return (1.0 + _upgrade_value(damage_upgrade)) * _buff_product(&"damage_mult")
 
 
-## Fraction of incoming damage that gets through, after armor. 1.0 with no armor;
-## clamped so it can never reach zero (the resource's max_level does the capping).
+## Fraction of incoming damage that gets through: permanent armor times buff
+## armor. Clamped above zero unless a buff grants outright invulnerability.
 func incoming_multiplier() -> float:
-	return maxf(0.05, 1.0 - _upgrade_value(armor_upgrade))
+	var buffed: float = _buff_product(&"incoming_mult")
+	if buffed <= 0.0:
+		return 0.0
+	return maxf(0.05, (1.0 - _upgrade_value(armor_upgrade)) * buffed)
 
 
-## The applied value of an upgrade at its current bought level. Central so every
-## effect reads the level and the resource the same way.
+## Move-speed multiplier from active buffs. 1.0 with none.
+func move_speed_multiplier() -> float:
+	return _buff_product(&"move_mult")
+
+
+## Attack-speed multiplier: the weapon upgrade's per-level bonus, times buffs.
+## Higher = faster swings. Attack states divide their timings by this.
+func attack_speed_multiplier() -> float:
+	var weapon: float = 1.0 + float(GameState.upgrade_level(&"damage")) * weapon_speed_per_level
+	return weapon * _buff_product(&"attack_speed_mult")
+
+
+## Attack timing helpers: base ms scaled by attack speed, then to ticks. The
+## attack state reads these instead of the raw exports so speed buffs and the
+## weapon upgrade actually shorten the swing.
+func attack_startup_ticks() -> int:
+	return ms_to_ticks(roundi(float(attack_startup_ms) / attack_speed_multiplier()))
+func attack_active_ticks() -> int:
+	return ms_to_ticks(roundi(float(attack_active_ms) / attack_speed_multiplier()))
+func attack_recovery_ticks() -> int:
+	return ms_to_ticks(roundi(float(attack_recovery_ms) / attack_speed_multiplier()))
+func attack_cancel_ticks() -> int:
+	return ms_to_ticks(roundi(float(attack_cancel_start_ms) / attack_speed_multiplier()))
+
+
 func _upgrade_value(upgrade: UpgradeData) -> float:
 	if upgrade == null:
 		return 0.0
 	return upgrade.value_at_level(GameState.upgrade_level(upgrade.id))
+
+
+# --- Temporary buffs ---
+# Buffs are timed power-ups that end with the run. Stored as id -> expiry tick,
+# so they are deterministic (tick-counted) like everything else. The product of a
+# named multiplier across all active buffs is what folds into the stats above.
+
+var _buffs: Dictionary[StringName, BuffData] = {}
+var _buff_expiry: Dictionary[StringName, int] = {}
+
+
+func apply_buff(buff: BuffData) -> void:
+	if buff == null:
+		return
+	_buffs[buff.id] = buff
+	_buff_expiry[buff.id] = _tick + ms_to_ticks(buff.duration_ms)
+	_juice.flash()
+	Events.buff_gained.emit(buff)
+
+
+## Called each physics tick to expire buffs. Returns nothing; the HUD reads state.
+func _tick_buffs() -> void:
+	for id: StringName in _buff_expiry.keys():
+		if _tick >= _buff_expiry[id]:
+			_buffs.erase(id)
+			_buff_expiry.erase(id)
+			Events.buff_expired.emit(id)
+
+
+## Active buffs, for the HUD: {buff, fraction_remaining}.
+func active_buffs() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for id: StringName in _buffs:
+		var buff: BuffData = _buffs[id]
+		var total: int = ms_to_ticks(buff.duration_ms)
+		var left: int = maxi(0, _buff_expiry[id] - _tick)
+		out.append({"buff": buff, "fraction": float(left) / maxf(1.0, float(total))})
+	return out
+
+
+func _buff_product(field: StringName) -> float:
+	var product: float = 1.0
+	for id: StringName in _buffs:
+		product *= _buffs[id].get(field)
+	return product
 
 
 func is_dead() -> bool:
@@ -312,6 +396,9 @@ func reset_for_new_run() -> void:
 	invulnerable = false
 	velocity = Vector2.ZERO
 	consume_riposte()
+	# Buffs are per-run: a fresh run starts with none.
+	_buffs.clear()
+	_buff_expiry.clear()
 	if _state_machine != null:
 		_state_machine.transition_to(&"Idle")
 
@@ -404,6 +491,26 @@ func update_facing(direction: float) -> void:
 		facing = -1
 
 
+## When you swing without holding a direction, face the nearest enemy instead of
+## your last movement direction. This is the fix for "I clearly meant to hit that
+## guy but swung the other way": holding a direction still overrides it, so you
+## keep full control — it only helps when you gave no direction at all.
+@export var aim_assist_range: float = 220.0
+func aim_at_nearest_enemy() -> void:
+	var best: Node2D = null
+	var best_d: float = aim_assist_range
+	for node: Node in get_tree().get_nodes_in_group(&"enemies"):
+		var enemy: Node2D = node as Node2D
+		if enemy == null or not is_instance_valid(enemy):
+			continue
+		var d: float = absf(enemy.global_position.x - global_position.x)
+		if d < best_d and absf(enemy.global_position.y - global_position.y) < 120.0:
+			best_d = d
+			best = enemy
+	if best != null:
+		facing = 1 if best.global_position.x > global_position.x else -1
+
+
 ## Rising uses jump_gravity, falling uses fall_gravity. The asymmetry is most of
 ## why a jump reads as snappy rather than floaty.
 func apply_gravity(delta: float) -> void:
@@ -417,7 +524,8 @@ func apply_horizontal(delta: float, direction: float) -> void:
 	if is_zero_approx(direction):
 		velocity.x = move_toward(velocity.x, 0.0, friction * delta)
 	else:
-		velocity.x = move_toward(velocity.x, direction * max_run_speed, accel * delta)
+		# Haste and Frenzy raise top speed through move_speed_multiplier.
+		velocity.x = move_toward(velocity.x, direction * max_run_speed * move_speed_multiplier(), accel * delta)
 
 
 ## True while a jump is still legal after walking off a ledge.
