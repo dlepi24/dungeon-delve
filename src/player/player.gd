@@ -251,6 +251,15 @@ func _on_hurt(hitbox: Hitbox) -> void:
 		_die()
 
 
+## Restore health, capped at the effective maximum. A heart pickup calls this.
+## Flashes so a heal reads as a heal, not just a number ticking up.
+func heal(amount: float) -> void:
+	if _dead or amount <= 0.0:
+		return
+	health = minf(effective_max_health(), health + amount)
+	_juice.flash()
+
+
 ## Base health plus whatever the persistent max-health upgrade adds. Reading it
 ## through the resource keeps the per-level value as data, not a constant here.
 func effective_max_health() -> float:

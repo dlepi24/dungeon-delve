@@ -392,19 +392,36 @@ func _on_death() -> void:
 	_juice.punch(Vector2(1.5, 0.5))
 
 
-## Scatter the haul reward as pickups. Count, not one big nugget, so a kill throws
-## a satisfying little shower of ore.
+## Scatter the reward as pickups: mostly small ore, an occasional big chunk, and
+## sometimes a heart. A shower of loot reads better than one lump.
+##
+## Drop rolls come from the SEEDED service, not randf(): drops are gameplay, so
+## two players on one daily seed must get the same loot. The stream is named apart
+## from "delve" so it can never shift the level layout.
 func _drop_haul() -> void:
 	var host: Node = get_parent()
-	if host == null or stats.haul_reward <= 0:
+	if host == null:
 		return
-	var scene: PackedScene = load("res://src/systems/haul_pickup.tscn") as PackedScene
+	var scene: PackedScene = load("res://src/systems/pickup.tscn") as PackedScene
 	if scene == null:
 		return
-	# Each nugget is worth more the deeper you are — the incentive to push on.
-	var per_nugget: int = maxi(1, roundi(GameState.depth_haul_multiplier()))
+	var rng: RandomNumberGenerator = Rng.stream(&"drops")
+	var origin: Vector2 = global_position + Vector2(0, -stats.body_size.y * 0.5)
+	# Each ore unit is worth more the deeper you are — the incentive to push on.
+	var per_unit: int = maxi(1, roundi(GameState.depth_haul_multiplier()))
+
 	for i: int in stats.haul_reward:
-		var nugget: HaulPickup = scene.instantiate() as HaulPickup
-		nugget.amount = per_nugget
-		nugget.global_position = global_position + Vector2(0, -stats.body_size.y * 0.5)
+		# Roughly one in five nuggets is a big chunk worth several.
+		var big: bool = rng.randf() < 0.2
+		var nugget: Pickup = scene.instantiate() as Pickup
+		nugget.kind = Pickup.Kind.HAUL
+		nugget.amount = per_unit * (5 if big else 1)
+		nugget.global_position = origin
 		host.add_child(nugget)
+
+	if rng.randf() < stats.heart_chance and stats.heart_heal > 0:
+		var heart: Pickup = scene.instantiate() as Pickup
+		heart.kind = Pickup.Kind.HEAL
+		heart.amount = stats.heart_heal
+		heart.global_position = origin
+		host.add_child(heart)

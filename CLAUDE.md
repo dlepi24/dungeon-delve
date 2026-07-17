@@ -105,6 +105,9 @@ Godot 4.7.1 installed via `brew install --cask godot`. Binary is on PATH at
   - Animation names match the player's FSM state names lowercased. `PlayerSprite`
     reads the live state and plays it, so there is no second animation state
     machine to fall out of sync with the real one.
+- Regenerate placeholder music: `python3 tools/gen_music.py` (dark synthwave loops,
+  delve + hub). Synthesised like the SFX, reproducible, replaced by real audio at
+  M9. The `Music` autoload forces the imported WAV to LOOP_FORWARD at runtime.
 - Regenerate the placeholder SFX with `python3 tools/gen_sfx.py`. They are
   synthesised, not sourced — reproducible and unmistakably placeholder. Real audio
   is M9.

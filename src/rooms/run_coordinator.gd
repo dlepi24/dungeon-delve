@@ -29,6 +29,7 @@ func _ready() -> void:
 	Events.delve_completed.connect(_on_delve_completed)
 	_prompt.visible = false
 	_result.dismissed.connect(_to_hub)
+	Music.play(&"delve")
 
 
 func _physics_process(_delta: float) -> void:

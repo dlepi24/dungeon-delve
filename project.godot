@@ -20,6 +20,7 @@ Events="*res://src/autoload/events.gd"
 GameState="*res://src/autoload/game_state.gd"
 Hitstop="*res://src/systems/hitstop.gd"
 Keybinds="*res://src/systems/keybinds.gd"
+Music="*res://src/systems/music.gd"
 Rng="*res://src/systems/rng.gd"
 Sfx="*res://src/systems/sfx.gd"
 

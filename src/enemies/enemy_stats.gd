@@ -51,6 +51,12 @@ extends Resource
 ## Haul this enemy drops when killed. The Brute is worth more than the Dart, so
 ## fighting the dangerous thing pays — which is what makes pushing deeper tempting.
 @export var haul_reward: int = 2
+## Chance (0..1) this enemy drops a healing heart. Kept low: hearts are the
+## in-run healing economy, and free healing everywhere would erase the risk of
+## going deep. Tune per enemy.
+@export var heart_chance: float = 0.12
+## Health a dropped heart restores.
+@export var heart_heal: int = 20
 ## How long the corpse lingers before fading out and freeing itself.
 @export var corpse_linger_ms: int = 260
 @export var corpse_fade_ms: int = 420

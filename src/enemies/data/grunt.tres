@@ -36,3 +36,4 @@ move_speed = 105.0
 idle_ms = 380
 attacks = Array[ExtResource("1_wstjk")]([SubResource("Resource_5lcdc"), SubResource("Resource_wan6a")])
 haul_reward = 3
+heart_heal = 18
