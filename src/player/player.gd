@@ -228,6 +228,7 @@ func _physics_process(delta: float) -> void:
 		_last_grounded_tick = _tick
 
 	_tick_buffs()
+	_handle_weapon_select()
 	_update_landing_juice()
 
 	var off: Vector2 = weapon_hitbox_offset()
@@ -327,18 +328,65 @@ func attack_cancel_ticks() -> int:
 # them for the run; a null equipped_weapon means the pickaxe. Found weapons are
 # run-scoped: reset_for_new_run drops back to the pickaxe, while permanent stat
 # upgrades persist. That is the roguelite split — the weapon is this run's flavour.
+#
+# M7: you hold up to TWO found weapons (a loadout) and swap live with the skill
+# slots (Q/E by default). Still run-scoped — the loadout dies with the run.
+# equipped_weapon stays the single source of truth for "what am I swinging";
+# held_weapons is just where the inactive one waits.
 
 ## Base pickaxe hitbox size when no weapon is equipped. Matches player.tscn.
 @export var base_hitbox_size: Vector2 = Vector2(46, 44)
 
+const MAX_HELD_WEAPONS: int = 2
+
 var equipped_weapon: WeaponData = null
+## Found weapons this run, in slot order. Empty = pickaxe only.
+var held_weapons: Array[WeaponData] = []
+## Which slot of held_weapons is in hand. Meaningless while held_weapons is empty.
+var active_slot: int = 0
 
 
+## Pick up a weapon: fill an empty slot, or replace the one you are NOT holding
+## — the weapon in your hand is the one you chose to keep, so a pickup should
+## never silently take it away. Either way the new weapon comes up in hand.
 func equip_weapon(weapon: WeaponData) -> void:
+	if held_weapons.size() < MAX_HELD_WEAPONS:
+		held_weapons.append(weapon)
+		active_slot = held_weapons.size() - 1
+	else:
+		active_slot = 1 - active_slot
+		held_weapons[active_slot] = weapon
+	_wield(weapon)
+
+
+## Swap to a loadout slot (skill_1 -> 0, skill_2 -> 1). No-op on an empty slot
+## or the slot already in hand.
+func select_weapon_slot(slot: int) -> void:
+	if slot < 0 or slot >= held_weapons.size() or slot == active_slot:
+		return
+	active_slot = slot
+	_wield(held_weapons[slot])
+
+
+func _wield(weapon: WeaponData) -> void:
 	equipped_weapon = weapon
 	_resize_attack_hitbox()
 	_juice.flash()
 	Events.weapon_equipped.emit(weapon)
+
+
+## Swap is a physics-tick input like every other verb (determinism: ghost
+## replays must see it). Blocked mid-swing on purpose: the attack state reads
+## its timing windows LIVE each tick, so swapping Maul -> Dagger mid-recovery
+## would shrink the remaining recovery and become a swap-cancel — free escape
+## from the commitment the GDD makes attacks carry. Swap first, then swing.
+func _handle_weapon_select() -> void:
+	if _state_machine.get_current_name() == &"Attack":
+		return
+	if Input.is_action_just_pressed(&"skill_1"):
+		select_weapon_slot(0)
+	elif Input.is_action_just_pressed(&"skill_2"):
+		select_weapon_slot(1)
 
 
 func weapon_name() -> String:
@@ -463,8 +511,10 @@ func reset_for_new_run() -> void:
 	# Buffs are per-run: a fresh run starts with none.
 	_buffs.clear()
 	_buff_expiry.clear()
-	# Found weapons are per-run too — back to the pickaxe.
+	# Found weapons are per-run too — the whole loadout goes, back to the pickaxe.
 	equipped_weapon = null
+	held_weapons.clear()
+	active_slot = 0
 	_resize_attack_hitbox()
 	if _state_machine != null:
 		_state_machine.transition_to(&"Idle")

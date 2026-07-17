@@ -33,8 +33,20 @@ func _ready() -> void:
 	p.equip_weapon(dagger)
 	_ck(p.attack_startup_ticks() < base_startup, "the Dagger is faster than the pickaxe")
 
+	# M7: the 2-slot loadout. Both weapons are held, the newest is in hand, and
+	# swapping is live. A third pickup replaces the slot you are NOT holding.
+	_ck(p.held_weapons.size() == 2 and p.active_slot == 1, "two pickups fill both slots, newest in hand")
+	p.select_weapon_slot(0)
+	_ck(p.weapon_name() == maul.display_name, "swapping to slot 1 puts the Maul back in hand")
+	var spear: WeaponData = load("res://src/systems/weapons/spear.tres")
+	p.equip_weapon(spear)
+	_ck(p.weapon_name() == spear.display_name and p.held_weapons[1] == spear,
+		"a third weapon replaces the inactive slot and comes up in hand")
+	_ck(p.held_weapons[0] == maul, "the weapon you were holding is never silently replaced")
+
 	p.reset_for_new_run()
 	_ck(p.weapon_name() == "Pickaxe", "a new run resets to the pickaxe (weapons are run-scoped)")
+	_ck(p.held_weapons.is_empty(), "a new run clears the whole loadout")
 
 	# Meta upgrade persists across that reset; the weapon did not.
 	GameState.upgrade_levels[&"damage"] = 3

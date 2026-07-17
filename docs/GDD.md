@@ -28,8 +28,8 @@ Controller-first design discipline. Budget is ~10 verbs. No new core-combat verb
 | Dodge roll | Shift | B / Circle |
 | Primary attack | LMB or J | X / Square |
 | Parry | RMB or K | Y / Triangle |
-| Skill 1 | Q | LB |
-| Skill 2 | E | RB |
+| Skill 1 (weapon slot 1 for now) | Q | LB |
+| Skill 2 (weapon slot 2 for now) | E | RB |
 | Interact | F | D-pad up |
 | Consumables | 1 / 2 | D-pad left / right |
 
@@ -140,3 +140,5 @@ The greed loop, in three decisions:
 - 2026-07-15: **Setting locked: a collapsing mine.** Dustin's call. You delve for ore and relics while the shaft fails behind you. Chosen because it makes the greed pillar literal — deeper is richer and less stable — rather than a rule sitting on top of an unrelated fiction. Unblocks art, which had been gated on this since M2's gate passed. Does not settle extraction, meta shape or the name.
 - 2026-07-15: Key rebinding pulled forward from M7, Dustin's call after finding J/K awkward. The GDD's KB+M table stays the DEFAULT rather than the only option, so the locked layout is now a starting point players can override.
 - 2026-07-15: **Run loop locked (M5), Dustin's call.** Gather carried haul in the delve; each room's exit offers extract (go UP, bank haul, end run safe) or descend (go DOWN, richer + deadlier). Death loses ALL carried haul — only banked is kept. Hub is a vendor selling permanent stacking stat upgrades; M5 ships one (max health). Chosen for the sharpest greed tension, which the collapsing-mine fiction already supports. Keep-a-fraction death softening is the pre-agreed fallback if it proves too punishing.
+- 2026-07-17: **In-run 2-weapon loadout, Dustin's call (M7).** You hold up to two FOUND weapons and swap live; a pickup fills an empty slot or replaces the one you are NOT holding. Weapons stay run-scoped — lost on death or extract — so the roguelite model is unchanged. The existing skill_1/skill_2 actions (Q/E, LB/RB) are REPURPOSED as the two weapon slots rather than adding a new verb, keeping the ~10-verb budget intact; if real skills ever ship, weapon-swap needs its own binding and a fresh decision here. Swapping is blocked mid-swing on purpose: attack timings are read live, so a swap during recovery would act as a swap-cancel and erase the commitment attacks are designed to carry.
+- 2026-07-17: **Persistent meta stats (M7).** GameState tracks total runs, deepest room reached, best single extract and total kills, saved with the meta save and wiped by New Game. Shown on the title screen — the game should remember you played it.

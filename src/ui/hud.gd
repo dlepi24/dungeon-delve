@@ -37,7 +37,7 @@ func _process(_delta: float) -> void:
 		return
 	_bar.set_ratio(player.health / maxf(1.0, player.effective_max_health()))
 	_health_label.text = "%d / %d" % [roundi(player.health), roundi(player.effective_max_health())]
-	_weapon.text = player.weapon_name()
+	_weapon.text = _loadout_text()
 
 	# Run-only rows: haul at risk and depth only mean something mid-delve.
 	var in_run: bool = GameState.run_active
@@ -55,6 +55,20 @@ func _process(_delta: float) -> void:
 	# (a DebuffData resource, red-styled) and feed it here. The slot is reserved
 	# so the layout does not reflow when the first debuff ships.
 	_reconcile_rows(_debuff_rows, [])
+
+
+## The weapon line: just the pickaxe until something is found, then both loadout
+## slots with their swap keys, the one in hand marked. Key names come from live
+## keybinds so a rebind never makes this line lie.
+func _loadout_text() -> String:
+	if player.held_weapons.is_empty():
+		return player.weapon_name()
+	var parts: PackedStringArray = []
+	for i: int in player.held_weapons.size():
+		var key: String = Keybinds.label_for(&"skill_1" if i == 0 else &"skill_2")
+		var mark: String = "> " if i == player.active_slot else "  "
+		parts.append("%s[%s] %s" % [mark, key, player.held_weapons[i].display_name])
+	return "    ".join(parts)
 
 
 ## One row per active timed effect: name plus a shrinking colour bar. Rebuilt by

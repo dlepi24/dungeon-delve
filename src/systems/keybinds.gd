@@ -35,8 +35,8 @@ const LABELS: Dictionary[StringName, String] = {
 	&"roll": "Dodge roll",
 	&"attack": "Attack",
 	&"parry": "Parry",
-	&"skill_1": "Skill 1",
-	&"skill_2": "Skill 2",
+	&"skill_1": "Weapon slot 1",
+	&"skill_2": "Weapon slot 2",
 	&"interact": "Interact",
 }
 
