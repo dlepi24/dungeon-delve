@@ -27,9 +27,15 @@ enum Kind { HAUL, HEAL, BUFF, WEAPON }
 @export var magnet_speed: float = 520.0
 @export var spawn_pop: Vector2 = Vector2(0, -140)
 
+const ORE_ICON: Texture2D = preload("res://assets/icons/ore.png")
+const HEART_ICON: Texture2D = preload("res://assets/icons/heart.png")
+
 var _velocity: Vector2 = Vector2.ZERO
 var _player: Player = null
 var _collected: bool = false
+## Icon sprite, when this pickup has art. The ColorRect stays the fallback for
+## anything without an icon (buffs), so missing art degrades to gray-box.
+var _icon: Sprite2D = null
 
 @onready var _visual: ColorRect = $Visual
 
@@ -39,24 +45,36 @@ func _ready() -> void:
 	_apply_style()
 
 
-## Colour and size say what it is at a glance: amber ore, bright big ore, red
-## heart. Size scales gently with value so a big chunk reads as a big chunk.
+## What it is, at a glance: ore chunks and hearts use the baked icon art, a
+## weapon shows ITS OWN icon so a Maul on the ground reads different from a
+## Dagger before you commit to grabbing it. Size still scales with value.
 func _apply_style() -> void:
 	var size: float = 14.0
 	var colour: Color = Color(0.95, 0.7, 0.25)
+	var texture: Texture2D = null
 	match kind:
 		Kind.HAUL:
 			size = clampf(12.0 + float(amount) * 1.6, 12.0, 30.0)
 			colour = Color(0.95, 0.7, 0.25) if amount < 5 else Color(1.0, 0.85, 0.35)
+			texture = ORE_ICON
 		Kind.HEAL:
-			size = 18.0
+			size = 20.0
 			colour = Color(0.95, 0.3, 0.35)
+			texture = HEART_ICON
 		Kind.BUFF:
 			size = 20.0
 			colour = buff.colour if buff != null else Color(0.6, 0.8, 1.0)
 		Kind.WEAPON:
-			size = 24.0
+			size = 34.0
 			colour = weapon.swing_colour if weapon != null else Color(0.8, 0.9, 1.0)
+			texture = weapon.icon if weapon != null else null
+	if texture != null:
+		_icon = Sprite2D.new()
+		_icon.texture = texture
+		_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_icon.scale = Vector2.ONE * (size / 16.0)
+		add_child(_icon)
+		_visual.visible = false
 	_visual.color = colour
 	_visual.custom_minimum_size = Vector2(size, size)
 	_visual.size = Vector2(size, size)
@@ -104,5 +122,8 @@ func _collect() -> void:
 
 
 func _process(_delta: float) -> void:
-	if _visual != null:
+	# Icons bob rather than spin — a rotating pickaxe reads as a projectile.
+	if _icon != null:
+		_icon.position.y = sin(float(Time.get_ticks_msec()) * 0.005) * 3.0
+	elif _visual != null:
 		_visual.rotation += 0.06
