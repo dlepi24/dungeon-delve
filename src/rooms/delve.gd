@@ -112,20 +112,39 @@ func _ready() -> void:
 		_start_today.call_deferred()
 
 
-## Run directly rather than from a hub: pick today's seed so the scene is
-## playable on its own. M5 gives this a real entry point.
+## Begin a run. Uses the seed the hub picked if there is one, otherwise today's
+## daily seed so the scene is still playable on its own.
 func _start_today() -> void:
+	if GameState.pending_seed >= 0:
+		var chosen: int = GameState.pending_seed
+		GameState.pending_seed = -1
+		start(chosen)
+		return
 	var today: Dictionary = Time.get_datetime_dict_from_system()
 	start(Rng.daily_seed(today["year"], today["month"], today["day"]))
+
+
+## Go one room deeper. Public because the run coordinator calls it when the player
+## chooses to descend at an exit — the Delve no longer decides that itself, since
+## "descend or extract" is a run-loop decision, not an assembly one.
+func descend() -> void:
+	_advance()
 
 
 func _advance() -> void:
 	_index += 1
 	if _index >= _plan.size():
+		# Cleared the whole mine. The coordinator treats this as a forced extract.
 		Events.delve_completed.emit()
 		return
 	_load_room(_plan[_index])
 	Events.room_entered.emit(_index, String(_plan[_index]))
+
+
+## True once the player is standing at the current room's exit, so the coordinator
+## can offer the extract/descend choice.
+func player_at_exit() -> bool:
+	return _room != null and _room.is_player_in_exit_zone()
 
 
 func _load_room(id: StringName) -> void:
@@ -139,7 +158,6 @@ func _load_room(id: StringName) -> void:
 		return
 	_room = packed.instantiate() as Room
 	add_child(_room)
-	_room.exit_reached.connect(_on_exit_reached)
 
 	_spawn_enemies(_room)
 	var player: Player = _get_player()
@@ -163,6 +181,3 @@ func _spawn_enemies(room: Room) -> void:
 		enemy.global_position = point["position"]
 		room.add_child(enemy)
 
-
-func _on_exit_reached() -> void:
-	_advance()

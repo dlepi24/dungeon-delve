@@ -48,6 +48,9 @@ extends Resource
 @export var attacks: Array[EnemyAttackData] = []
 
 @export_group("Death")
+## Haul this enemy drops when killed. The Brute is worth more than the Dart, so
+## fighting the dangerous thing pays — which is what makes pushing deeper tempting.
+@export var haul_reward: int = 2
 ## How long the corpse lingers before fading out and freeing itself.
 @export var corpse_linger_ms: int = 260
 @export var corpse_fade_ms: int = 420

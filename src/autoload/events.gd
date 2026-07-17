@@ -42,6 +42,17 @@ signal player_died
 ## does not need to know how a run is assembled.
 signal run_restart_requested(seed_value: int)
 
+## Carried haul changed this run. The HUD listens.
+signal haul_changed(carried: int)
+## Extracted alive: this much haul was banked.
+signal run_extracted(amount: int)
+## Died in the mine: this much carried haul was lost.
+signal run_lost(amount: int)
+## A haul pickup was collected in the world.
+signal haul_collected(amount: int, at: Vector2)
+## An upgrade was bought at the vendor.
+signal upgrade_purchased(id: StringName, new_level: int)
+
 ## A run began, from this seed. The seed is shareable and reproduces the delve.
 signal run_started(seed_value: int)
 ## The player entered room `index` of the plan.

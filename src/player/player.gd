@@ -104,11 +104,15 @@ const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll", "attack", "parry"]
 @export var riposte_damage_multiplier: float = 3.0
 
 @export_group("Health")
+## Base max health before permanent upgrades. The vendor's max_health upgrade
+## adds to this, so a player who has banked haul into it starts tougher.
 @export var max_health: float = 100.0
-## Where you reappear after dying. PLACEHOLDER: M5 owns death, losing your haul
-## and returning to the hub. Right now the room just puts you back so a fight can
-## be judged without restarting the game.
-@export var respawn_delay_ms: int = 700
+## The max-health upgrade resource, so the bonus per level stays data, not a magic
+## number here. Optional — if unset (e.g. the gym), only base health applies.
+@export var max_health_upgrade: UpgradeData
+## How long the death beat lasts before the run hands off to the hub. Long enough
+## that a death registers, short enough that it does not drag.
+@export var death_beat_ms: int = 900
 
 @export_group("Hitstun")
 @export var hitstun_ms: int = 250
@@ -156,7 +160,8 @@ var health: float = 0.0
 
 var _was_on_floor: bool = true
 var _spawn_position: Vector2 = Vector2.ZERO
-var _respawn_at_tick: int = -1
+var _dead: bool = false
+var _death_handoff_tick: int = 0
 
 @onready var _state_machine: PlayerStateMachine = $StateMachine
 @onready var _juice: BodyJuice = $VisualRoot
@@ -177,7 +182,7 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	health = max_health
+	health = effective_max_health()
 	_spawn_position = global_position
 	_buffer = InputBuffer.new(BUFFERED_ACTIONS)
 	_state_machine.setup(self)
@@ -197,9 +202,15 @@ func _physics_process(delta: float) -> void:
 	_tick += 1
 	_recalculate_derived()
 
-	if _respawn_at_tick >= 0:
-		if _tick >= _respawn_at_tick:
-			_respawn()
+	# Once dead, hold still for a beat, then hand off to the run coordinator. The
+	# player does NOT decide what death costs — GameState and the run loop do.
+	if _dead:
+		velocity.x = move_toward(velocity.x, 0.0, ground_friction * delta)
+		velocity.y += _fall_gravity * delta
+		move_and_slide()
+		if _tick >= _death_handoff_tick:
+			_death_handoff_tick = 0x7FFFFFFF  # fire once
+			Events.player_died.emit()
 		return
 
 	if is_on_floor():
@@ -216,9 +227,7 @@ func _physics_process(delta: float) -> void:
 ## The hurtbox reports; the active state decides what a hit means. i-frames are
 ## checked here because they apply regardless of state.
 func _on_hurt(hitbox: Hitbox) -> void:
-	if invulnerable:
-		return
-	if _respawn_at_tick >= 0:
+	if invulnerable or _dead:
 		return
 	last_hit_direction = 1 if hitbox.global_position.x < global_position.x else -1
 	_state_machine.handle_hit(hitbox)
@@ -235,34 +244,42 @@ func _on_hurt(hitbox: Hitbox) -> void:
 		_die()
 
 
-## PLACEHOLDER. M5 owns what death actually costs you — the haul, the run, the
-## trip back to the hub. This exists only so a fight can be judged end to end
-## without quitting the game.
+## Base health plus whatever the persistent max-health upgrade adds. Reading it
+## through the resource keeps the per-level value as data, not a constant here.
+func effective_max_health() -> float:
+	var bonus: float = 0.0
+	if max_health_upgrade != null:
+		var level: int = GameState.upgrade_level(max_health_upgrade.id)
+		bonus = max_health_upgrade.value_at_level(level)
+	return max_health + bonus
+
+
+func is_dead() -> bool:
+	return _dead
+
+
+## The run ends. Death costs you every carried haul (GDD): the run coordinator
+## handles that when it hears player_died. Here we just enter the death beat — a
+## short, uncontrollable moment before the handoff, so a death lands rather than
+## cutting instantly to a menu.
 func _die() -> void:
-	_respawn_at_tick = _tick + ms_to_ticks(respawn_delay_ms)
-	velocity = Vector2.ZERO
+	_dead = true
 	invulnerable = true
-	Events.player_died.emit()
+	consume_riposte()
+	_death_handoff_tick = _tick + ms_to_ticks(death_beat_ms)
+	Sfx.play(Sfx.HURT, 0.7, 4.0)
 	_juice.punch(Vector2(1.6, 0.4))
 
 
-func _respawn() -> void:
-	_respawn_at_tick = -1
-	health = max_health
-	invulnerable = false
-	velocity = Vector2.ZERO
-	global_position = _spawn_position
-	consume_riposte()
-	_state_machine.transition_to(&"Idle")
-
-
-## Wipe everything a run accumulates. Called by the Delve when a run starts, so
-## replaying a seed compares like with like.
+## Full reset for a fresh run: health, riposte, death state. Called when a run
+## starts, so replaying a seed compares like with like and a new delve after
+## death starts you whole.
 func reset_for_new_run() -> void:
-	health = max_health
+	_dead = false
+	_death_handoff_tick = 0
+	health = effective_max_health()
 	invulnerable = false
 	velocity = Vector2.ZERO
-	_respawn_at_tick = -1
 	consume_riposte()
 	if _state_machine != null:
 		_state_machine.transition_to(&"Idle")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=17 format=3]
 
 ; Collision layers, per the table in docs/GDD.md and src/systems/collision_layers.gd:
 ;   1 World  2 Player  3 Enemy  4 PlayerAttack  5 EnemyAttack  6 Pickup
@@ -19,6 +19,7 @@
 [ext_resource type="Script" path="res://src/systems/hurtbox.gd" id="11_hurtbox"]
 [ext_resource type="Script" path="res://src/systems/body_juice.gd" id="12_juice"]
 [ext_resource type="Script" path="res://src/player/player_sprite.gd" id="13_sprite"]
+[ext_resource type="Resource" path="res://src/systems/upgrades/max_health.tres" id="14_hp"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 14.0
@@ -31,6 +32,7 @@ size = Vector2(46, 44)
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("1_player")
+max_health_upgrade = ExtResource("14_hp")
 
 ; VisualRoot sits between the body and the rect because it is the node that gets
 ; scaled and spun. Its origin is the player's feet, so a squash flattens

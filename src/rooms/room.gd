@@ -8,9 +8,10 @@ extends Node2D
 ## room just answers questions. That keeps rooms reusable in any order, which is
 ## the whole point of assembling them from a seed.
 
-## Emitted when the player reaches the exit. The Delve listens; the room does not
-## know what happens next.
-signal exit_reached
+## The player entered or left the exit zone. The run coordinator listens and puts
+## up the extract/descend choice — the room itself makes no decision, it only
+## reports where the player is standing.
+signal exit_zone_changed(inside: bool)
 
 @export var room_id: String = ""
 @export var room_size: Vector2 = Vector2.ZERO
@@ -27,7 +28,7 @@ signal exit_reached
 @export var exit_pulse_hz: float = 1.6
 
 var _player: Player = null
-var _fired: bool = false
+var _in_exit_zone: bool = false
 var _pulse: float = 0.0
 var _exit_rect: ColorRect = null
 
@@ -86,13 +87,21 @@ func exit_position() -> Vector2:
 	return exit_marker.global_position
 
 
+func is_player_in_exit_zone() -> bool:
+	return _in_exit_zone
+
+
 func _physics_process(_delta: float) -> void:
 	var player: Player = _get_player()
-	if _fired or player == null:
+	if player == null:
 		return
-	if player.global_position.distance_to(exit_marker.global_position) > exit_radius:
-		return
-	# Fire once. The delve frees this room, but a second emission in the same
-	# frame would advance two rooms at once.
-	_fired = true
-	exit_reached.emit()
+	# Only offer the choice when grounded and alive: you should not be able to
+	# extract mid-jump or in a death beat.
+	var inside: bool = (
+		player.is_on_floor()
+		and not player.is_dead()
+		and player.global_position.distance_to(exit_marker.global_position) <= exit_radius
+	)
+	if inside != _in_exit_zone:
+		_in_exit_zone = inside
+		exit_zone_changed.emit(inside)

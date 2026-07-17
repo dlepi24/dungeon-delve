@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 ; The playable delve. Rooms are loaded and freed by Delve as you walk through
 ; them; only the player, camera and HUD persist across a transition.
@@ -10,6 +10,8 @@
 [ext_resource type="PackedScene" path="res://src/ui/hud.tscn" id="5_hud"]
 [ext_resource type="PackedScene" path="res://src/ui/delve_hud.tscn" id="6_dhud"]
 [ext_resource type="PackedScene" path="res://src/ui/pause_menu.tscn" id="7_pause"]
+[ext_resource type="Script" path="res://src/rooms/run_coordinator.gd" id="20_coord"]
+[ext_resource type="PackedScene" path="res://src/rooms/extract_prompt.tscn" id="21_prompt"]
 
 [node name="DelveRun" type="Node2D"]
 
@@ -74,3 +76,9 @@ F3      debug"
 
 [node name="PauseMenu" parent="." instance=ExtResource("7_pause") node_paths=PackedStringArray("delve")]
 delve = NodePath("../Delve")
+
+[node name="RunCoordinator" type="Node" parent="." node_paths=PackedStringArray("delve")]
+script = ExtResource("20_coord")
+delve = NodePath("../Delve")
+
+[node name="ExtractPrompt" parent="RunCoordinator" instance=ExtResource("21_prompt")]

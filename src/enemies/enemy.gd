@@ -387,5 +387,22 @@ func _on_death() -> void:
 	_hurtbox.set_deferred(&"monitorable", false)
 	_hurtbox.set_deferred(&"monitoring", false)
 	collision_layer = 0
+	_drop_haul()
 	Events.enemy_died.emit(self)
 	_juice.punch(Vector2(1.5, 0.5))
+
+
+## Scatter the haul reward as pickups. Count, not one big nugget, so a kill throws
+## a satisfying little shower of ore.
+func _drop_haul() -> void:
+	var host: Node = get_parent()
+	if host == null or stats.haul_reward <= 0:
+		return
+	var scene: PackedScene = load("res://src/systems/haul_pickup.tscn") as PackedScene
+	if scene == null:
+		return
+	for i: int in stats.haul_reward:
+		var nugget: HaulPickup = scene.instantiate() as HaulPickup
+		nugget.amount = 1
+		nugget.global_position = global_position + Vector2(0, -stats.body_size.y * 0.5)
+		host.add_child(nugget)

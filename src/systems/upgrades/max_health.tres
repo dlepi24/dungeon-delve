@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/systems/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"max_health"
+display_name = "Reinforced Lungs"
+description = "+20 max health per level"
+per_level = 20.0
+max_level = 5
+base_cost = 40
+cost_step = 30

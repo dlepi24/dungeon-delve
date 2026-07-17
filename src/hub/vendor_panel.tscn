@@ -1,0 +1,65 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/hub/vendor_panel.gd" id="1"]
+[ext_resource type="Resource" path="res://src/systems/upgrades/max_health.tres" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="sb"]
+bg_color = Color(0.07, 0.05, 0.04, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.62, 0.5, 0.32, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="VendorPanel" type="CanvasLayer"]
+layer = 5
+script = ExtResource("1")
+stock = Array[Resource]([ExtResource("2")])
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -160.0
+offset_right = 280.0
+offset_bottom = 160.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("sb")
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="Rows" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = "THE QUARTERMASTER"
+horizontal_alignment = 1
+
+[node name="Banked" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = "Banked haul: 0"
+horizontal_alignment = 1
+
+[node name="List" type="VBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="Close" type="Button" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = "Close  [F]"

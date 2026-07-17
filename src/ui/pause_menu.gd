@@ -82,12 +82,8 @@ func _on_replay() -> void:
 
 
 func _on_fresh() -> void:
-	if delve == null:
-		return
-	# A fresh seed is the one thing here that is genuinely arbitrary, so it does
-	# NOT come from the seeded service — asking Rng for a random seed would make
-	# the seed depend on the seed.
-	var generator: RandomNumberGenerator = RandomNumberGenerator.new()
-	generator.randomize()
+	# Abandon this run and go back to the hub. Abandoning is NOT extracting: you
+	# forfeit the carried haul, same as walking away from the mine.
+	GameState.end_run()
 	_close()
-	Events.run_restart_requested.emit(generator.randi())
+	get_tree().change_scene_to_file.call_deferred("res://src/hub/hub.tscn")

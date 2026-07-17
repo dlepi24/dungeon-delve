@@ -99,12 +99,32 @@ lock those.
 ### Run structure
 - Delve levels are procedurally assembled from hand-built rooms (rooms first, assembly logic later).
 - Persistent hub between runs.
-- An extraction decision exists mid-run. Exact mechanism is open (see below).
+- An extraction decision exists mid-run.
+
+### Death, extraction and meta (locked 2026-07-15)
+The greed loop, in three decisions:
+
+- **Haul.** You gather haul (ore, relics) as you descend. It is *carried*, not yet
+  yours. Enemies drop it; the mine holds it.
+- **Extract or descend, every room.** Each room's exit is the decision point. Going
+  UP (to the surface) extracts: your carried haul is banked and the run ends safe.
+  Going DOWN descends to the next room, richer and more dangerous. The choice is in
+  your face at every exit — that IS the greed tension, and up/down maps to the mine
+  fiction so it needs no explaining.
+- **Death costs everything carried.** Die in the mine and you lose all carried haul.
+  Only banked haul is yours. This is the sharp version on purpose: every room deeper
+  is more at risk, and the collapsing shaft sells the stakes. (If playtesting proves
+  it too punishing, a keep-a-fraction softening is the pre-agreed fallback — decision
+  log entry required.)
+- **The hub is a vendor.** Banked haul buys permanent stat upgrades that stack across
+  runs — so the hub grows even when runs fail (pillar #5). M5 ships ONE upgrade (max
+  health) to prove the loop; the rest is M6 content. Not crafting, not base-building
+  in v1.
 
 ## Open questions
-1. ~~**Theme and setting.**~~ **ANSWERED 2026-07-15 — see Setting below.**
-2. **Death and extraction rules.** What you keep, what you lose, how extraction works mechanically.
-3. **Meta progression shape.** What the hub does: vendor, crafting, base-building, or a mix. What persists.
+1. ~~**Theme and setting.**~~ **ANSWERED 2026-07-15 — see Setting.**
+2. ~~**Death and extraction rules.**~~ **ANSWERED 2026-07-15 — see Death/extraction/meta.**
+3. ~~**Meta progression shape.**~~ **ANSWERED 2026-07-15 — vendor with permanent upgrades. See above.**
 4. **V1 scope line.** What ships in the first itch.io build.
 5. **Name.**
 
@@ -119,3 +139,4 @@ lock those.
 - 2026-07-15: Enemy attacks are data (`EnemyAttackData` resources) chosen by range, not one hard-coded swing. Folds the Dart's lunge in as a `dash_speed` value rather than a subclass — it turned out to be a number, not a verb. Adding an attack or an enemy variant is now a resource file.
 - 2026-07-15: **Setting locked: a collapsing mine.** Dustin's call. You delve for ore and relics while the shaft fails behind you. Chosen because it makes the greed pillar literal — deeper is richer and less stable — rather than a rule sitting on top of an unrelated fiction. Unblocks art, which had been gated on this since M2's gate passed. Does not settle extraction, meta shape or the name.
 - 2026-07-15: Key rebinding pulled forward from M7, Dustin's call after finding J/K awkward. The GDD's KB+M table stays the DEFAULT rather than the only option, so the locked layout is now a starting point players can override.
+- 2026-07-15: **Run loop locked (M5), Dustin's call.** Gather carried haul in the delve; each room's exit offers extract (go UP, bank haul, end run safe) or descend (go DOWN, richer + deadlier). Death loses ALL carried haul — only banked is kept. Hub is a vendor selling permanent stacking stat upgrades; M5 ships one (max health). Chosen for the sharpest greed tension, which the collapsing-mine fiction already supports. Keep-a-fraction death softening is the pre-agreed fallback if it proves too punishing.

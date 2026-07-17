@@ -210,13 +210,17 @@ func _test_the_run_is_actually_playable() -> void:
 				chased = true
 	_check(chased, "at least one enemy actually acts rather than standing still")
 
-	# And the exit advances the run.
+	# The exit is now a CHOICE, not an auto-advance (M5). Standing on it should
+	# register as "at exit"; descending advances, extracting does not.
 	var before: int = delve.current_index()
 	player.global_position = room.exit_position()
 	player.velocity = Vector2.ZERO
-	for i: int in 20:
+	for i: int in 8:
 		await get_tree().physics_frame
-	_check(delve.current_index() > before, "reaching the exit advances the delve")
+	_check(delve.player_at_exit(), "standing on the exit registers as at-exit (the extract/descend prompt)")
+	delve.descend()
+	await get_tree().physics_frame
+	_check(delve.current_index() > before, "choosing descend advances the delve")
 	run.queue_free()
 	await get_tree().physics_frame
 

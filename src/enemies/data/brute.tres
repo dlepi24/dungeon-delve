@@ -45,6 +45,7 @@ idle_ms = 520
 stagger_ms = 1100
 can_jump = false
 attacks = Array[ExtResource("1_falor")]([SubResource("Resource_edovo"), SubResource("Resource_0ntow")])
+haul_reward = 8
 sprite_sheet = "brute"
 colour_idle = Color(0.55, 0.3, 0.5, 1)
 colour_recover = Color(0.4, 0.25, 0.38, 1)
