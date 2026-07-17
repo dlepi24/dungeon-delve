@@ -27,6 +27,29 @@ var carried_haul: int = 0
 ## Not persisted: a pending run does not survive a quit.
 var pending_seed: int = -1
 
+# --- Session state (survives runs, not the app) ---
+# Locked 2026-07-17: coming out of the mine ALIVE banks your weapon loadout the
+# same way it banks your haul — extract, walk around the hub, descend again,
+# still armed. Death loses it with everything else. Deliberately NOT saved to
+# disk: "as long as you don't die or quit" is the rule, so an app quit is a
+# surrender too. That keeps found weapons an in-session treasure rather than
+# permanent inventory (permanent weapons are a vendor/blacksmith matter).
+var session_weapons: Array[WeaponData] = []
+var session_active_slot: int = 0
+
+
+## The player reports every loadout change here, so whatever scene rebuilds the
+## player next can re-arm it without the two ever talking directly.
+func store_loadout(weapons: Array[WeaponData], active: int) -> void:
+	session_weapons = weapons.duplicate()
+	session_active_slot = active
+
+
+func clear_session_loadout() -> void:
+	session_weapons.clear()
+	session_active_slot = 0
+
+
 # --- Meta state (persistent) ---
 ## Haul you have successfully extracted. The vendor currency.
 var banked_haul: int = 0
@@ -101,6 +124,7 @@ func lose_run() -> void:
 	var lost: int = carried_haul
 	carried_haul = 0
 	run_active = false
+	clear_session_loadout()
 	_record_run_end()
 	save_game()
 	Events.run_lost.emit(lost)
@@ -182,6 +206,7 @@ func reset_save() -> void:
 	banked_haul = 0
 	upgrade_levels.clear()
 	carried_haul = 0
+	clear_session_loadout()
 	total_runs = 0
 	deepest_room = 0
 	best_haul = 0

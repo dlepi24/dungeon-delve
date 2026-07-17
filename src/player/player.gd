@@ -372,6 +372,9 @@ func _wield(weapon: WeaponData) -> void:
 	equipped_weapon = weapon
 	_resize_attack_hitbox()
 	_juice.flash()
+	# Every loadout change is mirrored to the session stash, so extraction
+	# "banks" weapons for free — the next scene's player rebuild reads it back.
+	GameState.store_loadout(held_weapons, active_slot)
 	Events.weapon_equipped.emit(weapon)
 
 
@@ -509,10 +512,12 @@ func reset_for_new_run() -> void:
 	# Buffs are per-run: a fresh run starts with none.
 	_buffs.clear()
 	_buff_expiry.clear()
-	# Found weapons are per-run too — the whole loadout goes, back to the pickaxe.
-	equipped_weapon = null
-	held_weapons.clear()
-	active_slot = 0
+	# Weapons are SESSION-scoped (GDD 2026-07-17): surviving a run banks the
+	# loadout, dying cleared the stash before we got here. Either way, the stash
+	# is the truth and we just re-arm whatever it says is ours.
+	held_weapons = GameState.session_weapons.duplicate()
+	active_slot = clampi(GameState.session_active_slot, 0, maxi(0, held_weapons.size() - 1))
+	equipped_weapon = held_weapons[active_slot] if not held_weapons.is_empty() else null
 	_resize_attack_hitbox()
 	if _state_machine != null:
 		_state_machine.transition_to(&"Idle")

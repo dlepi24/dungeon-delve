@@ -44,9 +44,15 @@ func _ready() -> void:
 		"a third weapon replaces the inactive slot and comes up in hand")
 	_ck(p.held_weapons[0] == maul, "the weapon you were holding is never silently replaced")
 
+	# Session scoping (GDD 2026-07-17): surviving keeps the loadout, dying loses
+	# it. reset_for_new_run models arriving anywhere alive; lose_run is death.
 	p.reset_for_new_run()
-	_ck(p.weapon_name() == "Pickaxe", "a new run resets to the pickaxe (weapons are run-scoped)")
-	_ck(p.held_weapons.is_empty(), "a new run clears the whole loadout")
+	_ck(p.weapon_name() == spear.display_name and p.held_weapons.size() == 2,
+		"surviving a run banks the loadout — extract and you stay armed")
+	GameState.lose_run()
+	p.reset_for_new_run()
+	_ck(p.weapon_name() == "Pickaxe", "death resets to the pickaxe")
+	_ck(p.held_weapons.is_empty(), "death clears the whole loadout")
 
 	# Meta upgrade persists across that reset; the weapon did not.
 	GameState.upgrade_levels[&"damage"] = 3
