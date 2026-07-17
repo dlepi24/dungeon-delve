@@ -1,7 +1,37 @@
 # Roadmap
 
 ## Status
-- **M7 product shell BUILT 2026-07-17, awaiting Dustin's by-eye pass.** The game
+- **M7 round 2 BUILT 2026-07-17 (same day), from Dustin's playtest notes.**
+  Verdict on round 1 was "very fun" with a punch list; all of it landed:
+  - Pause menu gained **Quit to title** (Souls-style; full app quit lives on the
+    title). Forfeits carried haul like abandoning.
+  - **Weapon swap is now ONE key** (Q toggles; E freed back to a future skill).
+    HUD shows a Dead Cells-style big active-weapon square with the stowed one
+    nested behind it. GDD decision log updated.
+  - **Crude icon art baked** (tools/gen_icons.py, ASCII source of truth):
+    pickaxe/dagger/maul/spear/ore/heart. WeaponData gained an `icon` export.
+  - **HUD art pass**: heart + ore icons, panel backdrops, icon weapon squares;
+    world pickups render their icons too (a ground Maul reads different from a
+    Dagger).
+  - **Weapons are now SESSION-scoped, Dustin's call**: extraction banks the
+    loadout like haul; death or app-quit loses it. Never saved to disk.
+    weapon_test pins it; GDD logged.
+  - **The Blacksmith**: second hub vendor, rerolling random weapon stock each
+    visit, prices on WeaponData. Same equip path as drops. Shields/parry gear
+    was floated but is NOT designed — needs a session.
+  - **The Overseer miniboss** guards the deep room (new EnemyStats .tres + `E`
+    room glyph): unpokeable crush, long quake, a charge that answers sniping;
+    340 HP, dies rich. Dart cut from that room.
+  - **Title-screen mystery**: the scene is set as main_scene and boots clean —
+    if it did not appear, the game was likely launched with "Run Current
+    Scene" (F6) instead of "Run Project" (F5) / `godot --path .`. Quit-to-title
+    now also reaches it in-game.
+  - **Buffs already persist through doors** — only run start clears them. They
+    are 6-8 s timers (src/systems/buffs/*.tres), so they usually EXPIRE before
+    the next door and read as vanishing; duration is Dustin's tuning knob.
+  - Deliberately not built, need Dustin's call: depth-scaled enemy stats,
+    elite variants in mid rooms, shields/parry gear, buff-duration retune.
+- **M7 product shell round 1 BUILT 2026-07-17, judged "very fun".** The game
   now boots to a title screen (Play/Continue, New-game-with-wipe-confirm,
   Settings, Quit, career stats, live-keybind controls line), runs fullscreen
   borderless with the cursor hidden during play, and ships the debug overlay
