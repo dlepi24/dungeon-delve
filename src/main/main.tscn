@@ -1,6 +1,127 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 
-[node name="Main" type="Node2D"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm"]
+bg_color = Color(0.05, 0.05, 0.07, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.7, 0.3, 0.25, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="Main" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 script = ExtResource("1_main")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.055, 0.042, 0.035, 1)
+
+; Lantern-warm accent bar over the title, echoing the mine's palette.
+[node name="Accent" type="ColorRect" parent="."]
+offset_left = 760.0
+offset_top = 268.0
+offset_right = 1160.0
+offset_bottom = 274.0
+color = Color(1.0, 0.85, 0.5, 0.5)
+
+[node name="Title" type="Label" parent="."]
+offset_left = 360.0
+offset_top = 290.0
+offset_right = 1560.0
+offset_bottom = 400.0
+theme_override_font_sizes/font_size = 72
+text = "THE COLLAPSING MINE"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="."]
+offset_left = 360.0
+offset_top = 400.0
+offset_right = 1560.0
+offset_bottom = 430.0
+theme_override_colors/font_color = Color(0.65, 0.58, 0.5, 1)
+text = "working title — delve deep, extract or die"
+horizontal_alignment = 1
+
+[node name="Menu" type="VBoxContainer" parent="."]
+offset_left = 830.0
+offset_top = 500.0
+offset_right = 1090.0
+offset_bottom = 760.0
+theme_override_constants/separation = 16
+
+[node name="Play" type="Button" parent="Menu"]
+layout_mode = 2
+text = "Play"
+
+[node name="NewGame" type="Button" parent="Menu"]
+layout_mode = 2
+text = "New game"
+
+[node name="Quit" type="Button" parent="Menu"]
+layout_mode = 2
+text = "Quit"
+
+[node name="Controls" type="Label" parent="."]
+offset_left = 160.0
+offset_top = 1010.0
+offset_right = 1760.0
+offset_bottom = 1040.0
+theme_override_colors/font_color = Color(0.55, 0.5, 0.44, 1)
+text = "controls"
+horizontal_alignment = 1
+
+[node name="Confirm" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -90.0
+offset_right = 240.0
+offset_bottom = 90.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_confirm")
+
+[node name="Margin" type="MarginContainer" parent="Confirm"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="Rows" type="VBoxContainer" parent="Confirm/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Warning" type="Label" parent="Confirm/Margin/Rows"]
+layout_mode = 2
+text = "Start over?
+This wipes your banked haul and upgrades."
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="Confirm/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Yes" type="Button" parent="Confirm/Margin/Rows/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Wipe and start over"
+
+[node name="Cancel" type="Button" parent="Confirm/Margin/Rows/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cancel"
