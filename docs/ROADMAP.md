@@ -1,10 +1,12 @@
 # Roadmap
 
 ## Status
-- **Current milestone:** M5 built and PLAYED through by Dustin (full loop, upgraded
-  max health twice). Post-M5 polish landed 2026-07-16: result screen, depth haul
-  multiplier, armor + damage upgrades. Now weighing M6 content (varied drops,
-  music) — see the wishlist below.
+- **Current milestone:** M6 content underway. The full loop is proven fun but
+  Dustin finds it repetitive after several loops ("keep doing the same thing").
+  Landed 2026-07-17: attack aim-assist + damage-taken numbers (combat feel), the
+  weapon upgrade now grants attack speed (upgrades that change FEEL), and a
+  temporary buff system (Haste/Might/Iron Skin/Frenzy) that drops in runs. The
+  open question now is which anti-repetition direction to build next — see below.
 - **M0-M3 all PASSED.** M1 signed off 2026-07-14; M2 and M3 signed off 2026-07-15
   ("It's genuinely fun"), re-judged after the null-node-reference fix so the
   verdict was given against working telegraphs and counts. Movement, combat and
@@ -22,8 +24,14 @@
     interacts with his "heal 100% at hub" observation. Confirm before building.
   - More vendor upgrades: DONE for armor + damage; weapons-as-items is a bigger M6
     system (drop tables) still open.
-  - MUSIC: dark retro synthwave, Minecraft-ish. Approach undecided — generate a
-    placeholder loop now (like the SFX), or defer real audio to M9. Dustin's call.
+  - MUSIC: placeholder synthwave DONE (tools/gen_music.py). Real track is M9.
+  - **The repetition problem is the priority.** Same 3 enemies, 6 rooms, 3
+    permanent upgrades every run. Highest-leverage fixes, roughly in order:
+    (1) more enemy types + an elite/miniboss (data-driven, cheap); (2) WEAPON
+    VARIETY — different weapons that change playstyle, not +% damage (build
+    variety, and the root fix for "upgrades feel flat"); (3) run modifiers /
+    events (shrines, risk rooms, a real choice); (4) more/variable rooms. Awaiting
+    Dustin's pick on which to build first.
   - Deferred by Dustin, do NOT touch without a fresh call: combat difficulty /
     stunlock (afraid of overcorrection), and heal-on-descend (he said it is fine,
     but flagged a Diablo-well alternative as a maybe-later).
