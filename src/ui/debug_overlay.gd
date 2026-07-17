@@ -11,8 +11,9 @@ extends CanvasLayer
 @export var player: Player
 @export var dummy: TrainingDummy
 ## Toggled with the debug_toggle action (F3). A dev tool, not a combat verb, so it
-## does not spend from the GDD's ~10 verb budget.
-@export var start_visible: bool = true
+## does not spend from the GDD's ~10 verb budget. Ships hidden: a debug panel on
+## by default reads as a broken game, and M7 is the "reads like a game" pass.
+@export var start_visible: bool = false
 
 @onready var _label: Label = $Panel/Margin/Label
 
@@ -21,11 +22,15 @@ extends CanvasLayer
 const PARRY_FLASH_TICKS: int = 40
 
 var _parry_flash: int = 0
+## Current room id, from room_entered. Dev info that used to live on the
+## always-visible delve HUD; the seed and full plan are F3 material, not player UI.
+var _room_id: String = ""
 
 
 func _ready() -> void:
 	visible = start_visible
 	Events.parry_succeeded.connect(_on_parry_succeeded)
+	Events.room_entered.connect(func(_index: int, room_id: String) -> void: _room_id = room_id)
 
 
 func _on_parry_succeeded() -> void:
@@ -60,6 +65,14 @@ func _process(_delta: float) -> void:
 		lines.append("")
 		lines.append("dummy      %s" % dummy.get_state_name())
 		lines.append("dummy hp   %d" % roundi(dummy.health))
+	if GameState.run_active:
+		var plan: String = ""
+		for id: StringName in GameState.run_plan:
+			plan += "%s " % id
+		lines.append("")
+		lines.append("seed       %s" % GameState.seed_text())
+		lines.append("room       %d/%d %s" % [GameState.depth + 1, GameState.run_plan.size(), _room_id])
+		lines.append("plan       %s" % plan.strip_edges())
 	if _parry_flash > 0:
 		lines.append("")
 		lines.append(">>> PARRY <<<")

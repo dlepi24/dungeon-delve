@@ -137,6 +137,10 @@ func _advance() -> void:
 		# Cleared the whole mine. The coordinator treats this as a forced extract.
 		Events.delve_completed.emit()
 		return
+	# Depth is run state and the Delve is the thing that knows it. This write used
+	# to live in the dev HUD, which meant deleting a HUD could silently break the
+	# depth-pays-more economy.
+	GameState.depth = _index
 	_load_room(_plan[_index])
 	Events.room_entered.emit(_index, String(_plan[_index]))
 
