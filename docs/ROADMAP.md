@@ -1,6 +1,23 @@
 # Roadmap
 
 ## Status
+- **M7 round 3 BUILT 2026-07-17 (evening), from Dustin's second playtest pass.**
+  - Pause menu slimmed to Resume / Settings… / Quit to title; seed replay and
+    abandon-run moved into the settings screen's run section (mid-run only).
+  - **Pause now works in the hub** — it was only instanced in the delve. The
+    pause menu lost its Delve export (restart rides the Events bus) and is a
+    drop-in for any playable scene.
+  - **Varok, the Overseer**: the miniboss is named, `is_boss` on EnemyStats,
+    and engaging him raises a Souls-style named boss bar (bottom-centre,
+    `Events.boss_engaged`). Announces once per fight, not per re-aggro.
+  - **Variety pass** for "same exact levels all day": middle-room pool 4 -> 7
+    (cavern / shaft / gallery, ASCII-authored, validator-proven), and spawn
+    markers are now weight-class suggestions — a seeded stream swaps
+    grunt<->dart and promotes toward brutes with depth. Entry room and the
+    boss never vary. Same seed still = same delve (daily-seed safe).
+  - Title music: already wired (main.gd plays the hub track); if it seems
+    silent, the game was likely launched via F6/current-scene. Verify with F5.
+  - Physics pin restored after another editor strip (9th).
 - **M7 round 2 BUILT 2026-07-17 (same day), from Dustin's playtest notes.**
   Verdict on round 1 was "very fun" with a punch list; all of it landed:
   - Pause menu gained **Quit to title** (Souls-style; full app quit lives on the
