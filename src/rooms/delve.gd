@@ -20,7 +20,9 @@ const ROOM_DIR: String = "res://src/rooms/delve"
 ## rather than being uniform noise.
 const FIRST_ROOM: StringName = &"entry"
 const LAST_ROOM: StringName = &"deep"
-const MIDDLE_POOL: Array[StringName] = [&"gap", &"climb", &"arena", &"corridor"]
+const MIDDLE_POOL: Array[StringName] = [
+	&"gap", &"climb", &"arena", &"corridor", &"cavern", &"shaft", &"gallery",
+]
 
 ## One scene for every enemy: there are no enemy subclasses any more, only data.
 const ENEMY_SCENE: String = "res://src/enemies/enemy.tscn"
@@ -175,8 +177,9 @@ func _load_room(id: StringName) -> void:
 ## Enemies are built from the room's markers, so a room never hard-codes which
 ## enemy it holds — swapping the roster is a data change.
 func _spawn_enemies(room: Room) -> void:
+	var rng: RandomNumberGenerator = Rng.stream(&"spawns")
 	for point: Dictionary in room.spawn_points():
-		var kind: String = point["kind"]
+		var kind: String = _vary_kind(point["kind"], rng)
 		if not ENEMY_STATS.has(kind):
 			push_error("Delve: unknown enemy kind '%s'" % kind)
 			continue
@@ -185,4 +188,28 @@ func _spawn_enemies(room: Room) -> void:
 		enemy.stats = load(ENEMY_STATS[kind]) as EnemyStats
 		enemy.global_position = point["position"]
 		room.add_child(enemy)
+
+
+## Seeded, depth-scaled variation on the authored spawns, so the same layout
+## does not always hold the same fight. The ASCII marker is the room designer's
+## SUGGESTION of weight class; which grunt-tier or dart-tier thing actually
+## stands there varies per seed, and deeper rooms promote harder.
+##
+## Draws come from the seeded &"spawns" stream, never randf(): two players on
+## one daily seed must meet the same monsters. The entry room (depth 0) and the
+## Overseer are never varied — the gentle first room and the boss are promises,
+## not suggestions.
+func _vary_kind(kind: String, rng: RandomNumberGenerator) -> String:
+	if kind == "overseer" or _index <= 0:
+		return kind
+	# Sideways variety: a grunt post may hold a dart and vice versa.
+	if rng.randf() < 0.35:
+		if kind == "grunt":
+			kind = "dart"
+		elif kind == "dart":
+			kind = "grunt"
+	# Depth promotion: the mine grows meaner as it pays better.
+	if kind != "brute" and rng.randf() < 0.08 * float(_index):
+		kind = "brute"
+	return kind
 
