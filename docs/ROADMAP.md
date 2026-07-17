@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Status
-- **Current milestone:** M4 PASSED. **M5 is design-blocked — that is now the
-  critical path, and it is a design session, not a coding task.**
+- **Current milestone:** M5 BUILT, awaiting Dustin's call. **This is the one that
+  turns a combat sandbox into a game** — the full loop now exists.
 - **M0-M3 all PASSED.** M1 signed off 2026-07-14; M2 and M3 signed off 2026-07-15
   ("It's genuinely fun"), re-judged after the null-node-reference fix so the
   verdict was given against working telegraphs and counts. Movement, combat and
@@ -14,9 +14,12 @@
   His playtest then found a pillar violation — attack-spam beat everything —
   which produced the poise/hyper-armor system, attacks as `EnemyAttackData`
   resources chosen by range, and enemy jumping. See the GDD decision log.
-- **Next step:** re-play the delve to judge poise (ESC now lets you replay one
-  exact seed, which is how to A/B a tuning change fairly). Then M5, which cannot
-  start without the design session below.
+- **Next step:** Dustin plays the whole loop and judges the greed tension. Boot the
+  game -> hub -> descend -> fight and gather haul -> at each exit choose W (extract,
+  bank it) or S (descend, risk it) -> die and lose it all, or extract and spend it
+  on max-health at the vendor -> descend again. The M5 exit gate is whether the
+  "one more run" pull is real. If lose-everything death feels too harsh, the GDD
+  has a pre-agreed keep-a-fraction fallback.
 - **Theme is LOCKED (2026-07-15): a collapsing mine.** Art is unblocked. The
   environment has had a first pass (rock/timber/ore tiles, lantern palette).
   **Character art is the remaining gap** — bodies are still ColorRect capsules,
@@ -38,15 +41,10 @@
     A test pins this. If Dustin rules the other way, the test changes with it.
   - Tuned feel-spec values should be written back into the GDD feel spec table,
     which still holds the untested starting values.
-  - **M5 IS NOW BLOCKED on the GDD's open questions.** M5 is the run loop: death,
-    pickups, the extraction decision, a hub, one persistent upgrade. Open question 2
-    (death and extraction rules) and question 3 (meta progression shape) ARE that
-    milestone — there is no honest way to build it by guessing. This is the next
-    thing on the critical path and it is a claude.ai design session, not a coding
-    task. Questions 1 (theme), 4 (v1 scope) and 5 (name) can wait longer.
-  - Placeholders M5 will replace: `Player.respawn_delay_ms` (death currently just
-    puts you back), `Enemy.corpse_*` (no drops), and `Delve.auto_start` exists
-    precisely so a hub can choose the seed before the run begins.
+  - **M5 questions are ANSWERED and built (2026-07-15):** lose-everything death, the
+    exit is the extract/descend fork, vendor with permanent upgrades. See the GDD.
+  - Remaining open GDD questions: 4 (v1 scope line) and 5 (name). Neither blocks the
+    next build milestone.
 - **Deferred:** Godot MCP server. No official or registry-listed server exists; all
   candidates are unvetted third-party code. The headless CLI already covers running
   scenes and reading output. Revisit only if tuning feel outgrows the CLI.
@@ -128,6 +126,12 @@ the layout; lazy generation would silently break daily seeds.
 - Hub stub and one upgrade path that persists across runs
 
 **Exit:** the full loop exists: hub, delve, extract or die, spend, go again. The one-more-run pull is real.
+**BUILT 2026-07-15, awaiting Dustin's call.** Design locked by Dustin (GDD): carried
+haul is lost on death, banked on extract; each room's exit is the up=extract /
+down=descend fork; the hub vendor sells permanent stacking upgrades (max health
+ships). Economy pinned by tests/loop_test.tscn. The "one more run" judgement is
+Dustin's. Note: normal descents use a fresh random seed; the daily-seed MODE is
+still M8, but the determinism service underneath it is done and used here.
 
 ## M6: Meta and content
 - Meta progression per the GDD decision once made
