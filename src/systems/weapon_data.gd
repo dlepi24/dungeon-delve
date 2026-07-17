@@ -29,3 +29,6 @@ extends Resource
 
 @export_group("Readability")
 @export var swing_colour: Color = Color(0.85, 0.95, 1.0, 0.85)
+## HUD/shop icon (assets/icons/, baked by tools/gen_icons.py). Null falls back
+## to a flat swing_colour square, so a missing icon degrades, not crashes.
+@export var icon: Texture2D
