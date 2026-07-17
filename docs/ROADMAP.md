@@ -1,8 +1,10 @@
 # Roadmap
 
 ## Status
-- **Current milestone:** M5 BUILT, awaiting Dustin's call. **This is the one that
-  turns a combat sandbox into a game** — the full loop now exists.
+- **Current milestone:** M5 built and PLAYED through by Dustin (full loop, upgraded
+  max health twice). Post-M5 polish landed 2026-07-16: result screen, depth haul
+  multiplier, armor + damage upgrades. Now weighing M6 content (varied drops,
+  music) — see the wishlist below.
 - **M0-M3 all PASSED.** M1 signed off 2026-07-14; M2 and M3 signed off 2026-07-15
   ("It's genuinely fun"), re-judged after the null-node-reference fix so the
   verdict was given against working telegraphs and counts. Movement, combat and
@@ -14,12 +16,17 @@
   His playtest then found a pillar violation — attack-spam beat everything —
   which produced the poise/hyper-armor system, attacks as `EnemyAttackData`
   resources chosen by range, and enemy jumping. See the GDD decision log.
-- **Next step:** Dustin plays the whole loop and judges the greed tension. Boot the
-  game -> hub -> descend -> fight and gather haul -> at each exit choose W (extract,
-  bank it) or S (descend, risk it) -> die and lose it all, or extract and spend it
-  on max-health at the vendor -> descend again. The M5 exit gate is whether the
-  "one more run" pull is real. If lose-everything death feels too harsh, the GDD
-  has a pre-agreed keep-a-fraction fallback.
+- **Next step:** M6 content, Dustin's wishlist from the 2026-07-16 playtest:
+  - Varied drops: coin tiers, hearts to heal, temporary buffs (star-power style).
+    NOTE: hearts-to-heal is a DESIGN fork — in-run healing changes run pacing and
+    interacts with his "heal 100% at hub" observation. Confirm before building.
+  - More vendor upgrades: DONE for armor + damage; weapons-as-items is a bigger M6
+    system (drop tables) still open.
+  - MUSIC: dark retro synthwave, Minecraft-ish. Approach undecided — generate a
+    placeholder loop now (like the SFX), or defer real audio to M9. Dustin's call.
+  - Deferred by Dustin, do NOT touch without a fresh call: combat difficulty /
+    stunlock (afraid of overcorrection), and heal-on-descend (he said it is fine,
+    but flagged a Diablo-well alternative as a maybe-later).
 - **Theme is LOCKED (2026-07-15): a collapsing mine.** Art is unblocked. The
   environment has had a first pass (rock/timber/ore tiles, lantern palette).
   **Character art is the remaining gap** — bodies are still ColorRect capsules,
