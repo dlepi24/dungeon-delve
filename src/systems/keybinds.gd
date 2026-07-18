@@ -36,7 +36,7 @@ const LABELS: Dictionary[StringName, String] = {
 	&"attack": "Attack",
 	&"parry": "Parry",
 	&"skill_1": "Swap weapon",
-	&"skill_2": "Skill 2 (unused)",
+	&"skill_2": "Timber hook",
 	&"interact": "Interact",
 }
 

@@ -102,6 +102,38 @@ const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll", "attack", "parry"]
 @export var pogo_startup_ms: int = 50
 @export var pogo_active_ms: int = 240
 
+@export_group("Hook")
+## How far the timber hook reaches. Anchors are authored (room glyphs), so
+## range is a feel knob, not a balance lever.
+@export var hook_range: float = 400.0
+## Zip speed along the rope.
+@export var hook_speed: float = 980.0
+## Upward pop when the zip arrives at the beam.
+@export var hook_release_boost: float = 360.0
+
+## The anchor the Hook state is flying toward. Set by whichever state consumed
+## the press; cleared by the Hook state on exit.
+var hook_target: Node2D = null
+
+
+## Nearest timber anchor in range and meaningfully ABOVE us — the hook is for
+## going up; a downward zip is just falling with extra steps.
+func find_hook_anchor() -> Node2D:
+	var best: Node2D = null
+	var best_distance: float = hook_range
+	for node: Node in get_tree().get_nodes_in_group(&"anchors"):
+		var anchor: Node2D = node as Node2D
+		if anchor == null or not is_instance_valid(anchor):
+			continue
+		if anchor.global_position.y > global_position.y - 24.0:
+			continue
+		var distance: float = anchor.global_position.distance_to(global_position)
+		if distance < best_distance:
+			best_distance = distance
+			best = anchor
+	return best
+
+
 @export_group("Parry")
 ## GDD feel spec: 120 ms. The greedy window.
 @export var parry_active_ms: int = 120

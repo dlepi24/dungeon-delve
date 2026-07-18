@@ -29,7 +29,7 @@ Controller-first design discipline. Budget is ~10 verbs. No new core-combat verb
 | Primary attack | LMB or J | X / Square |
 | Parry | RMB or K | Y / Triangle |
 | Skill 1 (weapon swap for now) | Q | LB |
-| Skill 2 (unused for now) | E | RB |
+| Skill 2 (timber hook) | E | RB |
 | Interact | F | A / Cross (D-pad up also works) |
 | Consumables | 1 / 2 | D-pad left / right |
 

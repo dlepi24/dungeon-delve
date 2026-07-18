@@ -26,6 +26,11 @@ func physics_update(delta: float) -> StringName:
 		return &"Attack"
 	if player.try_consume_parry():
 		return &"Parry"
+	if Input.is_action_just_pressed(&"skill_2"):
+		var anchor: Node2D = player.find_hook_anchor()
+		if anchor != null:
+			player.hook_target = anchor
+			return &"Hook"
 
 	if player.is_on_floor():
 		return &"Idle" if is_zero_approx(direction) else &"Run"

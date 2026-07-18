@@ -25,7 +25,7 @@ const ORE_EVERY: int = 9
 const OUT_DIR: String = "res://src/rooms/delve"
 const TILESET: String = "res://src/rooms/world_tileset.tres"
 
-const LEGEND: String = ".#=PXgbdESCv"
+const LEGEND: String = ".#=PXgbdESCvo"
 
 ## The player's jump rises 109 px = 3.4 tiles, so a 3-tile step lands and a
 ## 4-tile step is impossible. Every platform must be within this of a surface
@@ -137,8 +137,10 @@ func _check_reachability(id: StringName, rows: Array) -> bool:
 
 func _validate(id: StringName, rows: Array) -> bool:
 	var ok: bool = true
-	if rows.size() != RoomLayouts.HEIGHT:
-		_errors.append("%s: has %d rows, expected %d" % [id, rows.size(), RoomLayouts.HEIGHT])
+	# Height is per-room now too (a chasm can plunge); the standard 18 is the
+	# MINIMUM so the camera's vertical framing always has a full room to hold.
+	if rows.size() < RoomLayouts.HEIGHT:
+		_errors.append("%s: has %d rows, expected at least %d" % [id, rows.size(), RoomLayouts.HEIGHT])
 		ok = false
 	var entries: int = 0
 	var exits: int = 0
@@ -234,6 +236,8 @@ func _build(id: StringName, rows: Array, tile_set: TileSet) -> void:
 					spawns.append({"kind": "crumble", "at": _world(x, y)})
 				"v":
 					spawns.append({"kind": "spikes", "at": _world(x, y)})
+				"o":
+					spawns.append({"kind": "anchor", "at": _world(x, y)})
 
 	var entry_marker: Marker2D = Marker2D.new()
 	entry_marker.name = "Entry"

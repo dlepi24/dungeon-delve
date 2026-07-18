@@ -26,7 +26,7 @@ const MIDDLE_POOL: Array[StringName] = [
 ## Double-wide centrepiece rooms. Every run gets EXACTLY ONE, at a seeded
 ## depth — in the general pool they appeared one run in three, which read as
 ## never. Kept out of MIDDLE_POOL so a run cannot draw two.
-const BIG_POOL: Array[StringName] = [&"halls", &"undercroft"]
+const BIG_POOL: Array[StringName] = [&"halls", &"undercroft", &"chasm"]
 
 ## One scene for every enemy: there are no enemy subclasses any more, only data.
 const ENEMY_SCENE: String = "res://src/enemies/enemy.tscn"
@@ -40,6 +40,7 @@ const SHRINE_SCENE: String = "res://src/systems/shrine.tscn"
 const HAZARD_SCENES: Dictionary[String, String] = {
 	"crumble": "res://src/systems/hazards/crumble_platform.tscn",
 	"spikes": "res://src/systems/hazards/spikes.tscn",
+	"anchor": "res://src/systems/timber_anchor.tscn",
 }
 ## Debris rain: rocks per room = depth beyond the entry, plus the mine's heat
 ## ("heat shakes the mine loose"). The entry room never rains.
@@ -96,6 +97,7 @@ const HINTS: Dictionary[StringName, String] = {
 	&"gallery": "a two-storey drop",
 	&"halls": "a long dark hall",
 	&"undercroft": "a covered lane, wind above",
+	&"chasm": "a plunging chasm",
 	&"deep": "the deep vein",
 }
 
