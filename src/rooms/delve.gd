@@ -59,6 +59,9 @@ const SIDEWAYS: Dictionary[String, Array] = {
 
 ## Total rooms in a delve, including entry and deep.
 @export var room_count: int = 5
+## Chance a given depth's shaft SPLITS into a choice of two rooms. Occasional
+## by design — a fork every floor made forking mundane; a rare one is an event.
+@export_range(0.0, 1.0) var branch_chance: float = 0.3
 ## Start a run on its own at _ready. True so the scene is playable by itself.
 ## M5's hub will set this false, choose the seed, and call start() explicitly —
 ## and anything calling start() must turn this off, or the delve starts twice and
@@ -100,11 +103,14 @@ func options_for_seed(seed_value: int, count: int) -> Array[Array]:
 	var options: Array[Array] = [[FIRST_ROOM]]
 	var middles: int = maxi(0, count - 2)
 	for i: int in middles:
+		# Every draw happens for every depth, branching or not, so the
+		# sequence never depends on earlier outcomes.
 		var a: StringName = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
 		var b: StringName = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
 		if b == a and MIDDLE_POOL.size() > 1:
 			b = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
-		options.append([a, b] if b != a else [a])
+		var branches: bool = generator.randf() < branch_chance
+		options.append([a, b] if branches and b != a else [a])
 	if count >= 2:
 		options.append([LAST_ROOM])
 	return options

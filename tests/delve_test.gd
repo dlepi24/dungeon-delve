@@ -101,8 +101,8 @@ func _test_other_streams_do_not_disturb_layout(delve: Delve) -> void:
 		Rng.stream(&"enemies").randf()
 		Rng.stream(&"loot").randi()
 	# Mirrors options_for_seed's draw pattern (two candidates per depth, one
-	# redraw on a duplicate pair), taking the first candidate — the default
-	# path plan_for_seed returns. Update BOTH if the draw pattern changes.
+	# redraw on a duplicate pair, a branch roll), taking the first candidate —
+	# the default path plan_for_seed returns. Update BOTH if the pattern changes.
 	var generator: RandomNumberGenerator = Rng.stream(&"delve")
 	var noisy: Array[StringName] = [Delve.FIRST_ROOM]
 	for i: int in 3:
@@ -110,6 +110,7 @@ func _test_other_streams_do_not_disturb_layout(delve: Delve) -> void:
 		var b: StringName = Delve.MIDDLE_POOL[generator.randi_range(0, Delve.MIDDLE_POOL.size() - 1)]
 		if b == a and Delve.MIDDLE_POOL.size() > 1:
 			b = Delve.MIDDLE_POOL[generator.randi_range(0, Delve.MIDDLE_POOL.size() - 1)]
+		generator.randf()
 		noisy.append(a)
 	noisy.append(Delve.LAST_ROOM)
 
