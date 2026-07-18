@@ -21,8 +21,12 @@ const ROOM_DIR: String = "res://src/rooms/delve"
 const FIRST_ROOM: StringName = &"entry"
 const LAST_ROOM: StringName = &"deep"
 const MIDDLE_POOL: Array[StringName] = [
-	&"gap", &"climb", &"arena", &"corridor", &"cavern", &"shaft", &"gallery", &"halls",
+	&"gap", &"climb", &"arena", &"corridor", &"cavern", &"shaft", &"gallery",
 ]
+## Double-wide centrepiece rooms. Every run gets EXACTLY ONE, at a seeded
+## depth — in the general pool they appeared one run in three, which read as
+## never. Kept out of MIDDLE_POOL so a run cannot draw two.
+const BIG_POOL: Array[StringName] = [&"halls", &"undercroft"]
 
 ## One scene for every enemy: there are no enemy subclasses any more, only data.
 const ENEMY_SCENE: String = "res://src/enemies/enemy.tscn"
@@ -83,6 +87,7 @@ const HINTS: Dictionary[StringName, String] = {
 	&"shaft": "rising timbers",
 	&"gallery": "a two-storey drop",
 	&"halls": "a long dark hall",
+	&"undercroft": "a covered lane, wind above",
 	&"deep": "the deep vein",
 }
 
@@ -106,8 +111,17 @@ func options_for_seed(seed_value: int, count: int) -> Array[Array]:
 
 	var options: Array[Array] = [[FIRST_ROOM]]
 	var middles: int = maxi(0, count - 2)
+	# One middle depth per run is the big-room centrepiece, seeded like all else.
+	var big_slot: int = generator.randi_range(0, maxi(0, middles - 1))
 	var previous: StringName = FIRST_ROOM
 	for i: int in middles:
+		if i == big_slot and not BIG_POOL.is_empty():
+			# The centrepiece never branches: the run's one guaranteed big room
+			# should not be dodgeable behind the other door.
+			var big: StringName = BIG_POOL[generator.randi_range(0, BIG_POOL.size() - 1)]
+			options.append([big])
+			previous = big
+			continue
 		# One redraw against repeats, one against a duplicate pair, then the
 		# branch roll. Single redraws, never loops — see the original note.
 		var a: StringName = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]

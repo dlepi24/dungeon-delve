@@ -105,8 +105,14 @@ func _test_other_streams_do_not_disturb_layout(delve: Delve) -> void:
 	# the default path plan_for_seed returns. Update BOTH if the pattern changes.
 	var generator: RandomNumberGenerator = Rng.stream(&"delve")
 	var noisy: Array[StringName] = [Delve.FIRST_ROOM]
+	var big_slot: int = generator.randi_range(0, 2)
 	var previous: StringName = Delve.FIRST_ROOM
 	for i: int in 3:
+		if i == big_slot:
+			var big: StringName = Delve.BIG_POOL[generator.randi_range(0, Delve.BIG_POOL.size() - 1)]
+			noisy.append(big)
+			previous = big
+			continue
 		var a: StringName = Delve.MIDDLE_POOL[generator.randi_range(0, Delve.MIDDLE_POOL.size() - 1)]
 		if a == previous and Delve.MIDDLE_POOL.size() > 1:
 			a = Delve.MIDDLE_POOL[generator.randi_range(0, Delve.MIDDLE_POOL.size() - 1)]
@@ -126,6 +132,7 @@ func _test_every_planned_room_exists(delve: Delve) -> void:
 	var missing: PackedStringArray = []
 	var ids: Array[StringName] = [Delve.FIRST_ROOM, Delve.LAST_ROOM]
 	ids.append_array(Delve.MIDDLE_POOL)
+	ids.append_array(Delve.BIG_POOL)
 	for id: StringName in ids:
 		if not ResourceLoader.exists("%s/%s.tscn" % [ROOM_DIR, id]):
 			missing.append(String(id))
@@ -138,6 +145,7 @@ func _test_rooms_are_walkable() -> void:
 	print("rooms are structurally sane")
 	var ids: Array[StringName] = [Delve.FIRST_ROOM, Delve.LAST_ROOM]
 	ids.append_array(Delve.MIDDLE_POOL)
+	ids.append_array(Delve.BIG_POOL)
 	var problems: PackedStringArray = []
 	for id: StringName in ids:
 		var packed: PackedScene = load("%s/%s.tscn" % [ROOM_DIR, id]) as PackedScene
