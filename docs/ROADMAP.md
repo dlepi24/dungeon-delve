@@ -1,7 +1,16 @@
 # Roadmap
 
 ## Status
-- **THE VARIETY SESSION, 2026-07-17 (latest). Dustin: "greatly vary it up,
+- **Round 10, 2026-07-17 (latest): stunlock killed, music variety, mine
+  lighting.** Flinch fatigue (Dustin's fresh call on the long-deferred item):
+  only flinch_limit interrupts per window, heavies get 2, pinned by
+  enemy_test. Three delve music moods drawn per descent. The mine is now DARK:
+  lantern on the player, glowing shrine altars, vignette — all procedural,
+  tuning exports on MineAtmosphere in delve_run. Occasional branching (30%)
+  replaced every-exit forking. **Graphics direction beyond lighting (asset
+  packs vs commissioned pixel artist vs AI-generated + cleanup) is presented
+  to Dustin and remains HIS M9 call — spec in the session log.**
+- **THE VARIETY SESSION, 2026-07-17 (earlier). Dustin: "greatly vary it up,
   polish it as a game, perfect the first-time journey." All four chosen tracks
   landed:**
   - **Projectiles + ranged enemies**: Projectile extends Hitbox (parry
