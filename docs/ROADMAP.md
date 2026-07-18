@@ -1,6 +1,11 @@
 # Roadmap
 
 ## Status
+- **2026-07-18: TIMBER HOOK + THE CHASM.** skill_2 zips to authored timber
+  anchors (halls pits, undercroft roof, climb landing, chasm fast-lane);
+  generator height is per-room and the 58x36 Chasm joins the big pool. The
+  v1 movement kit is COMPLETE: jump / roll / parry / pogo / hook. Remaining
+  big items are decisions: NAME, v1 scope line, M9 art commission.
 - **2026-07-18: DAILY DELVE + RECORDS (M8 first half) SHIPPED.** One ranked
   attempt/day (spent at start), banked-haul scoring, heat-0 pickaxe-start
   level field, Records screen ranking the accumulated run history. GHOSTS SHIPPED
