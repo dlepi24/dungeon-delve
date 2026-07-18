@@ -22,6 +22,9 @@
     hand. First pad session should check: stick deadzones in play, menu focus
     ring visibility, and whether the GDD's provisional button layout feels
     right. Controller GLYPHS (showing "A" instead of "SPACE") remain open.
+  - Round 7 (same night): pad SELECT fixed — engine ui_accept/ui_cancel ship
+    with no joypad buttons; project now overrides both (gate-pinned). Hints are
+    device-aware: keyboard letters vs Xbox/Sony pad glyphs, flipping live.
   - **Session end. Next session candidates:** hardware gamepad test, playtest
     heat tuning (the heat_* knobs are first-guess values), buff durations,
     controller glyphs, M8 daily seed + leaderboard reading run_history.jsonl,
