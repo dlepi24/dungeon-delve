@@ -39,6 +39,12 @@ signal parried
 ## to hit harder on a riposte than on a normal connect.
 var is_riposte: bool = false
 
+## Whether a parry answers this hit. Attacks and projectiles: yes, always —
+## that is the pillar. Environmental hazards (spikes): no; you cannot deflect
+## the floor, and a parried spike would deactivate forever. Roll i-frames
+## still work on everything.
+@export var parryable: bool = true
+
 var _active: bool = false
 var _already_hit: Array[Hurtbox] = []
 var _visual_alpha: float = 0.0

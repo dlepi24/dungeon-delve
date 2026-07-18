@@ -25,7 +25,7 @@ const ORE_EVERY: int = 9
 const OUT_DIR: String = "res://src/rooms/delve"
 const TILESET: String = "res://src/rooms/world_tileset.tres"
 
-const LEGEND: String = ".#=PXgbdES"
+const LEGEND: String = ".#=PXgbdESCv"
 
 ## The player's jump rises 109 px = 3.4 tiles, so a 3-tile step lands and a
 ## 4-tile step is impossible. Every platform must be within this of a surface
@@ -230,6 +230,10 @@ func _build(id: StringName, rows: Array, tile_set: TileSet) -> void:
 					spawns.append({"kind": "overseer", "at": _world(x, y)})
 				"S":
 					spawns.append({"kind": "shrine", "at": _world(x, y)})
+				"C":
+					spawns.append({"kind": "crumble", "at": _world(x, y)})
+				"v":
+					spawns.append({"kind": "spikes", "at": _world(x, y)})
 
 	var entry_marker: Marker2D = Marker2D.new()
 	entry_marker.name = "Entry"

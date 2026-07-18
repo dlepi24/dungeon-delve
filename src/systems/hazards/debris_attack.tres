@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EnemyAttackData" load_steps=2 format=3]
+
+; The ceiling's attack profile. Only damage and projectile_speed matter to a
+; falling rock; the rest are the resource's defaults.
+
+[ext_resource type="Script" path="res://src/enemies/enemy_attack_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "debris"
+damage = 9.0
+projectile_speed = 460.0

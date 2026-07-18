@@ -36,6 +36,14 @@ const ENEMY_SCENE: String = "res://src/enemies/enemy.tscn"
 ## event, not furniture. ~2 spots appear across a 5-room run at 5 spots / 7
 ## middle rooms, so 0.55 yields roughly one lit altar per delve.
 const SHRINE_SCENE: String = "res://src/systems/shrine.tscn"
+## Environmental hazards, spawned from room glyphs like enemies are.
+const HAZARD_SCENES: Dictionary[String, String] = {
+	"crumble": "res://src/systems/hazards/crumble_platform.tscn",
+	"spikes": "res://src/systems/hazards/spikes.tscn",
+}
+## Debris rain: rocks per room = depth beyond the entry, plus the mine's heat
+## ("heat shakes the mine loose"). The entry room never rains.
+@export var debris_base_per_depth: int = 1
 const SHRINE_POOL: Array[String] = [
 	"res://src/systems/shrines/vein_of_greed.tres",
 	"res://src/systems/shrines/blood_pact.tres",
@@ -269,6 +277,7 @@ func _load_room(id: StringName) -> void:
 		camera.set_room_bounds(_room.room_size)
 
 	_spawn_enemies(_room)
+	_spawn_debris(_room)
 	# The very first run of a save gets its verbs taught in the world.
 	if id == FIRST_ROOM and GameState.total_runs == 0:
 		_room.add_child(TeachingSigns.new())
@@ -287,6 +296,11 @@ func _spawn_enemies(room: Room) -> void:
 		if point["kind"] == "shrine":
 			_maybe_place_shrine(room, point["position"], rng)
 			continue
+		if HAZARD_SCENES.has(point["kind"]):
+			var hazard: Node2D = (load(HAZARD_SCENES[point["kind"]]) as PackedScene).instantiate() as Node2D
+			hazard.global_position = point["position"]
+			room.add_child(hazard)
+			continue
 		var kind: String = _vary_kind(point["kind"], rng)
 		if not ENEMY_STATS.has(kind):
 			push_error("Delve: unknown enemy kind '%s'" % kind)
@@ -296,6 +310,25 @@ func _spawn_enemies(room: Room) -> void:
 		enemy.stats = load(ENEMY_STATS[kind]) as EnemyStats
 		enemy.global_position = point["position"]
 		room.add_child(enemy)
+
+
+## Schedule this room's ceiling debris from the seeded hazards stream. Depth
+## and heat scale the count, so the same seed rains differently at different
+## heat — deliberate, the same as heat's spawn promotions: heat IS difficulty.
+func _spawn_debris(room: Room) -> void:
+	var count: int = maxi(0, _index - 1) * debris_base_per_depth + GameState.heat_level()
+	if count <= 0:
+		return
+	var rng: RandomNumberGenerator = Rng.stream(&"hazards")
+	var size: Vector2 = room.room_size if room.room_size != Vector2.ZERO else Vector2(1920, 640)
+	var rain: DebrisRain = DebrisRain.new()
+	rain.room_height = size.y
+	for i: int in count:
+		rain.events.append({
+			"tick": rng.randi_range(240, 2600),
+			"x": rng.randf_range(80.0, size.x - 80.0),
+		})
+	room.add_child(rain)
 
 
 ## The clear check: when a death leaves no living enemy standing in the current

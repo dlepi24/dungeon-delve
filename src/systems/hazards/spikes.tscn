@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/systems/hazards/spikes.gd" id="1_spk"]
+
+; Layer 16 = EnemyAttack, mask 2 = the player's hurtbox. Enemies are immune —
+; they live down here.
+[node name="Spikes" type="Area2D"]
+collision_layer = 16
+collision_mask = 2
+script = ExtResource("1_spk")

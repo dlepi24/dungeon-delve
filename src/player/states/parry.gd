@@ -17,7 +17,7 @@ func enter() -> void:
 
 ## The whole pillar lives in this branch.
 func on_hit(hitbox: Hitbox) -> StringName:
-	if _elapsed <= player.ms_to_ticks(player.parry_active_ms):
+	if hitbox.parryable and _elapsed <= player.ms_to_ticks(player.parry_active_ms):
 		hitbox.notify_parried()
 		player.open_riposte()
 		Events.parry_succeeded.emit()
