@@ -50,6 +50,9 @@ var _poise: float = 0.0
 var _dash_direction: int = 1
 var _last_jump_tick: int = -10000
 var _boss_announced: bool = false
+## Full-2D commit direction for a flyer's dive, locked at ATTACK start like the
+## horizontal dash direction is.
+var _dash_vector: Vector2 = Vector2.RIGHT
 ## stats.max_health scaled by mine heat at spawn. Health bars divide by this.
 var _scaled_max_health: float = 1.0
 var _tick: int = 0
@@ -112,7 +115,7 @@ func _physics_process(delta: float) -> void:
 	_tick += 1
 	_elapsed += 1
 
-	if not is_on_floor():
+	if not is_on_floor() and not stats.can_fly:
 		velocity.y += GRAVITY * delta
 
 	match _state:
@@ -140,7 +143,11 @@ func _physics_process(delta: float) -> void:
 				_enter(State.ATTACK)
 		State.ATTACK:
 			if _attack.dash_speed > 0.0:
-				velocity.x = float(_dash_direction) * _attack.dash_speed
+				if stats.can_fly:
+					# A dive commits along the locked 2D line.
+					velocity = _dash_vector * _attack.dash_speed
+				else:
+					velocity.x = float(_dash_direction) * _attack.dash_speed
 			else:
 				_decelerate(delta)
 			if _elapsed >= Ticks.from_ms(_attack.active_ms):
@@ -197,7 +204,34 @@ func _pick_attack() -> EnemyAttackData:
 
 
 ## Do not swing at someone standing on a ledge above your head.
+## Where a thrown projectile leaves from: chest height, leading edge.
+func _muzzle() -> Vector2:
+	return global_position + Vector2(float(_facing) * stats.body_size.x * 0.5, -stats.body_size.y * 0.6)
+
+
+## Spawned into the ROOM, not this enemy, so a rock in flight outlives its
+## thrower. Aims at the player's centre at release — the telegraph was the
+## warning; the release is honest.
+func _fire_projectile() -> void:
+	var direction: Vector2 = Vector2(float(_facing), 0.0)
+	var player: Player = get_player()
+	if player != null:
+		direction = (player.global_position + Vector2(0, -30) - _muzzle())
+	Projectile.spawn(get_parent(), _muzzle(), direction, _attack)
+
+
+## Aim for a flyer's dive, locked at ATTACK start.
+func _aim_at_player() -> Vector2:
+	var player: Player = get_player()
+	if player == null:
+		return Vector2(float(_facing), 0.0)
+	return (player.global_position + Vector2(0, -28) - global_position).normalized()
+
+
 func _roughly_level_with_player() -> bool:
+	if stats.can_fly:
+		# Being above you is a flyer's whole job; the gate would mute it.
+		return true
 	var player: Player = get_player()
 	if player == null:
 		return false
@@ -239,7 +273,13 @@ func _enter(next: State) -> void:
 		# Lock the lunge direction now: a dash that steers mid-flight is
 		# unreadable, and the commitment is what makes it fair to roll.
 		_dash_direction = _facing
-		_hitbox.activate()
+		_dash_vector = _aim_at_player()
+		if _attack != null and _attack.projectile_speed > 0.0:
+			# A throw, not a swing: the projectile IS the attack; the melee
+			# box stays shut. Parryable in flight instead of at the arm.
+			_fire_projectile()
+		else:
+			_hitbox.activate()
 	elif previous == State.ATTACK:
 		_hitbox.deactivate()
 
@@ -276,6 +316,13 @@ func _chase(delta: float) -> void:
 	_face_player()
 	var player: Player = get_player()
 	if player == null:
+		return
+	if stats.can_fly:
+		# Hold a perch beside and above the player, then let range checks
+		# decide when to dive. Full-2D steering — hovering is the flyer's walk.
+		var perch: Vector2 = player.global_position + Vector2(stats.hover_offset.x * float(-_facing), stats.hover_offset.y)
+		var to_perch: Vector2 = perch - global_position
+		velocity = velocity.move_toward(to_perch.normalized() * stats.move_speed * minf(1.0, to_perch.length() / 40.0), stats.acceleration * delta)
 		return
 	# Stop closing once in range of the longest attack, so they do not shove into
 	# you and swing from inside your body.

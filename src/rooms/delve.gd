@@ -44,6 +44,17 @@ const ENEMY_STATS: Dictionary[String, String] = {
 	"brute": "res://src/enemies/data/brute.tres",
 	"dart": "res://src/enemies/data/dart.tres",
 	"overseer": "res://src/enemies/data/overseer.tres",
+	"slinger": "res://src/enemies/data/slinger.tres",
+	"gnat": "res://src/enemies/data/gnat.tres",
+}
+
+## What an authored marker may become instead (seeded draw): each kind's
+## alternates share its weight class, so a room's difficulty budget holds while
+## the ANSWER it demands varies — a slinger post makes you approach, a gnat
+## makes the high ground contested.
+const SIDEWAYS: Dictionary[String, Array] = {
+	"grunt": ["dart", "slinger"],
+	"dart": ["grunt", "gnat"],
 }
 
 ## Total rooms in a delve, including entry and deep.
@@ -232,12 +243,13 @@ func _maybe_place_shrine(room: Room, at: Vector2, rng: RandomNumberGenerator) ->
 func _vary_kind(kind: String, rng: RandomNumberGenerator) -> String:
 	if kind == "overseer" or _index <= 0:
 		return kind
-	# Sideways variety: a grunt post may hold a dart and vice versa.
-	if rng.randf() < 0.35:
-		if kind == "grunt":
-			kind = "dart"
-		elif kind == "dart":
-			kind = "grunt"
+	# Sideways variety: an authored post may hold any same-weight alternate.
+	# Both draws ALWAYS happen so the stream stays aligned across rooms.
+	var swap: bool = rng.randf() < 0.45
+	var pick: int = rng.randi_range(0, 255)
+	if swap and SIDEWAYS.has(kind):
+		var alts: Array = SIDEWAYS[kind]
+		kind = alts[pick % alts.size()]
 	# Depth promotion: the mine grows meaner as it pays better — meaner still
 	# under a curse bargain (Overseer's Whisper) or a hot extract streak.
 	var promote: float = 0.08 * float(_index) + GameState.modifier_promote_bonus() + GameState.heat_promote_bonus()

@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="EnemyStats" format=3]
+
+; The Slinger: the first ranged enemy. Lobs rocks from across the room, which
+; breaks the "wait at my tier and they walk to me" answer — you close the gap
+; or you parry the rock BACK (projectile.gd gives a returned rock double damage
+; and a guaranteed stance break, so the greedy answer stays the stylish one).
+; Weak up close on purpose: getting in its face is the reward for approaching.
+
+[ext_resource type="Script" path="res://src/enemies/enemy_attack_data.gd" id="1_atk"]
+[ext_resource type="Script" path="res://src/enemies/enemy_stats.gd" id="2_stats"]
+
+[sub_resource type="Resource" id="Resource_throw"]
+script = ExtResource("1_atk")
+display_name = "throw"
+min_range = 150.0
+max_range = 620.0
+weight = 2.0
+telegraph_ms = 700
+active_ms = 140
+recover_ms = 850
+damage = 12.0
+projectile_speed = 430.0
+poise = 35.0
+colour_telegraph = Color(1, 0.85, 0.3, 1)
+colour_attack = Color(1, 0.4, 0.3, 1)
+hitbox_size = Vector2(40, 40)
+hitbox_offset = Vector2(30, -34)
+
+[sub_resource type="Resource" id="Resource_shove"]
+script = ExtResource("1_atk")
+display_name = "shove"
+max_range = 95.0
+telegraph_ms = 420
+active_ms = 100
+recover_ms = 520
+damage = 8.0
+poise = 18.0
+colour_telegraph = Color(0.95, 0.75, 0.4, 1)
+colour_attack = Color(0.95, 0.3, 0.35, 1)
+hitbox_size = Vector2(64, 48)
+hitbox_offset = Vector2(38, -30)
+
+[resource]
+script = ExtResource("2_stats")
+display_name = "Slinger"
+max_health = 45.0
+hurt_ms = 170
+knockback = 190.0
+move_speed = 72.0
+acceleration = 560.0
+aggro_range = 780.0
+idle_ms = 500
+stagger_ms = 900
+can_jump = false
+attacks = Array[ExtResource("1_atk")]([SubResource("Resource_throw"), SubResource("Resource_shove")])
+haul_reward = 3
+heart_chance = 0.1
+heart_heal = 20
+buff_chance = 0.06
+weapon_chance = 0.08
+sprite_sheet = "grunt"
+colour_idle = Color(0.72, 0.62, 0.35, 1)
+colour_recover = Color(0.55, 0.48, 0.3, 1)
+body_size = Vector2(30, 60)

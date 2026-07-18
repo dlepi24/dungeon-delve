@@ -47,6 +47,14 @@ extends Resource
 ## Chosen by range each time the enemy commits. Empty means it never attacks.
 @export var attacks: Array[EnemyAttackData] = []
 
+@export_group("Flight")
+## Flyers ignore gravity and hover toward the player instead of walking. Their
+## dash attacks aim in full 2D (a dive), and the level-with-player gate is
+## skipped — being above you is their whole job.
+@export var can_fly: bool = false
+## Where a flyer tries to hold, relative to the player: this far out and up.
+@export var hover_offset: Vector2 = Vector2(150, -90)
+
 @export_group("Boss")
 ## Bosses announce themselves: engaging one shows the big named health bar
 ## (Events.boss_engaged -> the HUD). Content rule holds — a miniboss is still

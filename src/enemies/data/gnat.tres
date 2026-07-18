@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="EnemyStats" format=3]
+
+; The Gnat: the first flyer. Hovers at a perch beside and above you — where
+; tier-camping used to be safe — then commits to a full-2D dive you can roll
+; under or parry. Paper health on purpose: one poke kills it, so the threat is
+; attention pressure, not a health bar. Something the digging woke.
+
+[ext_resource type="Script" path="res://src/enemies/enemy_attack_data.gd" id="1_atk"]
+[ext_resource type="Script" path="res://src/enemies/enemy_stats.gd" id="2_stats"]
+
+[sub_resource type="Resource" id="Resource_dive"]
+script = ExtResource("1_atk")
+display_name = "dive"
+min_range = 60.0
+max_range = 300.0
+weight = 1.0
+telegraph_ms = 520
+active_ms = 280
+recover_ms = 780
+damage = 10.0
+dash_speed = 470.0
+poise = 12.0
+colour_telegraph = Color(0.95, 0.95, 0.4, 1)
+colour_attack = Color(1, 0.3, 0.3, 1)
+hitbox_size = Vector2(44, 40)
+hitbox_offset = Vector2(24, -20)
+
+[resource]
+script = ExtResource("2_stats")
+display_name = "Gnat"
+max_health = 22.0
+hurt_ms = 140
+knockback = 260.0
+move_speed = 170.0
+acceleration = 900.0
+aggro_range = 700.0
+idle_ms = 460
+stagger_ms = 850
+can_jump = false
+can_fly = true
+hover_offset = Vector2(170, -100)
+attacks = Array[ExtResource("1_atk")]([SubResource("Resource_dive")])
+haul_reward = 2
+heart_chance = 0.08
+heart_heal = 15
+buff_chance = 0.04
+weapon_chance = 0.03
+sprite_sheet = "dart"
+colour_idle = Color(0.6, 0.75, 0.35, 1)
+colour_recover = Color(0.45, 0.55, 0.3, 1)
+body_size = Vector2(28, 34)

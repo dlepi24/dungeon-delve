@@ -30,6 +30,10 @@ extends Resource
 ## Lunge speed during the active window. 0 is a stationary swing. Direction locks
 ## when the attack starts, so a dash always commits to a readable line.
 @export var dash_speed: float = 0.0
+## Above 0 this attack THROWS instead of swinging: a projectile leaves at this
+## speed, aimed at the player when the active window opens, and the melee
+## hitbox never activates. Parryable in flight — see projectile.gd.
+@export var projectile_speed: float = 0.0
 
 @export_group("Poise")
 ## Damage this attack can absorb before the enemy is knocked off balance.
