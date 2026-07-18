@@ -91,6 +91,12 @@ func is_active() -> bool:
 	return _active
 
 
+## How many targets this activation has connected with. The pogo state polls
+## it to know the strike landed without wiring another signal.
+func hit_count() -> int:
+	return _already_hit.size()
+
+
 func notify_parried() -> void:
 	# Close the box first: a parried attack must not also land.
 	deactivate()

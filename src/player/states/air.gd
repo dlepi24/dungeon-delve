@@ -19,6 +19,10 @@ func physics_update(delta: float) -> StringName:
 	if player.try_consume_roll():
 		return &"Roll"
 	if player.try_consume_attack():
+		# Holding down turns the air attack into the Pick Pogo — the traversal
+		# verb. No held direction (or held up/side) swings normally.
+		if Input.is_action_pressed(&"move_down"):
+			return &"Pogo"
 		return &"Attack"
 	if player.try_consume_parry():
 		return &"Parry"

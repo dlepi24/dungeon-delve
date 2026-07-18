@@ -56,6 +56,7 @@ func _build_signs() -> void:
 	_sign(Vector2(400, 700), "%s to swing   ·   %s to roll" % [
 		Keybinds.hint_for(&"attack"), Keybinds.hint_for(&"roll"),
 	])
+	_sign(Vector2(1500, 700), "in the air: hold DOWN + %s\nto POGO off anything below you" % Keybinds.hint_for(&"attack"))
 
 
 func _sign(at: Vector2, text: String) -> void:

@@ -90,6 +90,18 @@ const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll", "attack", "parry"]
 ## Hitbox position relative to the player, mirrored by facing.
 @export var attack_hitbox_offset: Vector2 = Vector2(34, -28)
 
+@export_group("Pogo")
+## Upward speed granted by a connected pick pogo (down+attack in the air).
+## Compare the jump's launch speed (~578 at defaults): slightly above it, so a
+## bounce chain can climb.
+@export var pogo_bounce_speed: float = 640.0
+## Pogo damage as a fraction of the weapon's swing. Below 1: it is a movement
+## verb that hurts, not a better attack.
+@export var pogo_damage_mult: float = 0.8
+## Startup and active windows, ms. Fast — the read is the aim, not the wait.
+@export var pogo_startup_ms: int = 50
+@export var pogo_active_ms: int = 240
+
 @export_group("Parry")
 ## GDD feel spec: 120 ms. The greedy window.
 @export var parry_active_ms: int = 120
@@ -459,6 +471,20 @@ func _w_recovery() -> int:
 	return equipped_weapon.recovery_ms if equipped_weapon != null else attack_recovery_ms
 func _w_cancel() -> int:
 	return equipped_weapon.cancel_start_ms if equipped_weapon != null else attack_cancel_start_ms
+
+
+## Juice for a pogo bounce off something that is not a hurtbox (spikes,
+## debris) — hurtbox hits already ride the hit_landed juice train.
+func pogo_bounced() -> void:
+	_juice.punch(Vector2(0.82, 1.24))
+	Rumble.hit()
+	_dust(4, 60.0)
+
+
+## Restore the attack hitbox to the equipped weapon's shape — public because
+## the pogo state borrows the hitbox and must hand it back exactly as found.
+func reset_attack_hitbox() -> void:
+	_resize_attack_hitbox()
 
 
 ## Resize the physical hitbox and its swing arc to the equipped weapon, so a
