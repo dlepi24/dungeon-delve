@@ -105,13 +105,17 @@ func _test_other_streams_do_not_disturb_layout(delve: Delve) -> void:
 	# the default path plan_for_seed returns. Update BOTH if the pattern changes.
 	var generator: RandomNumberGenerator = Rng.stream(&"delve")
 	var noisy: Array[StringName] = [Delve.FIRST_ROOM]
+	var previous: StringName = Delve.FIRST_ROOM
 	for i: int in 3:
 		var a: StringName = Delve.MIDDLE_POOL[generator.randi_range(0, Delve.MIDDLE_POOL.size() - 1)]
+		if a == previous and Delve.MIDDLE_POOL.size() > 1:
+			a = Delve.MIDDLE_POOL[generator.randi_range(0, Delve.MIDDLE_POOL.size() - 1)]
 		var b: StringName = Delve.MIDDLE_POOL[generator.randi_range(0, Delve.MIDDLE_POOL.size() - 1)]
 		if b == a and Delve.MIDDLE_POOL.size() > 1:
 			b = Delve.MIDDLE_POOL[generator.randi_range(0, Delve.MIDDLE_POOL.size() - 1)]
 		generator.randf()
 		noisy.append(a)
+		previous = a
 	noisy.append(Delve.LAST_ROOM)
 
 	_check(clean == noisy, "the delve stream ignores 200 draws from other streams")

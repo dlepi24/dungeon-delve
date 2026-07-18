@@ -102,15 +102,19 @@ func options_for_seed(seed_value: int, count: int) -> Array[Array]:
 
 	var options: Array[Array] = [[FIRST_ROOM]]
 	var middles: int = maxi(0, count - 2)
+	var previous: StringName = FIRST_ROOM
 	for i: int in middles:
-		# Every draw happens for every depth, branching or not, so the
-		# sequence never depends on earlier outcomes.
+		# One redraw against repeats, one against a duplicate pair, then the
+		# branch roll. Single redraws, never loops — see the original note.
 		var a: StringName = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
+		if a == previous and MIDDLE_POOL.size() > 1:
+			a = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
 		var b: StringName = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
 		if b == a and MIDDLE_POOL.size() > 1:
 			b = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
 		var branches: bool = generator.randf() < branch_chance
 		options.append([a, b] if branches and b != a else [a])
+		previous = a
 	if count >= 2:
 		options.append([LAST_ROOM])
 	return options
