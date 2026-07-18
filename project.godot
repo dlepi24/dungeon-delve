@@ -38,10 +38,11 @@ window/size/viewport_height=1080
 ; which triggers the macOS Spaces swap animation on every boot.
 window/size/mode=3
 window/stretch/mode="canvas_items"
-; "keep" letterboxes on odd aspect ratios. Load-bearing: every HUD element is
-; hand-placed in 1920x1080 coordinates, and without this they drift off-screen
-; on non-16:9 displays.
-window/stretch/aspect="keep"
+; "expand" fills ultrawide monitors with MORE WORLD instead of pillarbox bars
+; (height stays the 1080 design space; width grows). Safe because every UI
+; element is edge- or centre-anchored — anything hand-placed in absolute
+; 1920-space coordinates WILL sit wrong on 21:9, so anchor new UI, always.
+window/stretch/aspect="expand"
 
 [input]
 

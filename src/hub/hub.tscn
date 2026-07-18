@@ -20,7 +20,8 @@ script = ExtResource("1")
 position = Vector2(960, 540)
 
 [node name="Background" type="ColorRect" parent="."]
-offset_right = 1920.0
+offset_left = -1200.0
+offset_right = 3120.0
 offset_bottom = 1080.0
 color = Color(0.11, 0.08, 0.06, 1)
 
