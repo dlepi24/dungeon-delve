@@ -44,6 +44,10 @@ window/stretch/mode="canvas_items"
 ; 1920-space coordinates WILL sit wrong on 21:9, so anchor new UI, always.
 window/stretch/aspect="expand"
 
+[gui]
+
+theme/custom="res://src/ui/theme.tres"
+
 [input]
 
 move_left={
