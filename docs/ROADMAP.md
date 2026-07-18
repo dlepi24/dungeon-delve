@@ -1,7 +1,11 @@
 # Roadmap
 
 ## Status
-- **Round 13, 2026-07-17 (latest): camera zoom + scroll (zoom_level dial on
+- **Rounds 14-16, 2026-07-17 (latest): big-room guarantee + Undercroft; wow
+  pass (parry shockwave, camera lean, room-clear CLEAR + loot vacuum); hazards
+  batch (pit spikes, crumbling bridges, heat-scaled parryable debris rain).
+  The deferred hazards pick is DONE.**
+- **Round 13, 2026-07-17: camera zoom + scroll (zoom_level dial on
   FollowCamera), variable-width rooms + the double-wide HALLS, boss music +
   mid-run mood drift. NEXT DESIGN CALL: traversal mechanic (air-roll flip vs
   wall-jump vs dash) — bigger rooms make it due.**
