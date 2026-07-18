@@ -14,6 +14,7 @@ extends Node2D
 
 var _accepted: bool = false
 var _player: Player = null
+var _light: PointLight2D = null
 
 @onready var _glow: ColorRect = $Glow
 @onready var _offer: Label = $Offer
@@ -22,7 +23,30 @@ var _player: Player = null
 func _ready() -> void:
 	if data != null:
 		_glow.color = data.colour
+		# A real light in the mine's darkness, so an altar beckons from across
+		# the room. Dies to an ember on accept, with the glow.
+		_light = PointLight2D.new()
+		_light.texture = _radial_light()
+		_light.color = data.colour
+		_light.energy = 0.9
+		_light.texture_scale = 2.2
+		_light.position = Vector2(0, -46)
+		add_child(_light)
 	_offer.visible = false
+
+
+func _radial_light() -> GradientTexture2D:
+	var gradient: Gradient = Gradient.new()
+	gradient.set_color(0, Color.WHITE)
+	gradient.set_color(1, Color.BLACK)
+	var texture: GradientTexture2D = GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(0.5, 1.0)
+	texture.width = 128
+	texture.height = 128
+	return texture
 
 
 func _physics_process(_delta: float) -> void:
@@ -68,3 +92,5 @@ func _accept() -> void:
 	_offer.visible = false
 	# The spent altar keeps a coal of its colour, so you can see what you took.
 	_glow.color = Color(data.colour, 0.25)
+	if _light != null:
+		_light.energy = 0.25
