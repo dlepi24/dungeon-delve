@@ -48,6 +48,7 @@ func _ready() -> void:
 
 
 func open() -> void:
+	_close.text = "Close  [%s]" % Keybinds.hint_for(&"interact")
 	_refresh()
 	visible = true
 	Cursor.menu()

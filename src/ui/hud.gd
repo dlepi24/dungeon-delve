@@ -119,7 +119,7 @@ func _refresh_weapons() -> void:
 	_key_hint.visible = stowed != null
 	if stowed != null:
 		_apply_icon(_secondary_icon, stowed)
-		_key_hint.text = "%s swap" % Keybinds.label_for(&"skill_1")
+		_key_hint.text = "%s swap" % Keybinds.hint_for(&"skill_1")
 
 
 func _stowed_weapon() -> WeaponData:

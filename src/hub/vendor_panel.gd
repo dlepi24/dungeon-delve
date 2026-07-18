@@ -39,6 +39,7 @@ func _add_row(upgrade: UpgradeData) -> void:
 func open() -> void:
 	visible = true
 	Cursor.menu()
+	_close.text = "Close  [%s]" % Keybinds.hint_for(&"interact")
 	_refresh()
 	_focus_first()
 

@@ -35,6 +35,10 @@ func _ready() -> void:
 	_result.dismissed.connect(_to_hub)
 	Cursor.gameplay()
 	Music.play(&"delve")
+	# Keyboard-vs-pad can change while standing at an exit; the prompt follows.
+	Keybinds.input_device_changed.connect(func() -> void:
+		if _at_exit and not _ending:
+			_refresh_prompt())
 
 
 func _physics_process(_delta: float) -> void:
@@ -50,7 +54,9 @@ func _physics_process(_delta: float) -> void:
 
 func _refresh_prompt() -> void:
 	var label: Label = _prompt.get_node("Panel/Margin/Label")
-	label.text = "▲ W  Extract to surface  (bank %d)\n▼ S  Descend deeper" % GameState.carried_haul
+	label.text = "▲ %s  Extract to surface  (bank %d)\n▼ %s  Descend deeper" % [
+		Keybinds.hint_for(&"move_up"), GameState.carried_haul, Keybinds.hint_for(&"move_down"),
+	]
 
 
 ## Runtime input, handled here rather than in _physics_process so the press

@@ -71,13 +71,14 @@ func _physics_process(_delta: float) -> void:
 	elif _player.global_position.distance_to(_mine_marker.global_position) <= interact_range:
 		near = &"mine"
 	_near = near
+	var key: String = Keybinds.hint_for(&"interact")
 	match near:
 		&"vendor":
-			_prompt.text = "[F] Trade"
+			_prompt.text = "[%s] Trade" % key
 		&"blacksmith":
-			_prompt.text = "[F] Blacksmith"
+			_prompt.text = "[%s] Blacksmith" % key
 		&"mine":
-			_prompt.text = "[F] Descend into the mine"
+			_prompt.text = "[%s] Descend into the mine" % key
 		_:
 			_prompt.text = ""
 

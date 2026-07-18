@@ -44,7 +44,7 @@ func _refresh_offer() -> void:
 	if data.ore_cost > 0 and GameState.carried_haul < data.ore_cost:
 		line += "(need %d carried ore)" % data.ore_cost
 	else:
-		line += "[%s] Accept" % Keybinds.label_for(&"interact")
+		line += "[%s] Accept" % Keybinds.hint_for(&"interact")
 	_offer.text = line
 
 

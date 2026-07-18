@@ -44,13 +44,23 @@ func _ready() -> void:
 		_play.text = "Continue"
 	_refresh_controls_line()
 	_refresh_stats_line()
+	# The verbs line follows whichever device is driving.
+	Keybinds.input_device_changed.connect(_refresh_controls_line)
 	_play.grab_focus()
 
 
-## The verbs, from the LIVE keybinds — a static hint goes stale the moment a key
-## is rebound. Lesson from M2: a build that does not state its verbs gets judged
-## on the verbs you happened to guess.
+## The verbs, from the LIVE keybinds and the live input device — a static hint
+## goes stale the moment a key is rebound or a controller wakes up. Lesson from
+## M2: a build that does not state its verbs gets judged on the verbs you
+## happened to guess.
 func _refresh_controls_line() -> void:
+	if Keybinds.using_gamepad:
+		_controls.text = "Stick move   %s jump   %s roll   %s attack   %s parry   %s pause" % [
+			Keybinds.hint_for(&"jump"), Keybinds.hint_for(&"roll"),
+			Keybinds.hint_for(&"attack"), Keybinds.hint_for(&"parry"),
+			Keybinds.hint_for(&"pause"),
+		]
+		return
 	_controls.text = "%s%s move   %s jump   %s roll   %s / LMB attack   %s / RMB parry   ESC pause" % [
 		Keybinds.label_for(&"move_left"), Keybinds.label_for(&"move_right"),
 		Keybinds.label_for(&"jump"), Keybinds.label_for(&"roll"),

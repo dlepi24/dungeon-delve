@@ -43,10 +43,85 @@ const LABELS: Dictionary[StringName, String] = {
 ## The GDD's layout, captured before anything overrides it.
 var _defaults: Dictionary[StringName, InputEventKey] = {}
 
+# --- Input device awareness ---
+# The game watches which device spoke last and every on-screen hint follows:
+# keyboard letters normally, pad glyphs while a controller is driving, flipped
+# back the instant the keyboard is touched. Godot does not do this for you —
+# it only names the pad; the flavour split is ours.
+
+## Fired when the active device (or pad flavour) changes, so one-shot labels
+## (the title's controls line) can rebuild. Per-frame labels just poll.
+signal input_device_changed
+
+## True while the last meaningful input came from a gamepad.
+var using_gamepad: bool = false
+## &"xbox" or &"playstation", from the connected pad's reported name. Xbox is
+## the fallback because its lettered buttons are the generic convention.
+var pad_flavor: StringName = &"xbox"
+
+const _XBOX_BUTTONS: Dictionary[int, String] = {
+	0: "A", 1: "B", 2: "X", 3: "Y", 4: "View", 6: "Menu",
+	9: "LB", 10: "RB", 11: "D-pad up", 12: "D-pad down", 13: "D-pad left", 14: "D-pad right",
+}
+const _PS_BUTTONS: Dictionary[int, String] = {
+	0: "Cross", 1: "Circle", 2: "Square", 3: "Triangle", 4: "Share", 6: "Options",
+	9: "L1", 10: "R1", 11: "D-pad up", 12: "D-pad down", 13: "D-pad left", 14: "D-pad right",
+}
+
 
 func _ready() -> void:
+	# Menus pause the tree; device detection must keep running under them or
+	# hints freeze on whichever device opened the menu.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_capture_defaults()
 	load_overrides()
+
+
+## Passive listener: never consumes anything, just notices who is talking.
+## Stick drift is filtered by the 0.5 threshold; mouse MOTION deliberately does
+## not flip back (brushing the mouse mid-pad-session is incidental).
+func _input(event: InputEvent) -> void:
+	var from_pad: bool
+	if event is InputEventJoypadButton:
+		from_pad = true
+	elif event is InputEventJoypadMotion:
+		if absf((event as InputEventJoypadMotion).axis_value) < 0.5:
+			return
+		from_pad = true
+	elif event is InputEventKey or event is InputEventMouseButton:
+		from_pad = false
+	else:
+		return
+	if from_pad == using_gamepad:
+		return
+	using_gamepad = from_pad
+	if from_pad:
+		_detect_flavor(event.device)
+	input_device_changed.emit()
+
+
+func _detect_flavor(device: int) -> void:
+	var pad_name: String = Input.get_joy_name(device).to_lower()
+	var sony: bool = false
+	for marker: String in ["ps5", "ps4", "ps3", "dualsense", "dualshock", "sony", "playstation"]:
+		if marker in pad_name:
+			sony = true
+			break
+	pad_flavor = &"playstation" if sony else &"xbox"
+
+
+## Device-aware hint for on-screen prompts: the keyboard key normally, the pad
+## glyph while a gamepad is driving. Stick-only actions (movement) say "Stick".
+func hint_for(action: StringName) -> String:
+	if not using_gamepad:
+		return label_for(action)
+	var table: Dictionary[int, String] = _PS_BUTTONS if pad_flavor == &"playstation" else _XBOX_BUTTONS
+	for event: InputEvent in InputMap.action_get_events(action):
+		if event is InputEventJoypadButton:
+			return table.get((event as InputEventJoypadButton).button_index, "Pad")
+		if event is InputEventJoypadMotion:
+			return "Stick"
+	return label_for(action)
 
 
 func _capture_defaults() -> void:

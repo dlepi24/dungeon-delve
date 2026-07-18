@@ -19,6 +19,11 @@ const EXPECTED_ACTIONS: PackedStringArray = [
 	"jump", "roll", "attack", "parry",
 	"skill_1", "skill_2", "interact",
 	"consumable_1", "consumable_2",
+	# ui_accept/ui_cancel are OVERRIDDEN in project.godot because the engine
+	# defaults carry no joypad buttons — a controller could navigate menus but
+	# never press anything. Pinned here so a settings re-save cannot silently
+	# strip the pad's A/B bindings back out.
+	"ui_accept", "ui_cancel",
 ]
 
 ## Order is the contract: index N here must be collision layer N+1.
