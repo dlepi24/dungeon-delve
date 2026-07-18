@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 ; The playable delve. Rooms are loaded and freed by Delve as you walk through
 ; them; only the player, camera and HUD persist across a transition.
@@ -14,6 +14,7 @@
 [ext_resource type="PackedScene" path="res://src/rooms/extract_prompt.tscn" id="21_prompt"]
 [ext_resource type="PackedScene" path="res://src/rooms/result_screen.tscn" id="22_result"]
 [ext_resource type="PackedScene" path="res://src/rooms/door_choice.tscn" id="25_doors"]
+[ext_resource type="Script" path="res://src/ui/transition_fade.gd" id="26_fade"]
 
 [node name="DelveRun" type="Node2D"]
 
@@ -37,6 +38,26 @@ position = Vector2(200, 500)
 position = Vector2(960, 340)
 script = ExtResource("3_cam")
 target = NodePath("../Player")
+
+; Ambient dust motes riding the camera — the air down here has weight.
+[node name="Dust" type="CPUParticles2D" parent="Camera2D"]
+amount = 36
+lifetime = 7.0
+preprocess = 7.0
+local_coords = true
+emission_shape = 3
+emission_rect_extents = Vector2(980, 360)
+direction = Vector2(-1, 0)
+spread = 35.0
+gravity = Vector2(0, 1)
+initial_velocity_min = 4.0
+initial_velocity_max = 14.0
+scale_amount_min = 1.5
+scale_amount_max = 3.0
+color = Color(0.95, 0.88, 0.7, 0.1)
+
+[node name="TransitionFade" type="CanvasLayer" parent="."]
+script = ExtResource("26_fade")
 
 [node name="DebugOverlay" parent="." instance=ExtResource("4_overlay") node_paths=PackedStringArray("player")]
 player = NodePath("../Player")

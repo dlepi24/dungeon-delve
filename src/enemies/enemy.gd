@@ -129,6 +129,7 @@ func _physics_process(delta: float) -> void:
 				if stats.is_boss and not _boss_announced:
 					_boss_announced = true
 					Events.boss_engaged.emit(self)
+					Rumble.boss()
 		State.CHASE:
 			_chase(delta)
 			var attack: EnemyAttackData = _pick_attack()

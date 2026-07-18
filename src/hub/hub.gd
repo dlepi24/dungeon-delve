@@ -25,6 +25,14 @@ var _near: StringName = &""
 @onready var _blacksmith_panel: CanvasLayer = $BlacksmithPanel
 @onready var _prompt: Label = $HubHud/Prompt
 @onready var _banked_label: Label = $HubHud/Banked
+@onready var _lantern: ColorRect = $Lantern
+
+
+## Visual only: the lantern breathes. Two incommensurate sines read as flame
+## rather than as a metronome.
+func _process(_delta: float) -> void:
+	var t: float = float(Time.get_ticks_msec()) / 1000.0
+	_lantern.modulate.a = 0.82 + 0.1 * sin(t * 9.0) + 0.08 * sin(t * 23.7)
 
 
 func _ready() -> void:

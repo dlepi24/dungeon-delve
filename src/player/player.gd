@@ -252,6 +252,7 @@ func _on_hurt(hitbox: Hitbox) -> void:
 
 	Hitstop.request(hitstop_hurt_frames)
 	_juice.flash()
+	Rumble.hurt()
 	var taken: float = hitbox.damage * incoming_multiplier()
 	health = maxf(0.0, health - taken)
 	Events.player_hurt.emit(taken)
@@ -518,6 +519,7 @@ func _die() -> void:
 	_death_handoff_tick = _tick + ms_to_ticks(death_beat_ms)
 	Sfx.play(Sfx.HURT, 0.7, 4.0)
 	_juice.punch(Vector2(1.6, 0.4))
+	Rumble.death()
 
 
 ## Full reset for a fresh run: health, riposte, death state. Called when a run
@@ -560,11 +562,16 @@ func teleport_to(destination: Vector2) -> void:
 func _on_hit_landed(_damage: float, was_riposte: bool) -> void:
 	Hitstop.request(hitstop_parry_frames if was_riposte else hitstop_hit_frames)
 	_juice.punch(attack_punch)
+	if was_riposte:
+		Rumble.riposte()
+	else:
+		Rumble.hit()
 
 
 func _on_parry_succeeded() -> void:
 	Hitstop.request(hitstop_parry_frames)
 	_juice.flash()
+	Rumble.parry()
 
 
 ## Squash on touchdown, stretch on take-off. Requested from physics, animated in
