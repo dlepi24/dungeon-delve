@@ -1,6 +1,24 @@
 # Roadmap
 
 ## Status
+- **Round 5 BUILT 2026-07-17 (late): MINE HEAT + blacksmith round 2 + shop UX.**
+  - **Mine heat** (Dustin: "shouldn't be able to roflstomp"): each survived
+    extraction toughens enemies (+12% hp, +10% dmg, more brute promotions per
+    level, cap 8), pays more ore (+8%/level), and a +50% full-clear bonus lands
+    for finishing all five rooms. Death cools it to zero. Persists in the save;
+    shown in the HUD depth line and on the hub. Knobs: heat_* vars in
+    GameState, clear_bonus_fraction on RunCoordinator.
+  - **Blacksmith**: stock now rolls once per surface visit (close/reopen
+    restock exploit fixed) and the smith HONES the weapon in hand (+15%
+    dmg/poise, escalating cost, renames "+N"; session duplicate — the shared
+    .tres never mutates, weapon_test pins it).
+  - **Shop UX**: F and ESC close both stalls; walking away closes them.
+  - Shrine spots added to entry + gap so altars can appear early ("shrines only
+    pop up toward the end").
+  - **Session end. Next session candidates:** playtest heat tuning (the heat_*
+    knobs are first-guess values), buff durations, controller glyphs + gamepad
+    menu nav, M8 daily seed + leaderboard reading run_history.jsonl, and the
+    remaining GDD open questions (v1 scope, name).
 - **Round 4 BUILT 2026-07-17 (late): SHRINES + silent run history.** Design
   locked with Dustin in-session (all recommendations accepted): rest-of-run
   bargains, stacking, all three flavours (stat trade / pay-carried-ore /
