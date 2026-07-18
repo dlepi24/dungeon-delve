@@ -1,7 +1,10 @@
 # Roadmap
 
 ## Status
-- **Round 11, 2026-07-17 (latest): weapon pickups are an inventory, not a
+- **Round 12, 2026-07-17 (latest): pickup floor probe (weapons no longer fall
+  through the world), auto-pause on pad disconnect, juice round two (roll
+  afterimages + dust, death bursts, lantern flicker).**
+- **Round 11, 2026-07-17: weapon pickups are an inventory, not a
   vacuum.** Dustin kept losing honed weapons to walk-over auto-equips.
   Auto-equip only from the bare pickaxe; a free slot stows QUIETLY (hand never
   switches from walking over loot); a full loadout stops auto-collect — the
