@@ -8,7 +8,15 @@ extends Node
 ## Two tracks: a driving one for the delve, a calmer one for the hub. Switching
 ## is a soft fade so it does not jump-cut.
 
-const DELVE: String = "res://assets/audio/music_delve.wav"
+## The delve owns three moods; one is drawn per descent so back-to-back runs
+## do not share a soundtrack. The reroll is free: the hub track plays between
+## runs, so every entry into the mine is a fresh pick. Plain randomness —
+## ambience is not gameplay and must not touch the seeded streams.
+const DELVE_VARIANTS: Array[String] = [
+	"res://assets/audio/music_delve.wav",
+	"res://assets/audio/music_delve_b.wav",
+	"res://assets/audio/music_delve_c.wav",
+]
 const HUB: String = "res://assets/audio/music_hub.wav"
 
 ## Master music level in dB. Music sits under the SFX; -12 is a starting point.
@@ -49,7 +57,11 @@ func play(track: StringName, attenuation_db: float = 0.0) -> void:
 			_fade(_players[_active], _players[_active].volume_db, _target_db())
 		return
 	_current = track
-	var path: String = DELVE if track == &"delve" else HUB
+	var path: String = HUB
+	if track == &"delve":
+		var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+		rng.randomize()
+		path = DELVE_VARIANTS[rng.randi_range(0, DELVE_VARIANTS.size() - 1)]
 	var stream: AudioStreamWAV = _looped(path)
 	if stream == null:
 		return

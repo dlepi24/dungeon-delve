@@ -123,40 +123,45 @@ def _hat(dur=0.05):
     return [random.uniform(-1, 1) * math.exp(-i / RATE * 60.0) * 0.5 for i in range(n)]
 
 
-def build(with_drums):
-    total_bars = len(PROG) * BARS_PER_CHORD
-    length = total_bars * BAR
+def build(with_drums, prog=None, bpm=BPM):
+    """One loop. prog/bpm default to the originals; variants pass their own,
+    which is how the delve gets three moods from one synth."""
+    prog = prog or PROG
+    beat = 60.0 / bpm
+    bar = beat * 4
+    total_bars = len(prog) * BARS_PER_CHORD
+    length = total_bars * bar
     n = int(length * RATE)
     buf = [0.0] * n
 
-    for ci, (root, tones) in enumerate(PROG):
-        chord_start = ci * BARS_PER_CHORD * BAR
+    for ci, (root, tones) in enumerate(prog):
+        chord_start = ci * BARS_PER_CHORD * bar
         root_freq = note(root, -1)
         pad_freqs = [note(root + tn, 0) for tn in tones]
 
         # Pad holds the whole chord.
-        _mix_into(buf, int(chord_start * RATE), _pad_chord(pad_freqs, BARS_PER_CHORD * BAR), 0.16)
+        _mix_into(buf, int(chord_start * RATE), _pad_chord(pad_freqs, BARS_PER_CHORD * bar), 0.16)
 
-        for bar in range(BARS_PER_CHORD):
-            bar_start = chord_start + bar * BAR
+        for bi in range(BARS_PER_CHORD):
+            bar_start = chord_start + bi * bar
             # Bass on each beat, root then fifth for a little movement.
-            for beat in range(4):
-                bf = root_freq if beat % 2 == 0 else note(root + 7, -1)
-                _mix_into(buf, int((bar_start + beat * BEAT) * RATE), _bass_note(bf, BEAT * 0.9), 0.34)
+            for bt_i in range(4):
+                bf = root_freq if bt_i % 2 == 0 else note(root + 7, -1)
+                _mix_into(buf, int((bar_start + bt_i * beat) * RATE), _bass_note(bf, beat * 0.9), 0.34)
             # Arp: chord tones as eighth notes, climbing.
             arp = [root + tones[0], root + tones[1], root + tones[2], root + tones[1]] * 2
             for k, semi in enumerate(arp):
-                t0 = bar_start + k * (BEAT / 2)
-                _mix_into(buf, int(t0 * RATE), _pluck(note(semi, 1), BEAT / 2 * 0.9), 0.14 if with_drums else 0.10)
+                t0 = bar_start + k * (beat / 2)
+                _mix_into(buf, int(t0 * RATE), _pluck(note(semi, 1), beat / 2 * 0.9), 0.14 if with_drums else 0.10)
             if with_drums:
-                for beat in range(4):
-                    bt = bar_start + beat * BEAT
-                    if beat in (0, 2):
+                for bt_i in range(4):
+                    bt = bar_start + bt_i * beat
+                    if bt_i in (0, 2):
                         _mix_into(buf, int(bt * RATE), _kick(), 0.6)
-                    if beat in (1, 3):
+                    if bt_i in (1, 3):
                         _mix_into(buf, int(bt * RATE), _snare(), 0.34)
                     _mix_into(buf, int(bt * RATE), _hat(), 0.16)
-                    _mix_into(buf, int((bt + BEAT / 2) * RATE), _hat(), 0.12)
+                    _mix_into(buf, int((bt + beat / 2) * RATE), _hat(), 0.12)
 
     peak = max(1e-6, max(abs(x) for x in buf))
     norm = 0.85 / peak
@@ -174,9 +179,26 @@ def write(name, samples):
     print(f"  {name}  {len(samples) / RATE:.1f}s")
 
 
+# Variant progressions, all A natural minor so nothing clashes with the SFX.
+# b: moodier — i, iv, v, VI at a slower pulse. c: driving — i, VII, VI, v, faster.
+PROG_B = [
+    (0,  [0, 3, 7]),    # Am
+    (5,  [0, 3, 7]),    # Dm
+    (7,  [0, 3, 7]),    # Em
+    (-4, [0, 4, 7]),    # F
+]
+PROG_C = [
+    (0,  [0, 3, 7]),    # Am
+    (-2, [0, 4, 7]),    # G
+    (-4, [0, 4, 7]),    # F
+    (7,  [0, 3, 7]),    # Em
+]
+
 if __name__ == "__main__":
     random.seed(11)
     print("generating placeholder synthwave:")
     write("music_delve.wav", build(with_drums=True))
     write("music_hub.wav", build(with_drums=False))
+    write("music_delve_b.wav", build(with_drums=True, prog=PROG_B, bpm=84))
+    write("music_delve_c.wav", build(with_drums=True, prog=PROG_C, bpm=108))
     print("done")
