@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://src/hub/hub.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/player/player.tscn" id="2"]
@@ -9,6 +9,9 @@
 
 [sub_resource type="RectangleShape2D" id="floor"]
 size = Vector2(1840, 80)
+
+[sub_resource type="RectangleShape2D" id="wall"]
+size = Vector2(40, 1080)
 
 [node name="Hub" type="Node2D"]
 script = ExtResource("1")
@@ -29,12 +32,33 @@ collision_mask = 0
 position = Vector2(960, 820)
 shape = SubResource("floor")
 
+; The surface is enclosed like every delve room — round 12 playtest: you could
+; stroll off either edge of the world and fall forever.
+[node name="LeftWallShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(20, 540)
+shape = SubResource("wall")
+
+[node name="RightWallShape" type="CollisionShape2D" parent="Geometry"]
+position = Vector2(1900, 540)
+shape = SubResource("wall")
+
 [node name="Floor" type="ColorRect" parent="."]
 offset_left = 40.0
 offset_top = 780.0
 offset_right = 1880.0
 offset_bottom = 860.0
 color = Color(0.3, 0.24, 0.18, 1)
+
+[node name="LeftWall" type="ColorRect" parent="."]
+offset_right = 40.0
+offset_bottom = 1080.0
+color = Color(0.22, 0.17, 0.12, 1)
+
+[node name="RightWall" type="ColorRect" parent="."]
+offset_left = 1880.0
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.22, 0.17, 0.12, 1)
 
 [node name="Lantern" type="ColorRect" parent="."]
 offset_left = 900.0
