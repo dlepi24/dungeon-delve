@@ -65,35 +65,57 @@ const SIDEWAYS: Dictionary[String, Array] = {
 ## the first room is entered twice.
 @export var auto_start: bool = true
 
+## What each room id sounds like from the tunnel above it. Shown on the door
+## choice — a hint, not a name, so the choice is informed but not spoiled.
+const HINTS: Dictionary[StringName, String] = {
+	&"entry": "the mine mouth",
+	&"gap": "a broken floor",
+	&"climb": "a long climb",
+	&"arena": "an open fighting floor",
+	&"corridor": "a low gallery",
+	&"cavern": "gaping dark",
+	&"shaft": "rising timbers",
+	&"gallery": "a two-storey drop",
+	&"deep": "the deep vein",
+}
+
 var _plan: Array[StringName] = []
+## Per-depth candidate rooms from the seed: [ [entry], [a,b], [a,b], ..., [deep] ].
+## The player's door choice at each descent picks which candidate _plan takes.
+var _options: Array[Array] = []
 var _index: int = -1
 var _room: Room = null
 var _player: Player = null
 
 
 ## Pure function of the seed: no scene loading, no side effects, so tests can
-## generate delves by the hundred and compare them.
-##
-## Avoids repeating the previous room where it can, because two identical rooms
-## back to back reads as a bug even when it is legitimately random.
-func plan_for_seed(seed_value: int, count: int) -> Array[StringName]:
+## generate delves by the hundred and compare them. Each middle depth gets TWO
+## distinct candidates (one redraw, not a loop — a variable number of draws
+## would make the sequence depend on what came before); the player chooses at
+## the exit, which multiplies run shapes without new content.
+func options_for_seed(seed_value: int, count: int) -> Array[Array]:
 	Rng.set_seed(seed_value)
 	var generator: RandomNumberGenerator = Rng.stream(&"delve")
 
-	var plan: Array[StringName] = [FIRST_ROOM]
+	var options: Array[Array] = [[FIRST_ROOM]]
 	var middles: int = maxi(0, count - 2)
-	var previous: StringName = FIRST_ROOM
 	for i: int in middles:
-		var choice: StringName = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
-		if choice == previous and MIDDLE_POOL.size() > 1:
-			# One re-draw, not a loop: a while-loop here could spin forever on a
-			# pool of one, and burning a variable number of draws would make the
-			# sequence depend on what came before.
-			choice = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
-		plan.append(choice)
-		previous = choice
+		var a: StringName = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
+		var b: StringName = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
+		if b == a and MIDDLE_POOL.size() > 1:
+			b = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
+		options.append([a, b] if b != a else [a])
 	if count >= 2:
-		plan.append(LAST_ROOM)
+		options.append([LAST_ROOM])
+	return options
+
+
+## The default path: the first candidate at every depth. What the run plan
+## holds until a door choice overrides a level.
+func plan_for_seed(seed_value: int, count: int) -> Array[StringName]:
+	var plan: Array[StringName] = []
+	for opts: Array in options_for_seed(seed_value, count):
+		plan.append(opts[0])
 	return plan
 
 
@@ -110,7 +132,10 @@ func current_room() -> Room:
 
 
 func start(seed_value: int) -> void:
-	_plan = plan_for_seed(seed_value, room_count)
+	_options = options_for_seed(seed_value, room_count)
+	_plan = []
+	for opts: Array in _options:
+		_plan.append(opts[0])
 	_index = -1
 	GameState.begin_run(seed_value, _plan)
 	# A restart must be a clean slate, or you carry your last run's health and
@@ -151,10 +176,27 @@ func _start_today() -> void:
 	start(Rng.daily_seed(today["year"], today["month"], today["day"]))
 
 
-## Go one room deeper. Public because the run coordinator calls it when the player
-## chooses to descend at an exit — the Delve no longer decides that itself, since
-## "descend or extract" is a run-loop decision, not an assembly one.
-func descend() -> void:
+## What lies below the current room: 1 candidate (no real choice) or 2 (the
+## coordinator shows the doors). Empty at the bottom.
+func next_options() -> Array:
+	var next: int = _index + 1
+	if next >= _options.size():
+		return []
+	return _options[next]
+
+
+## Go one room deeper, through the chosen door. Public because the run
+## coordinator calls it when the player chooses to descend at an exit — the
+## Delve no longer decides that itself, since "descend or extract" is a
+## run-loop decision, not an assembly one.
+##
+## _plan and GameState.run_plan are the same array object, so writing the
+## choice here updates everything that displays the plan.
+func descend(choice: int = 0) -> void:
+	var next: int = _index + 1
+	if next < _options.size():
+		var opts: Array = _options[next]
+		_plan[next] = opts[clampi(choice, 0, opts.size() - 1)]
 	_advance()
 
 

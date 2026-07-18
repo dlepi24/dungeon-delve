@@ -1,0 +1,70 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/rooms/door_choice.gd" id="1_doors"]
+
+[sub_resource type="StyleBoxFlat" id="sb_doors"]
+bg_color = Color(0.05, 0.045, 0.04, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.62, 0.5, 0.32, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="DoorChoice" type="CanvasLayer"]
+layer = 8
+script = ExtResource("1_doors")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -110.0
+offset_right = 300.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("sb_doors")
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="Rows" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = "THE SHAFT SPLITS"
+horizontal_alignment = 1
+
+[node name="Doors" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Left" type="Button" parent="Panel/Margin/Rows/Doors"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Left shaft"
+
+[node name="Right" type="Button" parent="Panel/Margin/Rows/Doors"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Right shaft"
+
+[node name="Hint" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.6, 0.55, 0.45, 1)
+text = "You can only hear so much from up here."
+horizontal_alignment = 1

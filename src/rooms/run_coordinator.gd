@@ -29,6 +29,7 @@ var _ending: bool = false
 
 @onready var _prompt: CanvasLayer = $ExtractPrompt
 @onready var _result: CanvasLayer = $ResultScreen
+@onready var _doors: CanvasLayer = $DoorChoice
 
 
 func _ready() -> void:
@@ -36,6 +37,7 @@ func _ready() -> void:
 	Events.delve_completed.connect(_on_delve_completed)
 	_prompt.visible = false
 	_result.dismissed.connect(_to_hub)
+	_doors.chosen.connect(func(index: int) -> void: delve.descend(index))
 	Cursor.gameplay()
 	Music.play(&"delve", music_attenuation_db)
 	# Keyboard-vs-pad can change while standing at an exit; the prompt follows.
@@ -73,7 +75,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		_extract()
 	elif event.is_action_pressed(&"move_down") and _deliberate(event):
 		get_viewport().set_input_as_handled()
-		delve.descend()
+		_descend()
+
+
+## Two distinct shafts below: offer the doors. One (or the deep vein): just go.
+func _descend() -> void:
+	var options: Array = delve.next_options()
+	if options.size() > 1:
+		_doors.offer(Delve.HINTS.get(options[0], "silence"), Delve.HINTS.get(options[1], "silence"))
+		return
+	delve.descend()
 
 
 ## A stick press only counts here at a committed tilt. The 0.2 action deadzone
