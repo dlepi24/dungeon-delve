@@ -47,6 +47,17 @@ func close() -> void:
 	Cursor.gameplay()
 
 
+## The key that opened the shop closes it, and so does ESC. _input (not
+## _unhandled_input) so this wins over the pause menu — ESC at a stall should
+## close the stall, not stack a pause screen over it.
+func _input(event: InputEvent) -> void:
+	if not visible:
+		return
+	if event.is_action_pressed(&"interact") or event.is_action_pressed(&"pause"):
+		get_viewport().set_input_as_handled()
+		close()
+
+
 func _buy(upgrade: UpgradeData) -> void:
 	var level: int = GameState.upgrade_level(upgrade.id)
 	if level >= upgrade.max_level:

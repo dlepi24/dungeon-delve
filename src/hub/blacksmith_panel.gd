@@ -33,11 +33,14 @@ var _stock: Array[WeaponData] = []
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_close.pressed.connect(close)
+	# Stock is rolled ONCE per surface visit (this panel is rebuilt with the hub
+	# scene after every run). Rolling in open() let you close and reopen the
+	# shop until it stocked what you wanted, which made the reroll meaningless.
+	_roll_stock()
+	_rebuild_rows()
 
 
 func open() -> void:
-	_roll_stock()
-	_rebuild_rows()
 	_refresh()
 	visible = true
 	Cursor.menu()
@@ -46,6 +49,16 @@ func open() -> void:
 func close() -> void:
 	visible = false
 	Cursor.gameplay()
+
+
+## The key that opened the shop closes it, and so does ESC. _input so this wins
+## over the pause menu.
+func _input(event: InputEvent) -> void:
+	if not visible:
+		return
+	if event.is_action_pressed(&"interact") or event.is_action_pressed(&"pause"):
+		get_viewport().set_input_as_handled()
+		close()
 
 
 func _roll_stock() -> void:

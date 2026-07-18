@@ -43,7 +43,19 @@ func _refresh_banked() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if _player == null or _vendor_panel.visible or _blacksmith_panel.visible:
+	if _player == null:
+		_prompt.text = ""
+		return
+	# Walking away from a stall closes it — you are not paused while shopping,
+	# so leaving without closing left a dead panel over the screen.
+	if _vendor_panel.visible:
+		if _player.global_position.distance_to(_vendor_marker.global_position) > interact_range * 1.6:
+			_vendor_panel.close()
+		_prompt.text = ""
+		return
+	if _blacksmith_panel.visible:
+		if _player.global_position.distance_to(_smithy_marker.global_position) > interact_range * 1.6:
+			_blacksmith_panel.close()
 		_prompt.text = ""
 		return
 	var near: StringName = &""
