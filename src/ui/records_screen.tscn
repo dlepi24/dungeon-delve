@@ -1,0 +1,102 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/ui/records_screen.gd" id="1_rec"]
+
+[sub_resource type="StyleBoxFlat" id="sb_rec"]
+bg_color = Color(0.05, 0.045, 0.04, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.62, 0.5, 0.32, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="RecordsScreen" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_rec")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -280.0
+offset_right = 300.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("sb_rec")
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 20
+
+[node name="Rows" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "RECORDS"
+horizontal_alignment = 1
+
+[node name="TodayHeader" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.95, 0.55, 0.35, 1)
+text = "TODAY'S DELVE"
+
+[node name="TodayValue" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = "Not yet attempted."
+
+[node name="Sep1" type="HSeparator" parent="Panel/Margin/Rows"]
+layout_mode = 2
+
+[node name="DailiesHeader" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.6, 0.55, 0.45, 1)
+text = "BEST DAILIES"
+
+[node name="Dailies" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = ""
+
+[node name="Sep2" type="HSeparator" parent="Panel/Margin/Rows"]
+layout_mode = 2
+
+[node name="FreesHeader" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.6, 0.55, 0.45, 1)
+text = "BEST EXTRACTIONS"
+
+[node name="Frees" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = ""
+
+[node name="Sep3" type="HSeparator" parent="Panel/Margin/Rows"]
+layout_mode = 2
+
+[node name="Career" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.75, 0.66, 0.5, 1)
+text = ""
+horizontal_alignment = 1
+
+[node name="Back" type="Button" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = "Back"

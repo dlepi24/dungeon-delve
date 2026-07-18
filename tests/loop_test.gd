@@ -177,6 +177,35 @@ func _ready() -> void:
 	_check(GameState.heat_level() == GameState.heat_cap, "scaling stops compounding at the cap")
 	GameState.reset_save()
 
+	print("the daily delve is one clean ranked shot")
+	GameState.reset_save()
+	GameState.mine_heat = 5
+	var pl4: Player = (load("res://src/player/player.tscn") as PackedScene).instantiate()
+	add_child(pl4)
+	await get_tree().physics_frame
+	var stash: Array[WeaponData] = [load("res://src/systems/weapons/dagger.tres") as WeaponData]
+	GameState.store_loadout(stash, 0)
+	GameState.pending_mode = &"daily"
+	GameState.begin_run(99, [&"a"])
+	_check(GameState.run_mode == &"daily" and GameState.run_ranked, "first daily of the day is the ranked attempt")
+	_check(GameState.heat_level() == 0 and is_equal_approx(GameState.heat_health_multiplier(), 1.0),
+		"the daily plays at heat 0 whatever the streak")
+	pl4.reset_for_new_run()
+	_check(pl4.held_weapons.is_empty() and pl4.weapon_name() == "Pickaxe",
+		"the daily starts on the bare pickaxe")
+	_check(GameState.session_weapons.size() == 1, "the session stash waits untouched for free play")
+	GameState.extract()
+	_check(GameState.mine_heat == 5, "daily extraction leaves the heat streak alone")
+	GameState.pending_mode = &"daily"
+	GameState.begin_run(99, [&"a"])
+	_check(not GameState.run_ranked, "a second daily today is practice, not ranked")
+	GameState.lose_run()
+	_check(GameState.mine_heat == 5, "daily death does not cool the mine")
+	_check(GameState.session_weapons.size() == 1, "daily death does not spend the free-play loadout")
+	pl4.queue_free()
+	GameState.reset_save()
+	_check(GameState.daily_available(), "reset_save returns the daily attempt")
+
 	if _failures.is_empty():
 		print("\nLOOP TEST OK")
 		get_tree().quit(0)

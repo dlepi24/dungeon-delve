@@ -127,4 +127,5 @@ func _descend() -> void:
 	var generator: RandomNumberGenerator = RandomNumberGenerator.new()
 	generator.randomize()
 	GameState.pending_seed = generator.randi()
+	GameState.pending_mode = &"free"
 	get_tree().change_scene_to_file.call_deferred(DELVE_SCENE)

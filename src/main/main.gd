@@ -11,8 +11,12 @@ extends Control
 ## display-touching goes through the already-guarded Cursor helper anyway.
 
 const HUB_SCENE: String = "res://src/hub/hub.tscn"
+const DELVE_SCENE: String = "res://src/rooms/delve_run.tscn"
 
 @onready var _play: Button = $Menu/Play
+@onready var _daily: Button = $Menu/Daily
+@onready var _records_button: Button = $Menu/Records
+@onready var _records: Control = $RecordsScreen
 @onready var _new_game: Button = $Menu/NewGame
 @onready var _settings_button: Button = $Menu/Settings
 @onready var _settings: Control = $SettingsMenu
@@ -36,6 +40,12 @@ func _ready() -> void:
 	_quit.pressed.connect(func() -> void: get_tree().quit())
 	_settings_button.pressed.connect(_on_settings)
 	_settings.closed.connect(_on_settings_closed)
+	_daily.pressed.connect(_on_daily)
+	_records_button.pressed.connect(_on_records)
+	_records.closed.connect(_on_records_closed)
+	# One ranked shot per day; after that the same seed is open practice.
+	if not GameState.daily_available():
+		_daily.text = "Daily Delve  (practice)"
 	_confirm_yes.pressed.connect(_on_wipe_confirmed)
 	_confirm_cancel.pressed.connect(func() -> void: _confirm.visible = false; _play.grab_focus())
 	# "Continue" when there is a save worth continuing; the distinction tells the
@@ -90,6 +100,26 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_play() -> void:
 	get_tree().change_scene_to_file.call_deferred(HUB_SCENE)
+
+
+## Straight down the mine on today's shared seed — no hub stop, no heat, no
+## carried loadout: the ceremony is that everyone faces the same mine.
+func _on_daily() -> void:
+	var now: Dictionary = Time.get_datetime_dict_from_system()
+	GameState.pending_seed = Rng.daily_seed(now["year"], now["month"], now["day"])
+	GameState.pending_mode = &"daily"
+	get_tree().change_scene_to_file.call_deferred(DELVE_SCENE)
+
+
+func _on_records() -> void:
+	_menu.visible = false
+	_records.open()
+
+
+func _on_records_closed() -> void:
+	_records.visible = false
+	_menu.visible = true
+	_records_button.grab_focus()
 
 
 func _on_settings() -> void:

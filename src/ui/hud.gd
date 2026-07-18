@@ -30,6 +30,7 @@ const PICKAXE_ICON: Texture2D = preload("res://assets/icons/pickaxe.png")
 @onready var _buff_rows: VBoxContainer = $BuffRows
 @onready var _debuff_rows: VBoxContainer = $DebuffRows
 @onready var _top_right: VBoxContainer = $TopRight
+@onready var _daily_chip: PanelContainer = $TopRight/DailyChip
 @onready var _pips: HBoxContainer = $TopRight/RoomChip/RoomM/RoomRow/Pips
 @onready var _room_value: Label = $TopRight/RoomChip/RoomM/RoomRow/RoomValue
 @onready var _ore_mult: Label = $TopRight/OreChip/OreM/OreRow/OreMult
@@ -112,6 +113,7 @@ func _update_boss_bar() -> void:
 ## multiplier beside its icon, heat as an ember badge that exists only while
 ## the mine is hot — and breathes when it is furious.
 func _refresh_run_chips() -> void:
+	_daily_chip.visible = GameState.run_mode == &"daily"
 	var rooms: int = maxi(1, GameState.run_plan.size())
 	while _pips.get_child_count() < rooms:
 		var pip: ColorRect = ColorRect.new()

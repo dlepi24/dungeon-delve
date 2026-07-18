@@ -585,10 +585,17 @@ func reset_for_new_run() -> void:
 	_buff_expiry.clear()
 	# Weapons are SESSION-scoped (GDD 2026-07-17): surviving a run banks the
 	# loadout, dying cleared the stash before we got here. Either way, the stash
-	# is the truth and we just re-arm whatever it says is ours.
-	held_weapons = GameState.session_weapons.duplicate()
-	active_slot = clampi(GameState.session_active_slot, 0, maxi(0, held_weapons.size() - 1))
-	equipped_weapon = held_weapons[active_slot] if not held_weapons.is_empty() else null
+	# is the truth and we just re-arm whatever it says is ours — EXCEPT on a
+	# daily, which starts on the bare pickaxe for a level field. The stash is
+	# not touched; it waits for the next free run.
+	if GameState.run_mode == &"daily":
+		held_weapons = []
+		active_slot = 0
+		equipped_weapon = null
+	else:
+		held_weapons = GameState.session_weapons.duplicate()
+		active_slot = clampi(GameState.session_active_slot, 0, maxi(0, held_weapons.size() - 1))
+		equipped_weapon = held_weapons[active_slot] if not held_weapons.is_empty() else null
 	_resize_attack_hitbox()
 	if _state_machine != null:
 		_state_machine.transition_to(&"Idle")

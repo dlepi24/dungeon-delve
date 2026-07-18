@@ -32,6 +32,31 @@ var carried_haul: int = 0
 ## Not persisted: a pending run does not survive a quit.
 var pending_seed: int = -1
 
+# --- Daily Delve (M8) ---
+# One seed per calendar day, same on every machine, ONE ranked attempt
+# (Dustin's rules, 2026-07-18): the first daily run of the day is THE run —
+# the attempt is spent at run START, so quitting out cannot refund a bad
+# opening. Replays of the seed are practice. Dailies play at heat 0 and on the
+# bare pickaxe (session weapons wait for free runs), and never touch the heat
+# streak: every player faces the same mine.
+## What the next begin_run is: &"free" or &"daily". Consumed by begin_run.
+var pending_mode: StringName = &"free"
+## The live run's mode.
+var run_mode: StringName = &"free"
+## Whether the live run is the day's ranked daily attempt.
+var run_ranked: bool = false
+## Date (YYYY-MM-DD) whose ranked daily attempt has been spent. Persisted.
+var daily_played: String = ""
+
+
+func today_string() -> String:
+	var now: Dictionary = Time.get_datetime_dict_from_system()
+	return "%04d-%02d-%02d" % [now["year"], now["month"], now["day"]]
+
+
+func daily_available() -> bool:
+	return daily_played != today_string()
+
 ## Shrine bargains accepted THIS run (GDD 2026-07-17). Rest-of-run, stacking,
 ## cleared with the rest of run state. The player's stat functions and the haul
 ## multiplier fold these in, same pattern as buffs.
@@ -124,6 +149,11 @@ var heat_cap: int = 8
 
 
 func heat_level() -> int:
+	# The daily is a level playing field: the same seed must be the same mine
+	# for everyone, whatever their streak. One choke point covers all heat
+	# scaling — enemies, promotions, ore, debris all route through here.
+	if run_mode == &"daily":
+		return 0
 	return mini(mine_heat, heat_cap)
 
 
@@ -183,6 +213,15 @@ func begin_run(seed_value: int, plan: Array[StringName]) -> void:
 	carried_haul = 0
 	active_modifiers.clear()
 	run_kills = 0
+	run_mode = pending_mode
+	pending_mode = &"free"
+	run_ranked = false
+	if run_mode == &"daily" and daily_available():
+		# The ranked attempt is spent NOW, not at the end — abandoning a bad
+		# start must not refund the one shot.
+		run_ranked = true
+		daily_played = today_string()
+		save_game()
 	run_active = true
 	Events.run_started.emit(seed_value)
 
@@ -203,7 +242,8 @@ func extract() -> void:
 	run_active = false
 	_record_run_end()
 	best_haul = maxi(best_haul, extracted)
-	mine_heat += 1
+	if run_mode != &"daily":
+		mine_heat += 1
 	_log_run(&"extracted", extracted)
 	save_game()
 	Events.run_extracted.emit(extracted)
@@ -215,8 +255,11 @@ func lose_run() -> void:
 	var lost: int = carried_haul
 	carried_haul = 0
 	run_active = false
-	clear_session_loadout()
-	mine_heat = 0
+	if run_mode != &"daily":
+		# A daily death costs the daily, not the career: the streak and the
+		# session weapons belong to free play and were never brought along.
+		clear_session_loadout()
+		mine_heat = 0
 	_record_run_end()
 	_log_run(&"died", lost)
 	save_game()
@@ -237,6 +280,8 @@ func _log_run(outcome: StringName, amount: int) -> void:
 		"amount": amount,
 		"room": depth + 1,
 		"kills": run_kills,
+		"mode": String(run_mode),
+		"ranked": run_ranked,
 	}
 	var lines: PackedStringArray = []
 	if FileAccess.file_exists(HISTORY_PATH):
@@ -261,6 +306,8 @@ func end_run() -> void:
 	run_plan = []
 	depth = 0
 	carried_haul = 0
+	run_mode = &"free"
+	run_ranked = false
 	active_modifiers.clear()
 
 
@@ -312,6 +359,7 @@ func save_game() -> void:
 	for id: StringName in upgrade_levels:
 		config.set_value("upgrades", String(id), upgrade_levels[id])
 	config.set_value("meta", "mine_heat", mine_heat)
+	config.set_value("meta", "daily_played", daily_played)
 	config.set_value("stats", "total_runs", total_runs)
 	config.set_value("stats", "deepest_room", deepest_room)
 	config.set_value("stats", "best_haul", best_haul)
@@ -329,6 +377,7 @@ func load_game() -> void:
 		for key: String in config.get_section_keys("upgrades"):
 			upgrade_levels[StringName(key)] = int(config.get_value("upgrades", key))
 	mine_heat = int(config.get_value("meta", "mine_heat", 0))
+	daily_played = str(config.get_value("meta", "daily_played", ""))
 	total_runs = int(config.get_value("stats", "total_runs", 0))
 	deepest_room = int(config.get_value("stats", "deepest_room", 0))
 	best_haul = int(config.get_value("stats", "best_haul", 0))
@@ -346,6 +395,7 @@ func reset_save() -> void:
 	best_haul = 0
 	total_kills = 0
 	mine_heat = 0
+	daily_played = ""
 	active_modifiers.clear()
 	DirAccess.remove_absolute(SAVE_PATH)
 	DirAccess.remove_absolute(HISTORY_PATH)
