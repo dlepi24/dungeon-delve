@@ -54,6 +54,19 @@ func _ready() -> void:
 	_ck(p.weapon_name() == "Pickaxe", "death resets to the pickaxe")
 	_ck(p.held_weapons.is_empty(), "death clears the whole loadout")
 
+	# Honing sharpens a session COPY — the shared .tres must never mutate, or
+	# every future drop of that weapon ships pre-honed.
+	p.equip_weapon(dagger)
+	var dagger_disk_damage: float = dagger.damage
+	_ck(p.hone_equipped_weapon(), "honing the held weapon succeeds")
+	_ck(p.weapon_damage() > dagger_disk_damage and p.equipped_weapon.hone_level == 1,
+		"honing raises damage and marks the level")
+	_ck(p.equipped_weapon.display_name.ends_with("+1"), "a honed blade says so in its name")
+	_ck(is_equal_approx(dagger.damage, dagger_disk_damage), "the .tres on disk is untouched")
+	_ck(GameState.session_weapons[p.active_slot].hone_level == 1, "the honed copy rides the session stash")
+	GameState.lose_run()
+	p.reset_for_new_run()
+
 	# Meta upgrade persists across that reset; the weapon did not.
 	GameState.upgrade_levels[&"damage"] = 3
 	_ck(p.attack_speed_multiplier() > 1.0, "the permanent weapon-speed upgrade survives a new run")

@@ -66,6 +66,23 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 8
 
+[node name="HoneSep" type="HSeparator" parent="Panel/Margin/Rows"]
+layout_mode = 2
+
+[node name="HoneRow" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HoneLabel" type="Label" parent="Panel/Margin/Rows/HoneRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hone"
+
+[node name="HoneButton" type="Button" parent="Panel/Margin/Rows/HoneRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(150, 0)
+text = "Hone"
+
 [node name="Close" type="Button" parent="Panel/Margin/Rows"]
 layout_mode = 2
 text = "Close  [F]"

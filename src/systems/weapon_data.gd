@@ -16,6 +16,10 @@ extends Resource
 ## Blacksmith price, in banked haul. Weapons bought or found are the same thing
 ## afterwards — session-scoped, lost on death.
 @export var cost: int = 40
+## Times this weapon has been honed at the blacksmith. Lives on the SESSION
+## COPY of the resource (honing duplicates before mutating — the .tres on disk
+## is shared by drops and shop stock and must never change).
+@export var hone_level: int = 0
 
 @export_group("Timing (ms)")
 @export var startup_ms: int = 90

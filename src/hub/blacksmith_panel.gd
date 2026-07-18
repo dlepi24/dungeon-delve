@@ -22,17 +22,24 @@ const WEAPON_POOL: Array[String] = [
 
 ## Weapons on the rack per visit.
 @export var stock_size: int = 2
+## Honing: +15% damage and poise per level. Base price, and how steeply
+## repeat honings escalate — sharpening the same blade twice costs more.
+@export var hone_base_cost: int = 30
+@export var hone_cost_per_level: int = 25
 
 var _stock: Array[WeaponData] = []
 
 @onready var _list: VBoxContainer = $Panel/Margin/Rows/List
 @onready var _banked: Label = $Panel/Margin/Rows/Banked
+@onready var _hone_label: Label = $Panel/Margin/Rows/HoneRow/HoneLabel
+@onready var _hone_button: Button = $Panel/Margin/Rows/HoneRow/HoneButton
 @onready var _close: Button = $Panel/Margin/Rows/Close
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_close.pressed.connect(close)
+	_hone_button.pressed.connect(_hone)
 	# Stock is rolled ONCE per surface visit (this panel is rebuilt with the hub
 	# scene after every run). Rolling in open() let you close and reopen the
 	# shop until it stocked what you wanted, which made the reroll meaningless.
@@ -115,6 +122,22 @@ func _buy(weapon: WeaponData, button: Button) -> void:
 	_refresh()
 
 
+func _hone_cost(weapon: WeaponData) -> int:
+	return hone_base_cost + hone_cost_per_level * weapon.hone_level
+
+
+## Honing works on the weapon in the player's HAND — found or bought, not the
+## bare pickaxe (that is the player's exports, not a WeaponData to duplicate).
+func _hone() -> void:
+	var player: Player = get_tree().get_first_node_in_group(&"player") as Player
+	if player == null or player.equipped_weapon == null:
+		return
+	if not GameState.spend_banked(_hone_cost(player.equipped_weapon)):
+		return
+	player.hone_equipped_weapon()
+	_refresh()
+
+
 func _refresh() -> void:
 	_banked.text = "Banked haul: %d" % GameState.banked_haul
 	for row: Node in _list.get_children():
@@ -124,3 +147,15 @@ func _refresh() -> void:
 			continue
 		button.text = "Buy  (%d)" % weapon.cost
 		button.disabled = not GameState.can_afford(weapon.cost)
+
+	var player: Player = get_tree().get_first_node_in_group(&"player") as Player
+	if player == null or player.equipped_weapon == null:
+		_hone_label.text = "Honing: bring a weapon in hand"
+		_hone_button.text = "—"
+		_hone_button.disabled = true
+		return
+	var held: WeaponData = player.equipped_weapon
+	var cost: int = _hone_cost(held)
+	_hone_label.text = "Hone %s\n+15%% damage, keeps until you die" % held.display_name
+	_hone_button.text = "Hone  (%d)" % cost
+	_hone_button.disabled = not GameState.can_afford(cost)

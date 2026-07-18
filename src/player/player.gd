@@ -381,6 +381,24 @@ func _wield(weapon: WeaponData) -> void:
 	Events.weapon_equipped.emit(weapon)
 
 
+## Blacksmith service: sharpen the weapon in hand. Mutates a DUPLICATE of the
+## resource — the .tres on disk is shared by every future drop and shop rack
+## and must never change. The honed copy rides the session stash like any
+## weapon: banked by extraction, lost to death.
+func hone_equipped_weapon() -> bool:
+	if equipped_weapon == null:
+		return false
+	var honed: WeaponData = equipped_weapon.duplicate() as WeaponData
+	honed.damage *= 1.15
+	honed.poise_damage *= 1.15
+	honed.hone_level += 1
+	var base_name: String = equipped_weapon.display_name.split(" +")[0]
+	honed.display_name = "%s +%d" % [base_name, honed.hone_level]
+	held_weapons[active_slot] = honed
+	_wield(honed)
+	return true
+
+
 ## Swap is a physics-tick input like every other verb (determinism: ghost
 ## replays must see it). Blocked mid-swing on purpose: the attack state reads
 ## its timing windows LIVE each tick, so swapping Maul -> Dagger mid-recovery
