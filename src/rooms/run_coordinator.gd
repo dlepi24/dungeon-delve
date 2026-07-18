@@ -65,12 +65,23 @@ func _refresh_prompt() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _ending or not _at_exit:
 		return
-	if event.is_action_pressed(&"move_up"):
+	if event.is_action_pressed(&"move_up") and _deliberate(event):
 		get_viewport().set_input_as_handled()
 		_extract()
-	elif event.is_action_pressed(&"move_down"):
+	elif event.is_action_pressed(&"move_down") and _deliberate(event):
 		get_viewport().set_input_as_handled()
 		delve.descend()
+
+
+## A stick press only counts here at a committed tilt. The 0.2 action deadzone
+## is right for movement but wrong for a run-ENDING decision: walking into the
+## exit with the thumb angled slightly up crossed it and extracted the player
+## by accident, every time. Keys and D-pad presses are always deliberate.
+func _deliberate(event: InputEvent) -> bool:
+	var motion: InputEventJoypadMotion = event as InputEventJoypadMotion
+	if motion == null:
+		return true
+	return absf(motion.axis_value) >= 0.7
 
 
 func _extract() -> void:
