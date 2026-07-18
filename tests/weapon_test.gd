@@ -31,18 +31,22 @@ func _ready() -> void:
 
 	var dagger: WeaponData = load("res://src/systems/weapons/dagger.tres")
 	p.equip_weapon(dagger)
-	_ck(p.attack_startup_ticks() < base_startup, "the Dagger is faster than the pickaxe")
 
-	# M7: the 2-slot loadout. Both weapons are held, the newest is in hand, and
-	# swapping is live. A third pickup replaces the slot you are NOT holding.
-	_ck(p.held_weapons.size() == 2 and p.active_slot == 1, "two pickups fill both slots, newest in hand")
+	# Inventory rules (Dustin's call, 2026-07-17 evening): a second pickup
+	# STOWS quietly — walking over loot never switches your hand. A pickup
+	# against a FULL loadout only reaches the player via a deliberate interact
+	# (see pickup.gd) and then replaces the STOWED weapon, never the hand.
+	_ck(p.held_weapons.size() == 2 and p.active_slot == 0 and p.weapon_name() == maul.display_name,
+		"a second pickup stows without switching hands")
+	p.select_weapon_slot(1)
+	_ck(p.attack_startup_ticks() < base_startup, "the Dagger is faster than the pickaxe")
 	p.select_weapon_slot(0)
-	_ck(p.weapon_name() == maul.display_name, "swapping to slot 1 puts the Maul back in hand")
+	_ck(p.weapon_name() == maul.display_name, "swapping puts the Maul back in hand")
 	var spear: WeaponData = load("res://src/systems/weapons/spear.tres")
 	p.equip_weapon(spear)
 	_ck(p.weapon_name() == spear.display_name and p.held_weapons[1] == spear,
-		"a third weapon replaces the inactive slot and comes up in hand")
-	_ck(p.held_weapons[0] == maul, "the weapon you were holding is never silently replaced")
+		"a deliberate full-loadout take replaces the stowed slot and comes up in hand")
+	_ck(p.held_weapons[0] == maul, "the weapon in your hand is never silently replaced")
 
 	# Session scoping (GDD 2026-07-17): surviving keeps the loadout, dying loses
 	# it. reset_for_new_run models arriving anywhere alive; lose_run is death.

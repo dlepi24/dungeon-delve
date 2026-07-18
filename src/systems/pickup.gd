@@ -36,6 +36,8 @@ var _collected: bool = false
 ## Icon sprite, when this pickup has art. The ColorRect stays the fallback for
 ## anything without an icon (buffs), so missing art degrades to gray-box.
 var _icon: Sprite2D = null
+## The trade offer shown over a weapon when the loadout is full. Built lazily.
+var _offer: Label = null
 
 @onready var _visual: ColorRect = $Visual
 
@@ -92,6 +94,18 @@ func _physics_process(delta: float) -> void:
 
 	var to_player: Vector2 = (_player.global_position + Vector2(0, -28)) - global_position
 	var dist: float = to_player.length()
+
+	# A weapon facing a FULL loadout is an offer, not loot (Dustin's inventory
+	# call): it stays on the ground and trades only on a deliberate interact.
+	# The magnet-and-touch flow was silently discarding honed weapons.
+	if kind == Kind.WEAPON and _player.loadout_full():
+		_velocity.y += 900.0 * delta
+		_velocity.x = move_toward(_velocity.x, 0.0, 400.0 * delta)
+		global_position += _velocity * delta
+		_update_offer(dist < 110.0)
+		return
+	_update_offer(false)
+
 	if dist < 22.0:
 		_collect()
 		return
@@ -101,6 +115,37 @@ func _physics_process(delta: float) -> void:
 		_velocity.y += 900.0 * delta
 		_velocity.x = move_toward(_velocity.x, 0.0, 400.0 * delta)
 	global_position += _velocity * delta
+
+
+func _update_offer(near: bool) -> void:
+	if not near:
+		if _offer != null:
+			_offer.visible = false
+		return
+	if _offer == null:
+		_offer = Label.new()
+		_offer.position = Vector2(-200, -96)
+		_offer.size = Vector2(400, 56)
+		_offer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_offer.add_theme_font_size_override(&"font_size", 15)
+		_offer.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.9))
+		_offer.add_theme_constant_override(&"outline_size", 6)
+		add_child(_offer)
+	var dropped: WeaponData = _player.stowed_weapon()
+	_offer.text = "%s\n[%s] Take — drops %s" % [
+		weapon.display_name, Keybinds.hint_for(&"interact"),
+		dropped.display_name if dropped != null else "nothing",
+	]
+	_offer.visible = true
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _collected or _offer == null or not _offer.visible:
+		return
+	if not event.is_action_pressed(&"interact"):
+		return
+	get_viewport().set_input_as_handled()
+	_collect()
 
 
 func _collect() -> void:

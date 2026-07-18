@@ -24,6 +24,7 @@ func _ready() -> void:
 	Events.player_healed.connect(_on_healed)
 	Events.buff_gained.connect(_on_buff)
 	Events.weapon_equipped.connect(_on_weapon)
+	Events.weapon_stowed.connect(_on_weapon_stowed)
 	Events.shrine_accepted.connect(_on_shrine)
 
 
@@ -55,8 +56,16 @@ func _on_weapon(weapon: WeaponData) -> void:
 	var colour: Color = weapon.swing_colour
 	colour.a = 1.0
 	FloatingText.spawn(get_parent(), at, "%s!" % weapon.display_name, colour, 32)
-	var player: Player = get_tree().get_first_node_in_group(&"player") as Player
-	if not _swap_hint_shown and player != null and player.held_weapons.size() == 2:
+
+
+## A quiet stow still deserves a word — the hand did not change, so without
+## this the pickup looks like it did nothing. First stow also teaches the swap.
+func _on_weapon_stowed(weapon: WeaponData) -> void:
+	var at: Vector2 = _player_head()
+	if at == Vector2.INF:
+		return
+	FloatingText.spawn(get_parent(), at, "%s stowed" % weapon.display_name, Color(0.75, 0.72, 0.62), 24)
+	if not _swap_hint_shown:
 		_swap_hint_shown = true
 		FloatingText.spawn(get_parent(), at + Vector2(0, -40), "%s swaps weapons" % Keybinds.hint_for(&"skill_1"), Color(0.8, 0.75, 0.65), 22)
 

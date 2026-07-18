@@ -351,17 +351,39 @@ var held_weapons: Array[WeaponData] = []
 var active_slot: int = 0
 
 
-## Pick up a weapon: fill an empty slot, or replace the one you are NOT holding
-## — the weapon in your hand is the one you chose to keep, so a pickup should
-## never silently take it away. Either way the new weapon comes up in hand.
+## Take a weapon (Dustin's inventory call, 2026-07-17 evening):
+## - Bare pickaxe: it goes straight to hand — anything beats nothing.
+## - Free second slot: it is STOWED quietly. Your hand is never switched by
+##   walking over loot; the stowed square and a toast say it arrived.
+## - Loadout full: replaces the STOWED weapon and comes up in hand. Pickups
+##   only reach this branch deliberately (a full loadout stops auto-collect
+##   and demands an interact press over the weapon — see pickup.gd), so a
+##   honed blade can no longer be vacuumed away mid-fight.
 func equip_weapon(weapon: WeaponData) -> void:
+	if held_weapons.is_empty():
+		held_weapons.append(weapon)
+		active_slot = 0
+		_wield(weapon)
+		return
 	if held_weapons.size() < MAX_HELD_WEAPONS:
 		held_weapons.append(weapon)
-		active_slot = held_weapons.size() - 1
-	else:
-		active_slot = 1 - active_slot
-		held_weapons[active_slot] = weapon
+		GameState.store_loadout(held_weapons, active_slot)
+		Events.weapon_stowed.emit(weapon)
+		return
+	active_slot = 1 - active_slot
+	held_weapons[active_slot] = weapon
 	_wield(weapon)
+
+
+func loadout_full() -> bool:
+	return held_weapons.size() >= MAX_HELD_WEAPONS
+
+
+## What a full-loadout pickup would discard: the weapon you are NOT holding.
+func stowed_weapon() -> WeaponData:
+	if held_weapons.size() < MAX_HELD_WEAPONS:
+		return null
+	return held_weapons[1 - active_slot]
 
 
 ## Swap to a loadout slot. No-op on an empty slot or the slot already in hand.

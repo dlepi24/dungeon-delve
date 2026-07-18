@@ -66,6 +66,8 @@ signal buff_expired(id: StringName)
 
 ## The player picked up and equipped a weapon this run.
 signal weapon_equipped(weapon: WeaponData)
+## A picked-up weapon went into the free slot WITHOUT switching hands.
+signal weapon_stowed(weapon: WeaponData)
 
 ## A shrine bargain was accepted. The HUD lists it; PickupFeedback toasts it.
 signal shrine_accepted(shrine: ShrineData)
