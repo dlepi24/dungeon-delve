@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 ; Tuning gym. Every platform here is placed against the DEFAULT jump_height of
 ; 104 px, with the tallest step at 95 px — deliberately near the limit, so a
@@ -8,6 +8,7 @@
 ; No pits and no death traps: falling always returns you to the floor. This room
 ; is for judging feel, not for punishing you while you judge it.
 
+[ext_resource type="Script" path="res://src/rooms/gym.gd" id="0_gym"]
 [ext_resource type="PackedScene" path="res://src/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://src/ui/debug_overlay.tscn" id="2_overlay"]
 [ext_resource type="PackedScene" path="res://src/ui/hud.tscn" id="9_hud"]
@@ -24,6 +25,7 @@ size = Vector2(40, 1080)
 size = Vector2(240, 30)
 
 [node name="Gym" type="Node2D"]
+script = ExtResource("0_gym")
 
 ; Static, centred on the room, which is exactly viewport-sized — so the framing
 ; is identical to having no camera at all until something shakes it. Deliberately

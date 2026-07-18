@@ -27,11 +27,11 @@ func show_result(outcome: StringName, amount: int) -> void:
 		&"died":
 			_title.text = "YOU DIED"
 			_title.add_theme_color_override(&"font_color", Color(0.9, 0.25, 0.22))
-			_detail.text = "The mine keeps your %d haul." % amount
+			_detail.text = "The mine keeps your %d haul, your weapons, and your streak.\nOnly banked ore is forever — extract to bank it." % amount
 		&"extracted":
 			_title.text = "EXTRACTED"
 			_title.add_theme_color_override(&"font_color", Color(0.4, 0.9, 0.55))
-			_detail.text = "Banked %d haul." % amount
+			_detail.text = "Banked %d haul — it is yours now, whatever happens.\nSpend it at the surface, then go deeper." % amount
 		&"cleared":
 			_title.text = "MINE CLEARED"
 			_title.add_theme_color_override(&"font_color", Color(1.0, 0.82, 0.3))

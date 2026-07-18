@@ -43,12 +43,22 @@ func _on_buff(buff: BuffData) -> void:
 		FloatingText.spawn(get_parent(), at, "%s!" % buff.display_name, buff.colour, 32)
 
 
+## Shown once per app session, the first time the loadout actually fills — a
+## swap hint before there is anything to swap to is noise.
+static var _swap_hint_shown: bool = false
+
+
 func _on_weapon(weapon: WeaponData) -> void:
 	var at: Vector2 = _player_head()
-	if at != Vector2.INF:
-		var colour: Color = weapon.swing_colour
-		colour.a = 1.0
-		FloatingText.spawn(get_parent(), at, "%s!" % weapon.display_name, colour, 32)
+	if at == Vector2.INF:
+		return
+	var colour: Color = weapon.swing_colour
+	colour.a = 1.0
+	FloatingText.spawn(get_parent(), at, "%s!" % weapon.display_name, colour, 32)
+	var player: Player = get_tree().get_first_node_in_group(&"player") as Player
+	if not _swap_hint_shown and player != null and player.held_weapons.size() == 2:
+		_swap_hint_shown = true
+		FloatingText.spawn(get_parent(), at + Vector2(0, -40), "%s swaps weapons" % Keybinds.hint_for(&"skill_1"), Color(0.8, 0.75, 0.65), 22)
 
 
 func _on_shrine(shrine: ShrineData) -> void:

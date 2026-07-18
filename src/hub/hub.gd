@@ -7,6 +7,7 @@ extends Node2D
 ## stand in. Deliberately small; M6 fleshes out what the hub becomes.
 
 const DELVE_SCENE: String = "res://src/rooms/delve_run.tscn"
+const GYM_SCENE: String = "res://src/rooms/gym.tscn"
 
 @export var interact_range: float = 90.0
 ## How far below the music bed the hub sits. Between the title (0) and the
@@ -17,6 +18,7 @@ var _player: Player = null
 var _near: StringName = &""
 
 @onready var _vendor_marker: Marker2D = $VendorMarker
+@onready var _training_marker: Marker2D = $TrainingMarker
 @onready var _smithy_marker: Marker2D = $SmithyMarker
 @onready var _mine_marker: Marker2D = $MineMarker
 @onready var _vendor_panel: CanvasLayer = $VendorPanel
@@ -69,6 +71,8 @@ func _physics_process(_delta: float) -> void:
 	var near: StringName = &""
 	if _player.global_position.distance_to(_vendor_marker.global_position) <= interact_range:
 		near = &"vendor"
+	elif _player.global_position.distance_to(_training_marker.global_position) <= interact_range:
+		near = &"training"
 	elif _player.global_position.distance_to(_smithy_marker.global_position) <= interact_range:
 		near = &"blacksmith"
 	elif _player.global_position.distance_to(_mine_marker.global_position) <= interact_range:
@@ -78,6 +82,8 @@ func _physics_process(_delta: float) -> void:
 	match near:
 		&"vendor":
 			_prompt.text = "[%s] Trade" % key
+		&"training":
+			_prompt.text = "[%s] Train (a safe room, a patient dummy)" % key
 		&"blacksmith":
 			_prompt.text = "[%s] Blacksmith" % key
 		&"mine":
@@ -95,6 +101,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_vendor_panel.visible = true
 		_vendor_panel.open()
+	elif _near == &"training":
+		get_viewport().set_input_as_handled()
+		get_tree().change_scene_to_file.call_deferred(GYM_SCENE)
 	elif _near == &"blacksmith":
 		get_viewport().set_input_as_handled()
 		_blacksmith_panel.open()

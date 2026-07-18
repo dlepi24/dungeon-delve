@@ -233,6 +233,9 @@ func _load_room(id: StringName) -> void:
 	add_child(_room)
 
 	_spawn_enemies(_room)
+	# The very first run of a save gets its verbs taught in the world.
+	if id == FIRST_ROOM and GameState.total_runs == 0:
+		_room.add_child(TeachingSigns.new())
 	var player: Player = _get_player()
 	if player != null:
 		player.teleport_to(_room.entry_position())
