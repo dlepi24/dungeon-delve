@@ -80,6 +80,7 @@ func _ready() -> void:
 	await _test_parry_always_breaks_poise()
 	await _test_poise_break_gives_no_riposte()
 	await _test_flinches_when_not_attacking()
+	await _test_flinch_fatigue()
 	await _test_attacks_vary_by_range()
 	await _test_enemies_jump_for_a_player_above()
 	_report()
@@ -162,6 +163,32 @@ func _test_flinches_when_not_attacking() -> void:
 	await get_tree().physics_frame
 	_check(brute.get_state_name() == "HURT",
 		"an idle Brute flinches from one poke despite 90 poise on its swing (state=%s)" % brute.get_state_name())
+	brute.queue_free()
+	await get_tree().physics_frame
+
+
+## Dustin's stunlock call (2026-07-17): chaining flinches beat everything
+## heavier than a grunt. Only flinch_limit hits may interrupt per window; the
+## rest still damage. If this fails, the poke-chain is back and weapon choice
+## against heavies is meaningless again.
+func _test_flinch_fatigue() -> void:
+	print("flinch fatigue stops the infinite poke-chain")
+	var brute: Enemy = _spawn(BRUTE, Vector2(600, 0))
+	await get_tree().physics_frame
+	var start_health: float = brute.health
+	var flinches: int = 0
+	for i: int in 6:
+		_poke(brute, 0.0)
+		await get_tree().physics_frame
+		if brute.get_state_name() == "HURT":
+			flinches += 1
+		# Let each flinch expire so the NEXT hit could legally flinch again —
+		# what we are proving is the budget, not the hurt-state duration.
+		for j: int in 12:
+			await get_tree().physics_frame
+	_check(flinches == brute.stats.flinch_limit,
+		"only the first %d hits interrupt (got %d flinches)" % [brute.stats.flinch_limit, flinches])
+	_check(brute.health <= start_health - 5.9, "fatigued hits still deal full damage")
 	brute.queue_free()
 	await get_tree().physics_frame
 

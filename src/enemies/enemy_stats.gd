@@ -16,6 +16,12 @@ extends Resource
 ## is not a free stunlock.
 @export var hurt_ms: int = 160
 @export var knockback: float = 170.0
+## Flinch fatigue (Dustin's stunlock call, 2026-07-17): only this many hits
+## can INTERRUPT within the window below; further hits still damage but the
+## enemy keeps acting. First hits always flinch — the GDD's "flinch freely
+## when idle" holds — this only rejects the infinite chain. Heavies get 2.
+@export var flinch_limit: int = 4
+@export var flinch_window_ms: int = 1800
 
 @export_group("Movement")
 @export var move_speed: float = 95.0

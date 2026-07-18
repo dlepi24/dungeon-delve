@@ -82,3 +82,5 @@ sprite_sheet = "brute"
 colour_idle = Color(0.85, 0.28, 0.18, 1)
 colour_recover = Color(0.55, 0.22, 0.16, 1)
 body_size = Vector2(64, 112)
+flinch_limit = 2
+flinch_window_ms = 2200

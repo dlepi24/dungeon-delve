@@ -53,6 +53,8 @@ var _boss_announced: bool = false
 ## Full-2D commit direction for a flyer's dive, locked at ATTACK start like the
 ## horizontal dash direction is.
 var _dash_vector: Vector2 = Vector2.RIGHT
+## Ticks of recent hits that caused a flinch, oldest first. See flinch fatigue.
+var _flinch_ticks: Array[int] = []
 ## stats.max_health scaled by mine heat at spawn. Health bars divide by this.
 var _scaled_max_health: float = 1.0
 var _tick: int = 0
@@ -452,6 +454,16 @@ func _on_hurt(hitbox: Hitbox) -> void:
 		velocity.x = float(_away_from(hitbox)) * stats.knockback
 		return
 
+	# Flinch fatigue: hits keep hurting, but only flinch_limit of them can
+	# INTERRUPT within the window. Past that the enemy shrugs through — the
+	# infinite poke-chain was beating everything heavier than a grunt, which
+	# made weapon choice and parry timing irrelevant against big enemies.
+	var window: int = Ticks.from_ms(stats.flinch_window_ms)
+	while not _flinch_ticks.is_empty() and _tick - _flinch_ticks[0] > window:
+		_flinch_ticks.remove_at(0)
+	if _flinch_ticks.size() >= stats.flinch_limit:
+		return
+	_flinch_ticks.append(_tick)
 	velocity.x = float(_away_from(hitbox)) * stats.knockback
 	if _state != State.STAGGER:
 		_enter(State.HURT)
