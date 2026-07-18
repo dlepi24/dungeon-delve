@@ -1,6 +1,10 @@
 # Roadmap
 
 ## Status
+- **2026-07-18: DAILY DELVE + RECORDS (M8 first half) SHIPPED.** One ranked
+  attempt/day (spent at start), banked-haul scoring, heat-0 pickaxe-start
+  level field, Records screen ranking the accumulated run history. Remaining
+  M8: ghost replays (input recording/playback), optional online board later.
 - **2026-07-18: THE PICK POGO — traversal verb locked and built.** Down+attack
   in the air bounces off enemies, bosses, spikes and debris (destroyed).
   Exports: pogo_* on the player. Feel pass is Dustin's. The Timber Hook is
