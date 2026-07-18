@@ -59,14 +59,21 @@ func close() -> void:
 	Cursor.gameplay()
 
 
-## The key that opened the shop closes it, and so does ESC. _input (not
+## The key that opened the shop closes it, and so does ESC/B. _input (not
 ## _unhandled_input) so this wins over the pause menu — ESC at a stall should
 ## close the stall, not stack a pause screen over it.
+##
+## The interact check EXCLUDES presses that double as menu verbs: on a pad,
+## A is interact AND ui_accept (it should press the focused buy button, not
+## slam the shop), and D-pad up is interact AND ui_up (navigation). Without
+## the exclusions, browsing a shop on a controller closed it.
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if event.is_action_pressed(&"interact") or event.is_action_pressed(&"pause") \
-			or event.is_action_pressed(&"ui_cancel"):
+	var closes: bool = event.is_action_pressed(&"pause") or event.is_action_pressed(&"ui_cancel") \
+		or (event.is_action_pressed(&"interact")
+			and not event.is_action_pressed(&"ui_accept") and not event.is_action_pressed(&"ui_up"))
+	if closes:
 		get_viewport().set_input_as_handled()
 		close()
 

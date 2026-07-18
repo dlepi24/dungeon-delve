@@ -20,6 +20,9 @@ const HUB_SCENE: String = "res://src/hub/hub.tscn"
 ## early. The full-clear premium: greed's ceiling should out-pay caution's
 ## floor, or the descend choice stops mattering once your bag is full.
 @export_range(0.0, 2.0) var clear_bonus_fraction: float = 0.5
+## How far below the music bed the delve sits — the quietest context, so the
+## combat SFX own the foreground.
+@export var music_attenuation_db: float = -8.0
 
 var _at_exit: bool = false
 var _ending: bool = false
@@ -34,7 +37,7 @@ func _ready() -> void:
 	_prompt.visible = false
 	_result.dismissed.connect(_to_hub)
 	Cursor.gameplay()
-	Music.play(&"delve")
+	Music.play(&"delve", music_attenuation_db)
 	# Keyboard-vs-pad can change while standing at an exit; the prompt follows.
 	Keybinds.input_device_changed.connect(func() -> void:
 		if _at_exit and not _ending:

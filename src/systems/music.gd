@@ -22,6 +22,9 @@ var _muted: bool = false
 ## The player's volume slider, 0..1, applied on top of the tuned bed level.
 ## Owned and persisted by the Settings autoload; this just enacts it.
 var _user_volume: float = 1.0
+## Context attenuation in dB, set per play() call by the scene that owns the
+## moment (0 title, quieter in the hub, quieter still in the delve).
+var _attenuation: float = 0.0
 
 
 func _ready() -> void:
@@ -34,10 +37,16 @@ func _ready() -> void:
 		_players.append(p)
 
 
-## Play a named track, looping. No-op if it is already the current one, so
-## re-entering the hub does not restart its music.
-func play(track: StringName) -> void:
+## Play a named track, looping, at a per-context attenuation below the tuned
+## bed: the title runs the hub track at full bed, the hub runs it quieter, the
+## delve quieter still (Dustin's mix call — menus can be loud, play cannot).
+## Re-playing the current track does not restart it, but it DOES fade to the
+## new attenuation, which is exactly the title -> hub transition.
+func play(track: StringName, attenuation_db: float = 0.0) -> void:
+	_attenuation = attenuation_db
 	if track == _current:
+		if not _players.is_empty():
+			_fade(_players[_active], _players[_active].volume_db, _target_db())
 		return
 	_current = track
 	var path: String = DELVE if track == &"delve" else HUB
@@ -88,7 +97,7 @@ func set_user_volume(value: float) -> void:
 func _target_db() -> float:
 	if _muted or _user_volume <= 0.001:
 		return -80.0
-	return volume_db + linear_to_db(_user_volume)
+	return volume_db + _attenuation + linear_to_db(_user_volume)
 
 
 func _fade(player: AudioStreamPlayer, from_db: float, to_db: float) -> void:

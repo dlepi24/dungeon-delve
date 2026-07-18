@@ -73,13 +73,17 @@ func close() -> void:
 	Cursor.gameplay()
 
 
-## The key that opened the shop closes it, and so does ESC. _input so this wins
-## over the pause menu.
+## The key that opened the shop closes it, and so does ESC/B. _input so this
+## wins over the pause menu. Interact presses that double as menu verbs are
+## excluded (A = ui_accept presses the focused button; D-pad up = ui_up
+## navigates) — see vendor_panel.gd for the full story.
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if event.is_action_pressed(&"interact") or event.is_action_pressed(&"pause") \
-			or event.is_action_pressed(&"ui_cancel"):
+	var closes: bool = event.is_action_pressed(&"pause") or event.is_action_pressed(&"ui_cancel") \
+		or (event.is_action_pressed(&"interact")
+			and not event.is_action_pressed(&"ui_accept") and not event.is_action_pressed(&"ui_up"))
+	if closes:
 		get_viewport().set_input_as_handled()
 		close()
 

@@ -9,6 +9,9 @@ extends Node2D
 const DELVE_SCENE: String = "res://src/rooms/delve_run.tscn"
 
 @export var interact_range: float = 90.0
+## How far below the music bed the hub sits. Between the title (0) and the
+## delve — the surface should feel calmer than the menu, safer than the mine.
+@export var music_attenuation_db: float = -5.0
 
 var _player: Player = null
 var _near: StringName = &""
@@ -33,7 +36,7 @@ func _ready() -> void:
 	_vendor_panel.visible = false
 	_blacksmith_panel.visible = false
 	Cursor.gameplay()
-	Music.play(&"hub")
+	Music.play(&"hub", music_attenuation_db)
 	_refresh_banked()
 	Events.upgrade_purchased.connect(func(_id: StringName, _lvl: int) -> void: _refresh_banked())
 

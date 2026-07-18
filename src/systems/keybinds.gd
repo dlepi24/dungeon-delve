@@ -59,13 +59,17 @@ var using_gamepad: bool = false
 ## the fallback because its lettered buttons are the generic convention.
 var pad_flavor: StringName = &"xbox"
 
+## Xbox speaks in letters (that IS its official glyph text); Sony pads get
+## their shapes — the geometric characters render in the default font, where
+## circled letters (Ⓐ) would risk tofu boxes. Real drawn button icons are an
+## M9 asset job (labels would need to become RichTextLabels).
 const _XBOX_BUTTONS: Dictionary[int, String] = {
 	0: "A", 1: "B", 2: "X", 3: "Y", 4: "View", 6: "Menu",
-	9: "LB", 10: "RB", 11: "D-pad up", 12: "D-pad down", 13: "D-pad left", 14: "D-pad right",
+	9: "LB", 10: "RB", 11: "↑", 12: "↓", 13: "←", 14: "→",
 }
 const _PS_BUTTONS: Dictionary[int, String] = {
-	0: "Cross", 1: "Circle", 2: "Square", 3: "Triangle", 4: "Share", 6: "Options",
-	9: "L1", 10: "R1", 11: "D-pad up", 12: "D-pad down", 13: "D-pad left", 14: "D-pad right",
+	0: "✕", 1: "○", 2: "□", 3: "△", 4: "Share", 6: "Options",
+	9: "L1", 10: "R1", 11: "↑", 12: "↓", 13: "←", 14: "→",
 }
 
 
