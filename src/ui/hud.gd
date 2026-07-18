@@ -29,8 +29,12 @@ const PICKAXE_ICON: Texture2D = preload("res://assets/icons/pickaxe.png")
 @onready var _weapon_name: Label = $WeaponName
 @onready var _buff_rows: VBoxContainer = $BuffRows
 @onready var _debuff_rows: VBoxContainer = $DebuffRows
-@onready var _depth_panel: Panel = $DepthPanel
-@onready var _depth: Label = $DepthPanel/Depth
+@onready var _top_right: VBoxContainer = $TopRight
+@onready var _pips: HBoxContainer = $TopRight/RoomChip/RoomM/RoomRow/Pips
+@onready var _room_value: Label = $TopRight/RoomChip/RoomM/RoomRow/RoomValue
+@onready var _ore_mult: Label = $TopRight/OreChip/OreM/OreRow/OreMult
+@onready var _heat_chip: PanelContainer = $TopRight/HeatChip
+@onready var _heat_value: Label = $TopRight/HeatChip/HeatM/HeatRow/HeatValue
 @onready var _boss_bar: Control = $BossBar
 @onready var _boss_name: Label = $BossBar/BossName
 @onready var _boss_fill: ColorRect = $BossBar/BarFill
@@ -63,15 +67,10 @@ func _process(_delta: float) -> void:
 	var in_run: bool = GameState.run_active
 	_ore_icon.visible = in_run
 	_ore_count.visible = in_run
-	_depth_panel.visible = in_run
+	_top_right.visible = in_run
 	if in_run:
 		_ore_count.text = str(GameState.carried_haul)
-		var line: String = "Room %d/%d   ore x%.2f" % [
-			GameState.depth + 1, maxi(1, GameState.run_plan.size()), GameState.depth_haul_multiplier(),
-		]
-		if GameState.mine_heat > 0:
-			line += "   heat %d" % GameState.mine_heat
-		_depth.text = line
+		_refresh_run_chips()
 
 	_update_boss_bar()
 	# Boon column: timed buffs (shrinking bar) plus accepted shrine boons (full
@@ -107,6 +106,33 @@ func _update_boss_bar() -> void:
 		return
 	var ratio: float = clampf(_boss.health / maxf(1.0, _boss.max_health_value()), 0.0, 1.0)
 	_boss_fill.size.x = BOSS_FILL_WIDTH * ratio
+
+
+## The run chips: depth as filled pips (one per planned room), the ore
+## multiplier beside its icon, heat as an ember badge that exists only while
+## the mine is hot — and breathes when it is furious.
+func _refresh_run_chips() -> void:
+	var rooms: int = maxi(1, GameState.run_plan.size())
+	while _pips.get_child_count() < rooms:
+		var pip: ColorRect = ColorRect.new()
+		pip.custom_minimum_size = Vector2(9, 9)
+		_pips.add_child(pip)
+	for i: int in _pips.get_child_count():
+		var pip: ColorRect = _pips.get_child(i) as ColorRect
+		pip.visible = i < rooms
+		pip.color = Color(1.0, 0.82, 0.4) if i <= GameState.depth else Color(0.28, 0.24, 0.18)
+	_room_value.text = "%d / %d" % [GameState.depth + 1, rooms]
+	_ore_mult.text = "x%.2f" % GameState.depth_haul_multiplier()
+	var heat: int = GameState.mine_heat
+	_heat_chip.visible = heat > 0
+	if heat > 0:
+		_heat_value.text = str(heat)
+		# Past mid-heat the badge breathes — the mine is genuinely angry.
+		if heat >= 4:
+			var t: float = float(Time.get_ticks_msec()) / 1000.0
+			_heat_chip.modulate.a = 0.8 + 0.2 * sin(t * 5.0)
+		else:
+			_heat_chip.modulate.a = 1.0
 
 
 ## Active square always shows the hand (pickaxe by default); the stowed square
@@ -154,23 +180,39 @@ func _reconcile_rows(rows: VBoxContainer, active: Array[Dictionary]) -> void:
 		row.visible = i < active.size()
 		if i < active.size():
 			var colour: Color = active[i]["colour"]
+			var edge: ColorRect = row.get_node("Edge")
 			var label: Label = row.get_node("Label")
 			var bar: ColorRect = row.get_node("Bar")
 			label.text = active[i]["name"]
-			label.add_theme_color_override(&"font_color", colour)
+			edge.color = colour
 			bar.color = colour
-			bar.size.x = 150.0 * float(active[i]["fraction"])
+			bar.size.x = 146.0 * float(active[i]["fraction"])
 
 
+## An effect row is a small chip: dark panel, a colour-coded edge strip, the
+## name in HUD text, the remaining time as a thin bar along the bottom. Same
+## visual system as everything else on screen — no more naked labels.
 func _make_row() -> Control:
 	var row: Control = Control.new()
-	row.custom_minimum_size = Vector2(160, 28)
+	row.custom_minimum_size = Vector2(172, 30)
+	var back: ColorRect = ColorRect.new()
+	back.name = "Back"
+	back.color = Color(0.03, 0.025, 0.02, 0.72)
+	back.size = Vector2(172, 28)
+	row.add_child(back)
+	var edge: ColorRect = ColorRect.new()
+	edge.name = "Edge"
+	edge.size = Vector2(4, 28)
+	row.add_child(edge)
 	var label: Label = Label.new()
 	label.name = "Label"
+	label.position = Vector2(12, 2)
+	label.add_theme_font_size_override(&"font_size", 14)
+	label.add_theme_color_override(&"font_color", Color(0.88, 0.83, 0.72))
 	row.add_child(label)
 	var bar: ColorRect = ColorRect.new()
 	bar.name = "Bar"
-	bar.position = Vector2(0, 20)
-	bar.size = Vector2(150, 4)
+	bar.position = Vector2(12, 22)
+	bar.size = Vector2(146, 3)
 	row.add_child(bar)
 	return row

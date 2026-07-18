@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://src/ui/hud.gd" id="1_hud"]
 [ext_resource type="PackedScene" path="res://src/ui/health_bar.tscn" id="2_bar"]
@@ -28,6 +28,18 @@ corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_heat"]
+bg_color = Color(0.12, 0.035, 0.02, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.4, 0.2, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_second"]
 bg_color = Color(0.06, 0.055, 0.045, 0.9)
@@ -167,6 +179,149 @@ offset_top = 490.0
 offset_right = 220.0
 offset_bottom = 620.0
 theme_override_constants/separation = 8
+
+; Top-right: the run readout as designed CHIPS, not a data string. Room
+; progress is pips, the ore multiplier is an icon chip, heat is an ember badge
+; that only exists while the mine is hot. Right-hugging, edge-anchored.
+[node name="TopRight" type="VBoxContainer" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -340.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = 220.0
+grow_horizontal = 0
+theme_override_constants/separation = 8
+alignment = 0
+
+[node name="RoomChip" type="PanelContainer" parent="TopRight"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_styles/panel = SubResource("StyleBoxFlat_back")
+
+[node name="RoomM" type="MarginContainer" parent="TopRight/RoomChip"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 7
+
+[node name="RoomRow" type="HBoxContainer" parent="TopRight/RoomChip/RoomM"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="DepthLabel" type="Label" parent="TopRight/RoomChip/RoomM/RoomRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.6, 0.55, 0.45, 1)
+text = "DEPTH"
+
+[node name="Pips" type="HBoxContainer" parent="TopRight/RoomChip/RoomM/RoomRow"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="RoomValue" type="Label" parent="TopRight/RoomChip/RoomM/RoomRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.88, 0.83, 0.72, 1)
+text = "2 / 5"
+
+[node name="OreChip" type="PanelContainer" parent="TopRight"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_styles/panel = SubResource("StyleBoxFlat_back")
+
+[node name="OreM" type="MarginContainer" parent="TopRight/OreChip"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 6
+
+[node name="OreRow" type="HBoxContainer" parent="TopRight/OreChip/OreM"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MultIcon" type="TextureRect" parent="TopRight/OreChip/OreM/OreRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+texture = ExtResource("4_ore")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="OreMult" type="Label" parent="TopRight/OreChip/OreM/OreRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(1.0, 0.85, 0.35, 1)
+text = "x1.00"
+
+[node name="HeatChip" type="PanelContainer" parent="TopRight"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_styles/panel = SubResource("StyleBoxFlat_heat")
+
+[node name="HeatM" type="MarginContainer" parent="TopRight/HeatChip"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 6
+
+[node name="HeatRow" type="HBoxContainer" parent="TopRight/HeatChip/HeatM"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeatLabel" type="Label" parent="TopRight/HeatChip/HeatM/HeatRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.95, 0.55, 0.35, 1)
+text = "MINE HEAT"
+
+[node name="HeatValue" type="Label" parent="TopRight/HeatChip/HeatM/HeatRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(1.0, 0.7, 0.4, 1)
+text = "3"
+
+; The boss bar: bottom-centre, Souls-style, raised by Events.boss_engaged.
+; Wide and named so a miniboss reads as an EVENT, not another purple brute.
+[node name="BossBar" type="Control" parent="."]
+visible = false
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -150.0
+offset_right = 400.0
+offset_bottom = -70.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="BossName" type="Label" parent="BossBar"]
+offset_right = 800.0
+offset_bottom = 30.0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.92, 0.84, 0.7, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 6
+text = "VAROK, THE OVERSEER"
+horizontal_alignment = 1
+
+[node name="BarBack" type="ColorRect" parent="BossBar"]
+offset_top = 38.0
+offset_right = 800.0
+offset_bottom = 60.0
+color = Color(0, 0, 0, 0.72)
+
+[node name="BarFill" type="ColorRect" parent="BossBar"]
+offset_left = 3.0
+offset_top = 41.0
+offset_right = 797.0
+offset_bottom = 57.0
+color = Color(0.75, 0.14, 0.16, 1)
 
 ; The boss bar: bottom-centre, Souls-style, raised by Events.boss_engaged.
 ; Wide and named so a miniboss reads as an EVENT, not another purple brute.
