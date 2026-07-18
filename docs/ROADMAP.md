@@ -1,6 +1,10 @@
 # Roadmap
 
 ## Status
+- **2026-07-18: THE PICK POGO — traversal verb locked and built.** Down+attack
+  in the air bounces off enemies, bosses, spikes and debris (destroyed).
+  Exports: pogo_* on the player. Feel pass is Dustin's. The Timber Hook is
+  logged in the GDD as the tall-rooms milestone's second mechanic.
 - **Rounds 14-16, 2026-07-17 (latest): big-room guarantee + Undercroft; wow
   pass (parry shockwave, camera lean, room-clear CLEAR + loot vacuum); hazards
   batch (pit spikes, crumbling bridges, heat-scaled parryable debris rain).
