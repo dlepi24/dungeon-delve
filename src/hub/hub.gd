@@ -39,7 +39,12 @@ func _ready() -> void:
 
 
 func _refresh_banked() -> void:
-	_banked_label.text = "Banked haul: %d" % GameState.banked_haul
+	var text: String = "Banked haul: %d" % GameState.banked_haul
+	if GameState.mine_heat > 0:
+		# The streak is a possession — naming it on the surface is what makes
+		# descending at heat 4 feel like carrying something breakable.
+		text += "\nMine heat: %d  (extractions since your last death)" % GameState.mine_heat
+	_banked_label.text = text
 
 
 func _physics_process(_delta: float) -> void:

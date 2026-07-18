@@ -16,6 +16,10 @@ extends Node
 const HUB_SCENE: String = "res://src/hub/hub.tscn"
 
 @export var delve: Delve
+## Bonus fraction of carried haul for clearing ALL rooms rather than banking
+## early. The full-clear premium: greed's ceiling should out-pay caution's
+## floor, or the descend choice stops mattering once your bag is full.
+@export_range(0.0, 2.0) var clear_bonus_fraction: float = 0.5
 
 var _at_exit: bool = false
 var _ending: bool = false
@@ -88,6 +92,10 @@ func _on_delve_completed() -> void:
 		return
 	_ending = true
 	_prompt.visible = false
+	# The full-clear premium lands before the extract banks it.
+	var bonus: int = roundi(float(GameState.carried_haul) * clear_bonus_fraction)
+	if bonus > 0:
+		GameState.add_haul(bonus)
 	var banked: int = GameState.carried_haul
 	GameState.extract()
 	_result.show_result(&"cleared", banked)

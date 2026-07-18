@@ -35,7 +35,7 @@ func show_result(outcome: StringName, amount: int) -> void:
 		&"cleared":
 			_title.text = "MINE CLEARED"
 			_title.add_theme_color_override(&"font_color", Color(1.0, 0.82, 0.3))
-			_detail.text = "You reached the bottom and out with %d haul." % amount
+			_detail.text = "You reached the bottom and out with %d haul (full-clear bonus included)." % amount
 	_hint.text = "[F] Return to the surface"
 	visible = true
 	get_tree().paused = true

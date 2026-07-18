@@ -238,9 +238,10 @@ func _vary_kind(kind: String, rng: RandomNumberGenerator) -> String:
 			kind = "dart"
 		elif kind == "dart":
 			kind = "grunt"
-	# Depth promotion: the mine grows meaner as it pays better — and meaner
-	# still under a curse bargain (Overseer's Whisper).
-	if kind != "brute" and rng.randf() < 0.08 * float(_index) + GameState.modifier_promote_bonus():
+	# Depth promotion: the mine grows meaner as it pays better — meaner still
+	# under a curse bargain (Overseer's Whisper) or a hot extract streak.
+	var promote: float = 0.08 * float(_index) + GameState.modifier_promote_bonus() + GameState.heat_promote_bonus()
+	if kind != "brute" and rng.randf() < promote:
 		kind = "brute"
 	return kind
 

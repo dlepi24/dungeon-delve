@@ -50,6 +50,8 @@ var _poise: float = 0.0
 var _dash_direction: int = 1
 var _last_jump_tick: int = -10000
 var _boss_announced: bool = false
+## stats.max_health scaled by mine heat at spawn. Health bars divide by this.
+var _scaled_max_health: float = 1.0
 var _tick: int = 0
 
 @onready var _juice: BodyJuice = $VisualRoot
@@ -66,7 +68,11 @@ var _tick: int = 0
 func _ready() -> void:
 	assert(stats != null, "Enemy has no EnemyStats resource assigned.")
 	add_to_group(&"enemies")
-	health = stats.max_health
+	# Mine heat (the extract streak) toughens everything at spawn time. The
+	# .tres stays the baseline; the multiplier is read once here so a fight
+	# never changes difficulty mid-swing.
+	_scaled_max_health = stats.max_health * GameState.heat_health_multiplier()
+	health = _scaled_max_health
 	_apply_stats_to_body()
 	_hitbox.deactivate()
 	_hitbox.parried.connect(_on_parried)
@@ -204,7 +210,7 @@ func _begin_attack(attack: EnemyAttackData) -> void:
 	var rect: RectangleShape2D = RectangleShape2D.new()
 	rect.size = attack.hitbox_size
 	_hitbox_shape.shape = rect
-	_hitbox.damage = attack.damage
+	_hitbox.damage = attack.damage * GameState.heat_damage_multiplier()
 	var swing: ColorRect = _hitbox.visual as ColorRect
 	if swing != null:
 		swing.size = attack.hitbox_size
@@ -335,6 +341,11 @@ func get_state_name() -> String:
 	return State.keys()[_state]
 
 
+## This enemy's real, heat-scaled maximum. The boss bar divides by this.
+func max_health_value() -> float:
+	return _scaled_max_health
+
+
 func get_attack_name() -> String:
 	return _attack.display_name if _attack != null else "-"
 
@@ -361,7 +372,7 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	if _state == State.DEAD:
 		return
 	health = maxf(0.0, health - hitbox.damage)
-	_health_bar.set_ratio(health / stats.max_health)
+	_health_bar.set_ratio(health / _scaled_max_health)
 	_juice.flash()
 	_juice.punch(Vector2(1.24, 0.8) if hitbox.is_riposte else Vector2(1.12, 0.9))
 	Events.hit_landed.emit(hitbox.damage, hitbox.is_riposte)

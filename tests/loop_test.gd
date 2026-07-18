@@ -155,6 +155,28 @@ func _ready() -> void:
 	GameState.reset_save()
 	_check(not FileAccess.file_exists(GameState.HISTORY_PATH), "reset_save wipes the history")
 
+	print("mine heat: the extract streak raises stakes, death cools it")
+	GameState.reset_save()
+	_check(GameState.mine_heat == 0 and is_equal_approx(GameState.heat_health_multiplier(), 1.0),
+		"a cold mine scales nothing")
+	GameState.begin_run(20, [&"a"]); GameState.extract()
+	GameState.begin_run(21, [&"a"]); GameState.extract()
+	_check(GameState.mine_heat == 2, "each extraction heats the mine")
+	_check(GameState.heat_health_multiplier() > 1.0 and GameState.heat_damage_multiplier() > 1.0,
+		"heat toughens enemies")
+	_check(GameState.heat_promote_bonus() > 0.0, "heat promotes spawns")
+	GameState.depth = 0
+	_check(GameState.depth_haul_multiplier() > 1.0, "a hot mine pays for its danger")
+	var heat_saved: int = GameState.mine_heat
+	GameState.mine_heat = -1
+	GameState.load_game()
+	_check(GameState.mine_heat == heat_saved, "heat survives save/reload (it is a streak, not a session)")
+	GameState.begin_run(22, [&"a"]); GameState.lose_run()
+	_check(GameState.mine_heat == 0, "death cools the mine to zero")
+	GameState.mine_heat = 999
+	_check(GameState.heat_level() == GameState.heat_cap, "scaling stops compounding at the cap")
+	GameState.reset_save()
+
 	if _failures.is_empty():
 		print("\nLOOP TEST OK")
 		get_tree().quit(0)

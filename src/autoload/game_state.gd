@@ -104,6 +104,42 @@ var banked_haul: int = 0
 ## Permanent upgrade levels bought at the hub, by id. Stacks across runs.
 var upgrade_levels: Dictionary[StringName, int] = {}
 
+# --- Mine heat (persistent, reset by DEATH) ---
+# Dustin's call (2026-07-17): every extraction you survive makes the mine
+# angrier — enemies tougher, harder spawn mixes, but richer ore. Death cools it
+# to zero along with everything else death costs. This is the answer to
+# "permanent upgrades let me roflstomp": the mine levels up alongside you, and
+# the streak itself becomes a thing you are afraid to lose.
+## Consecutive extractions since the last death. Saved with the meta save.
+var mine_heat: int = 0
+
+# Per-heat scaling knobs. Same tuning discipline as depth_haul_bonus above.
+var heat_health_per: float = 0.12
+var heat_damage_per: float = 0.10
+var heat_ore_per: float = 0.08
+var heat_promote_per: float = 0.05
+## Scaling stops compounding past this streak, so a long streak stays hard
+## rather than becoming arithmetically unwinnable.
+var heat_cap: int = 8
+
+
+func heat_level() -> int:
+	return mini(mine_heat, heat_cap)
+
+
+func heat_health_multiplier() -> float:
+	return 1.0 + heat_health_per * float(heat_level())
+
+
+func heat_damage_multiplier() -> float:
+	return 1.0 + heat_damage_per * float(heat_level())
+
+
+## Extra spawn-promotion chance from the streak; stacks with curse bargains.
+func heat_promote_bonus() -> float:
+	return heat_promote_per * float(heat_level())
+
+
 # --- Meta stats (persistent) ---
 # The career record: the game remembering you played it. Shown on the title
 # screen. Updated INSIDE extract()/lose_run() rather than via Events listeners,
@@ -125,9 +161,11 @@ var depth_haul_bonus: float = 0.35
 
 
 ## The haul multiplier at the current depth. Deeper = more, so greed pays —
-## and greedier still with an ore bargain accepted.
+## greedier still with an ore bargain accepted, and a hot mine pays for its
+## danger too (heat raises risk AND reward, per the not-punishing rule).
 func depth_haul_multiplier() -> float:
-	return (1.0 + float(depth) * depth_haul_bonus) * modifier_product(&"ore_mult")
+	return (1.0 + float(depth) * depth_haul_bonus) * modifier_product(&"ore_mult") \
+		* (1.0 + heat_ore_per * float(heat_level()))
 
 
 func _ready() -> void:
@@ -165,6 +203,7 @@ func extract() -> void:
 	run_active = false
 	_record_run_end()
 	best_haul = maxi(best_haul, extracted)
+	mine_heat += 1
 	_log_run(&"extracted", extracted)
 	save_game()
 	Events.run_extracted.emit(extracted)
@@ -177,6 +216,7 @@ func lose_run() -> void:
 	carried_haul = 0
 	run_active = false
 	clear_session_loadout()
+	mine_heat = 0
 	_record_run_end()
 	_log_run(&"died", lost)
 	save_game()
@@ -271,6 +311,7 @@ func save_game() -> void:
 	config.set_value("meta", "banked_haul", banked_haul)
 	for id: StringName in upgrade_levels:
 		config.set_value("upgrades", String(id), upgrade_levels[id])
+	config.set_value("meta", "mine_heat", mine_heat)
 	config.set_value("stats", "total_runs", total_runs)
 	config.set_value("stats", "deepest_room", deepest_room)
 	config.set_value("stats", "best_haul", best_haul)
@@ -287,6 +328,7 @@ func load_game() -> void:
 	if config.has_section("upgrades"):
 		for key: String in config.get_section_keys("upgrades"):
 			upgrade_levels[StringName(key)] = int(config.get_value("upgrades", key))
+	mine_heat = int(config.get_value("meta", "mine_heat", 0))
 	total_runs = int(config.get_value("stats", "total_runs", 0))
 	deepest_room = int(config.get_value("stats", "deepest_room", 0))
 	best_haul = int(config.get_value("stats", "best_haul", 0))
@@ -303,6 +345,7 @@ func reset_save() -> void:
 	deepest_room = 0
 	best_haul = 0
 	total_kills = 0
+	mine_heat = 0
 	active_modifiers.clear()
 	DirAccess.remove_absolute(SAVE_PATH)
 	DirAccess.remove_absolute(HISTORY_PATH)

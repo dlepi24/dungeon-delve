@@ -66,9 +66,12 @@ func _process(_delta: float) -> void:
 	_depth_panel.visible = in_run
 	if in_run:
 		_ore_count.text = str(GameState.carried_haul)
-		_depth.text = "Room %d/%d   ore x%.2f" % [
+		var line: String = "Room %d/%d   ore x%.2f" % [
 			GameState.depth + 1, maxi(1, GameState.run_plan.size()), GameState.depth_haul_multiplier(),
 		]
+		if GameState.mine_heat > 0:
+			line += "   heat %d" % GameState.mine_heat
+		_depth.text = line
 
 	_update_boss_bar()
 	# Boon column: timed buffs (shrinking bar) plus accepted shrine boons (full
@@ -102,7 +105,7 @@ func _update_boss_bar() -> void:
 		_boss = null
 		_boss_bar.visible = false
 		return
-	var ratio: float = clampf(_boss.health / maxf(1.0, _boss.stats.max_health), 0.0, 1.0)
+	var ratio: float = clampf(_boss.health / maxf(1.0, _boss.max_health_value()), 0.0, 1.0)
 	_boss_fill.size.x = BOSS_FILL_WIDTH * ratio
 
 
