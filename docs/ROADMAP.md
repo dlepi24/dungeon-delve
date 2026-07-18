@@ -1,7 +1,13 @@
 # Roadmap
 
 ## Status
-- **Round 10, 2026-07-17 (latest): stunlock killed, music variety, mine
+- **Round 11, 2026-07-17 (latest): weapon pickups are an inventory, not a
+  vacuum.** Dustin kept losing honed weapons to walk-over auto-equips.
+  Auto-equip only from the bare pickaxe; a free slot stows QUIETLY (hand never
+  switches from walking over loot); a full loadout stops auto-collect — the
+  weapon lies on the ground offering "[A] Take X — drops Y" and trades only on
+  a deliberate press, always replacing the stowed slot. weapon_test pins it.
+- **Round 10, 2026-07-17: stunlock killed, music variety, mine
   lighting.** Flinch fatigue (Dustin's fresh call on the long-deferred item):
   only flinch_limit interrupts per window, heavies get 2, pinned by
   enemy_test. Three delve music moods drawn per descent. The mine is now DARK:
