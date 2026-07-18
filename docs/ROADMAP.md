@@ -15,10 +15,17 @@
   - **Shop UX**: F and ESC close both stalls; walking away closes them.
   - Shrine spots added to entry + gap so altars can appear early ("shrines only
     pop up toward the end").
-  - **Session end. Next session candidates:** playtest heat tuning (the heat_*
-    knobs are first-guess values), buff durations, controller glyphs + gamepad
-    menu nav, M8 daily seed + leaderboard reading run_history.jsonl, and the
-    remaining GDD open questions (v1 scope, name).
+  - **Round 6 (same night): gamepad menu navigation.** Gameplay bindings
+    existed since M0; now every menu grabs focus on open, stick/D-pad
+    navigates, A accepts, B backs out one level (shops, settings->keybinds,
+    pause, title confirm). UNTESTED ON HARDWARE — Dustin had no controller on
+    hand. First pad session should check: stick deadzones in play, menu focus
+    ring visibility, and whether the GDD's provisional button layout feels
+    right. Controller GLYPHS (showing "A" instead of "SPACE") remain open.
+  - **Session end. Next session candidates:** hardware gamepad test, playtest
+    heat tuning (the heat_* knobs are first-guess values), buff durations,
+    controller glyphs, M8 daily seed + leaderboard reading run_history.jsonl,
+    and the remaining GDD open questions (v1 scope, name).
 - **Round 4 BUILT 2026-07-17 (late): SHRINES + silent run history.** Design
   locked with Dustin in-session (all recommendations accepted): rest-of-run
   bargains, stacking, all three flavours (stat trade / pay-carried-ore /
