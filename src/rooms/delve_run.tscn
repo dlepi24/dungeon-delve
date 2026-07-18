@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=16 format=3]
 
 ; The playable delve. Rooms are loaded and freed by Delve as you walk through
 ; them; only the player, camera and HUD persist across a transition.
@@ -16,6 +16,8 @@
 [ext_resource type="PackedScene" path="res://src/rooms/door_choice.tscn" id="25_doors"]
 [ext_resource type="Script" path="res://src/ui/transition_fade.gd" id="26_fade"]
 [ext_resource type="Script" path="res://src/systems/mine_atmosphere.gd" id="27_atmo"]
+[ext_resource type="Script" path="res://src/systems/ghost_recorder.gd" id="28_grec"]
+[ext_resource type="Script" path="res://src/systems/ghost_runner.gd" id="29_grun"]
 
 [node name="DelveRun" type="Node2D"]
 
@@ -63,6 +65,12 @@ script = ExtResource("26_fade")
 
 [node name="MineAtmosphere" type="Node" parent="."]
 script = ExtResource("27_atmo")
+
+[node name="GhostRecorder" type="Node" parent="."]
+script = ExtResource("28_grec")
+
+[node name="GhostRunner" type="Node2D" parent="."]
+script = ExtResource("29_grun")
 
 [node name="DebugOverlay" parent="." instance=ExtResource("4_overlay") node_paths=PackedStringArray("player")]
 player = NodePath("../Player")
