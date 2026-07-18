@@ -28,6 +28,16 @@ func _ready() -> void:
 	_settings_button.pressed.connect(_on_settings)
 	_resume.pressed.connect(_close)
 	_quit_title.pressed.connect(_on_quit_to_title)
+	# A controller dying mid-fight should freeze the game, not the player's
+	# corpse. Skipped if something else already paused (a result screen, the
+	# door choice) — stacking pause states helps nobody.
+	Input.joy_connection_changed.connect(_on_joy_connection)
+
+
+func _on_joy_connection(_device: int, connected: bool) -> void:
+	if connected or visible or get_tree().paused:
+		return
+	_open()
 
 
 ## Start (pause) toggles; the gamepad B button (ui_cancel) also backs out of an

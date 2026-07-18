@@ -40,11 +40,35 @@ var _icon: Sprite2D = null
 var _offer: Label = null
 
 @onready var _visual: ColorRect = $Visual
+var _ground: RayCast2D = null
 
 
 func _ready() -> void:
 	_velocity = spawn_pop + Vector2(randf_range(-80, 80), 0)
+	# Pickups are Areas, not bodies — nothing stops them at the floor except
+	# this probe. The magnet used to hide that (it grabbed them mid-air), but a
+	# weapon a full loadout refuses to magnet fell straight through the world.
+	_ground = RayCast2D.new()
+	_ground.target_position = Vector2(0, 18)
+	_ground.collision_mask = CollisionLayers.WORLD
+	_ground.enabled = false
+	add_child(_ground)
 	_apply_style()
+
+
+## Gravity with a floor. Used whenever the magnet is not carrying us.
+func _fall(delta: float) -> void:
+	_velocity.y += 900.0 * delta
+	_velocity.x = move_toward(_velocity.x, 0.0, 400.0 * delta)
+	var motion: Vector2 = _velocity * delta
+	_ground.force_raycast_update()
+	if _velocity.y > 0.0 and _ground.is_colliding():
+		var floor_y: float = _ground.get_collision_point().y
+		if global_position.y + motion.y >= floor_y - 8.0:
+			global_position.y = floor_y - 8.0
+			_velocity = Vector2.ZERO
+			return
+	global_position += motion
 
 
 ## What it is, at a glance: ore chunks and hearts use the baked icon art, a
@@ -99,9 +123,7 @@ func _physics_process(delta: float) -> void:
 	# call): it stays on the ground and trades only on a deliberate interact.
 	# The magnet-and-touch flow was silently discarding honed weapons.
 	if kind == Kind.WEAPON and _player.loadout_full():
-		_velocity.y += 900.0 * delta
-		_velocity.x = move_toward(_velocity.x, 0.0, 400.0 * delta)
-		global_position += _velocity * delta
+		_fall(delta)
 		_update_offer(dist < 110.0)
 		return
 	_update_offer(false)
@@ -111,10 +133,9 @@ func _physics_process(delta: float) -> void:
 		return
 	if dist < magnet_range:
 		_velocity = _velocity.move_toward(to_player.normalized() * magnet_speed, magnet_speed * 4.0 * delta)
+		global_position += _velocity * delta
 	else:
-		_velocity.y += 900.0 * delta
-		_velocity.x = move_toward(_velocity.x, 0.0, 400.0 * delta)
-	global_position += _velocity * delta
+		_fall(delta)
 
 
 func _update_offer(near: bool) -> void:

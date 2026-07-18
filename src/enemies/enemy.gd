@@ -476,6 +476,7 @@ func _away_from(hitbox: Hitbox) -> int:
 func _on_death() -> void:
 	_hitbox.deactivate()
 	_health_bar.visible = false
+	_death_burst()
 	_hurtbox.set_deferred(&"monitorable", false)
 	_hurtbox.set_deferred(&"monitoring", false)
 	collision_layer = 0
@@ -490,6 +491,30 @@ func _on_death() -> void:
 ## Drop rolls come from the SEEDED service, not randf(): drops are gameplay, so
 ## two players on one daily seed must get the same loot. The stream is named apart
 ## from "delve" so it can never shift the level layout.
+## A burst of body-coloured chunks on the kill, so a death reads as an impact
+## even while the corpse lingers. Parented to the room — it must outlive us.
+func _death_burst() -> void:
+	var host: Node = get_parent()
+	if host == null:
+		return
+	var burst: CPUParticles2D = CPUParticles2D.new()
+	burst.one_shot = true
+	burst.emitting = true
+	burst.amount = 14
+	burst.lifetime = 0.55
+	burst.direction = Vector2(0, -1)
+	burst.spread = 80.0
+	burst.initial_velocity_min = 70.0
+	burst.initial_velocity_max = 190.0
+	burst.gravity = Vector2(0, 620)
+	burst.scale_amount_min = 2.0
+	burst.scale_amount_max = 4.0
+	burst.color = stats.colour_idle
+	host.add_child(burst)
+	burst.global_position = global_position + Vector2(0, -stats.body_size.y * 0.5)
+	burst.finished.connect(burst.queue_free)
+
+
 func _drop_haul() -> void:
 	var host: Node = get_parent()
 	if host == null:

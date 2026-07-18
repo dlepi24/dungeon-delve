@@ -46,8 +46,11 @@ func _build() -> void:
 
 ## The lantern follows the player; resolved lazily per the CLAUDE.md
 ## _ready-order discipline, and re-attached if the player is ever rebuilt.
+## Once alive, it flickers — two incommensurate sines, same trick as the hub.
 func _process(_delta: float) -> void:
 	if _lantern != null and is_instance_valid(_lantern):
+		var t: float = float(Time.get_ticks_msec()) / 1000.0
+		_lantern.energy = lantern_energy * (0.92 + 0.06 * sin(t * 13.0) + 0.04 * sin(t * 29.3))
 		return
 	var player: Player = get_tree().get_first_node_in_group(&"player") as Player
 	if player == null:

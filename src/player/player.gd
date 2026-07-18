@@ -602,6 +602,7 @@ func _update_landing_juice() -> void:
 	var on_floor: bool = is_on_floor()
 	if on_floor and not _was_on_floor:
 		_juice.punch(land_squash)
+		_dust(10, 75.0)
 		Events.player_landed.emit()
 	elif not on_floor and _was_on_floor and velocity.y < 0.0:
 		_juice.punch(jump_stretch)
@@ -609,15 +610,68 @@ func _update_landing_juice() -> void:
 
 
 ## Visuals only, per the hard rule. Reads gameplay state, never writes it.
-func _process(_delta: float) -> void:
+var _roll_fx_clock: float = 0.0
+
+@onready var _sprite: AnimatedSprite2D = $VisualRoot/Sprite
+
+
+func _process(delta: float) -> void:
 	if _state_machine.get_current_name() == &"Roll":
 		# A capsule that tumbles reads as a roll; one that slides reads as a
 		# slide. This is the cheapest possible "it looks like a roll" in gray-box.
 		_juice.hold_spin(roll_progress * TAU * float(facing))
 		_juice.hold_scale(roll_squash)
+		# The roll's identity pass: fading afterimages plus kicked-up dust.
+		_roll_fx_clock += delta
+		if _roll_fx_clock >= 0.045:
+			_roll_fx_clock = 0.0
+			_spawn_afterimage()
+			_dust(3, 40.0)
 	else:
+		_roll_fx_clock = 0.0
 		_juice.release_spin()
 		_juice.release_scale()
+
+
+## A ghost of the current sprite frame, frozen mid-tumble and fading fast.
+func _spawn_afterimage() -> void:
+	var host: Node = get_parent()
+	if host == null or _sprite.sprite_frames == null:
+		return
+	var ghost: Sprite2D = Sprite2D.new()
+	ghost.texture = _sprite.sprite_frames.get_frame_texture(_sprite.animation, _sprite.frame)
+	ghost.centered = false
+	ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ghost.flip_h = _sprite.flip_h
+	ghost.modulate = Color(0.7, 0.85, 1.0, 0.4)
+	host.add_child(ghost)
+	ghost.global_transform = _sprite.global_transform
+	var tween: Tween = ghost.create_tween()
+	tween.tween_property(ghost, "modulate:a", 0.0, 0.22)
+	tween.tween_callback(ghost.queue_free)
+
+
+## A one-shot puff of mine dust at the feet. Frees itself when spent.
+func _dust(amount: int, spread: float) -> void:
+	var host: Node = get_parent()
+	if host == null:
+		return
+	var puff: CPUParticles2D = CPUParticles2D.new()
+	puff.one_shot = true
+	puff.emitting = true
+	puff.amount = amount
+	puff.lifetime = 0.45
+	puff.direction = Vector2(0, -1)
+	puff.spread = spread
+	puff.initial_velocity_min = 25.0
+	puff.initial_velocity_max = 85.0
+	puff.gravity = Vector2(0, 220)
+	puff.scale_amount_min = 1.5
+	puff.scale_amount_max = 3.0
+	puff.color = Color(0.66, 0.58, 0.46, 0.55)
+	host.add_child(puff)
+	puff.global_position = global_position
+	puff.finished.connect(puff.queue_free)
 
 
 ## Godot's y axis points down: a negative velocity is upward, gravity is positive.
