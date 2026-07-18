@@ -1,7 +1,11 @@
 # Roadmap
 
 ## Status
-- **Round 12, 2026-07-17 (latest): pickup floor probe (weapons no longer fall
+- **Round 13, 2026-07-17 (latest): camera zoom + scroll (zoom_level dial on
+  FollowCamera), variable-width rooms + the double-wide HALLS, boss music +
+  mid-run mood drift. NEXT DESIGN CALL: traversal mechanic (air-roll flip vs
+  wall-jump vs dash) — bigger rooms make it due.**
+- **Round 12, 2026-07-17: pickup floor probe (weapons no longer fall
   through the world), auto-pause on pad disconnect, juice round two (roll
   afterimages + dust, death bursts, lantern flicker).**
 - **Round 11, 2026-07-17: weapon pickups are an inventory, not a
