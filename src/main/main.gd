@@ -69,6 +69,15 @@ func _refresh_stats_line() -> void:
 	]
 
 
+## Gamepad B (or ESC) backs out of the wipe confirm. The settings menu handles
+## its own back-navigation.
+func _unhandled_input(event: InputEvent) -> void:
+	if _confirm.visible and event.is_action_pressed(&"ui_cancel"):
+		get_viewport().set_input_as_handled()
+		_confirm.visible = false
+		_play.grab_focus()
+
+
 func _on_play() -> void:
 	get_tree().change_scene_to_file.call_deferred(HUB_SCENE)
 

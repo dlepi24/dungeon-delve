@@ -38,6 +38,24 @@ func _ready() -> void:
 	_replay.pressed.connect(_on_replay)
 	_fresh.pressed.connect(_on_fresh)
 	_seed_field.text_submitted.connect(func(_t: String) -> void: _on_replay())
+	# Click-to-edit only: a focus-ALL LineEdit traps gamepad/keyboard navigation
+	# (it eats the arrows for its caret), so stick navigation skips it.
+	_seed_field.focus_mode = Control.FOCUS_CLICK
+
+
+## Back one level: keybinds -> settings panel -> whoever hosts us. B on a pad,
+## ESC on keyboard. Skipped when a deeper node (the keybind screen's listening
+## capture) already claimed the event.
+func _input(event: InputEvent) -> void:
+	if not visible or not event.is_action_pressed(&"ui_cancel"):
+		return
+	if get_viewport().is_input_handled():
+		return
+	get_viewport().set_input_as_handled()
+	if _keybinds.visible:
+		_on_keybinds_closed()
+	else:
+		closed.emit()
 
 
 ## Sync the widgets from live state every time the menu opens — it can be
@@ -57,6 +75,7 @@ func open() -> void:
 	_run_buttons.visible = in_run
 	if in_run:
 		_seed_field.text = GameState.seed_text()
+	_volume.grab_focus()
 
 
 func _on_volume_changed(value: float) -> void:
@@ -67,11 +86,13 @@ func _on_volume_changed(value: float) -> void:
 func _on_controls() -> void:
 	_panel.visible = false
 	_keybinds.visible = true
+	_keybinds.focus_first()
 
 
 func _on_keybinds_closed() -> void:
 	_keybinds.visible = false
 	_panel.visible = true
+	_controls.grab_focus()
 
 
 ## Replay whatever is in the field. Accepts a number or a word — Rng hashes

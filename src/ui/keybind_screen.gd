@@ -51,6 +51,14 @@ func _refresh() -> void:
 		_rows[action].text = Keybinds.label_for(action)
 
 
+## Give gamepad/keyboard navigation a starting point when the screen opens.
+func focus_first() -> void:
+	for action: StringName in Keybinds.REBINDABLE:
+		if _rows.has(action):
+			_rows[action].grab_focus()
+			return
+
+
 func _listen(action: StringName) -> void:
 	_listening_for = action
 	_rows[action].text = "press a key…"

@@ -30,14 +30,19 @@ func _ready() -> void:
 	_quit_title.pressed.connect(_on_quit_to_title)
 
 
+## Start (pause) toggles; the gamepad B button (ui_cancel) also backs out of an
+## open pause. On keyboard ESC matches the pause action first, so the ui_cancel
+## branch is gamepad-only in practice.
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed(&"pause"):
-		return
-	get_viewport().set_input_as_handled()
-	if visible:
+	if event.is_action_pressed(&"pause"):
+		get_viewport().set_input_as_handled()
+		if visible:
+			_close()
+		else:
+			_open()
+	elif visible and event.is_action_pressed(&"ui_cancel"):
+		get_viewport().set_input_as_handled()
 		_close()
-	else:
-		_open()
 
 
 func _on_settings() -> void:
@@ -64,6 +69,9 @@ func _open() -> void:
 		if GameState.run_active else "the surface"
 	visible = true
 	get_tree().paused = true
+	# Gamepad/keyboard navigation needs a starting point — with the cursor
+	# hidden, an unfocused menu is an unusable menu.
+	_resume.grab_focus()
 
 
 func _close() -> void:

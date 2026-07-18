@@ -51,6 +51,20 @@ func open() -> void:
 	_refresh()
 	visible = true
 	Cursor.menu()
+	_focus_first()
+
+
+## First live buy button, else the hone button, else Close.
+func _focus_first() -> void:
+	for row: Node in _list.get_children():
+		var button: Button = row.get_meta(&"button") as Button
+		if button != null and not button.disabled:
+			button.grab_focus()
+			return
+	if not _hone_button.disabled:
+		_hone_button.grab_focus()
+		return
+	_close.grab_focus()
 
 
 func close() -> void:
@@ -63,7 +77,8 @@ func close() -> void:
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if event.is_action_pressed(&"interact") or event.is_action_pressed(&"pause"):
+	if event.is_action_pressed(&"interact") or event.is_action_pressed(&"pause") \
+			or event.is_action_pressed(&"ui_cancel"):
 		get_viewport().set_input_as_handled()
 		close()
 

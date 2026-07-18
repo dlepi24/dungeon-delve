@@ -40,6 +40,17 @@ func open() -> void:
 	visible = true
 	Cursor.menu()
 	_refresh()
+	_focus_first()
+
+
+## First affordable buy button, else Close — gamepad navigation needs a start.
+func _focus_first() -> void:
+	for row: Node in _list.get_children():
+		var button: Button = _rows.get((row.get_meta(&"upgrade") as UpgradeData).id)
+		if button != null and not button.disabled:
+			button.grab_focus()
+			return
+	_close.grab_focus()
 
 
 func close() -> void:
@@ -53,7 +64,8 @@ func close() -> void:
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if event.is_action_pressed(&"interact") or event.is_action_pressed(&"pause"):
+	if event.is_action_pressed(&"interact") or event.is_action_pressed(&"pause") \
+			or event.is_action_pressed(&"ui_cancel"):
 		get_viewport().set_input_as_handled()
 		close()
 
