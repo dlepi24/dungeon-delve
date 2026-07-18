@@ -22,6 +22,13 @@ extends Camera2D
 ## report their own size). The camera clamps inside; an axis where the view is
 ## bigger than the room centres instead.
 var _room_size: Vector2 = Vector2(1920, 640)
+## Momentary extra zoom on a parry or riposte — the camera leans IN on the
+## moment of mastery, then eases back. Visual only.
+var _zoom_punch: float = 0.0
+
+
+func punch_zoom(amount: float = 0.05) -> void:
+	_zoom_punch = maxf(_zoom_punch, amount)
 
 
 func set_room_bounds(size: Vector2) -> void:
@@ -69,10 +76,13 @@ func add_trauma(amount: float) -> void:
 
 func _on_hit_landed(_damage: float, was_riposte: bool) -> void:
 	add_trauma(trauma_parry if was_riposte else trauma_hit)
+	if was_riposte:
+		punch_zoom(0.05)
 
 
 func _on_parry_succeeded() -> void:
 	add_trauma(trauma_parry)
+	punch_zoom(0.06)
 
 
 func _on_player_hurt(_damage: float) -> void:
@@ -80,6 +90,9 @@ func _on_player_hurt(_damage: float) -> void:
 
 
 func _process(delta: float) -> void:
+	_zoom_punch = move_toward(_zoom_punch, 0.0, 0.25 * delta)
+	zoom = Vector2.ONE * zoom_level * (1.0 + _zoom_punch)
+
 	if target != null:
 		var goal: Vector2 = _clamp_to_room(Vector2(target.global_position.x, target.global_position.y - 200.0))
 		global_position = global_position.lerp(goal, minf(1.0, follow_stiffness))

@@ -182,8 +182,13 @@ func _get_player() -> Player:
 	return _player
 
 
+## Fired once per room, when its last living enemy falls.
+var _room_cleared: bool = false
+
+
 func _ready() -> void:
 	Events.run_restart_requested.connect(start)
+	Events.enemy_died.connect(_on_enemy_died)
 	if auto_start and _plan.is_empty():
 		# DEFERRED, not called directly. Starting inside _ready runs before the
 		# Player's own _ready, so its @onready nodes are still null and placing it
@@ -259,6 +264,7 @@ func _load_room(id: StringName) -> void:
 		return
 	_room = packed.instantiate() as Room
 	add_child(_room)
+	_room_cleared = false
 	if camera != null:
 		camera.set_room_bounds(_room.room_size)
 
@@ -290,6 +296,20 @@ func _spawn_enemies(room: Room) -> void:
 		enemy.stats = load(ENEMY_STATS[kind]) as EnemyStats
 		enemy.global_position = point["position"]
 		room.add_child(enemy)
+
+
+## The clear check: when a death leaves no living enemy standing in the current
+## room, the room is CLEARED — once. Corpses linger in the group briefly, so
+## the living are counted, not the members.
+func _on_enemy_died(_enemy: Node2D) -> void:
+	if _room == null or _room_cleared:
+		return
+	for node: Node in get_tree().get_nodes_in_group(&"enemies"):
+		var other: Enemy = node as Enemy
+		if other != null and not other.is_dead() and _room.is_ancestor_of(other):
+			return
+	_room_cleared = true
+	Events.room_cleared.emit()
 
 
 ## Seeded twice per spot: once for whether the altar is lit, once for which

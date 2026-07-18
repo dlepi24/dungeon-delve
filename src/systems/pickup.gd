@@ -53,6 +53,10 @@ func _ready() -> void:
 	_ground.collision_mask = CollisionLayers.WORLD
 	_ground.enabled = false
 	add_child(_ground)
+	# The room-clear payoff: every loose pickup rushes to the player, so the
+	# end of a fight is a shower of earnings instead of a scavenger walk.
+	# Full-loadout weapon offers are exempt — they never magnet by design.
+	Events.room_cleared.connect(func() -> void: magnet_range = 4000.0)
 	_apply_style()
 
 

@@ -26,6 +26,7 @@ func _ready() -> void:
 	Events.weapon_equipped.connect(_on_weapon)
 	Events.weapon_stowed.connect(_on_weapon_stowed)
 	Events.shrine_accepted.connect(_on_shrine)
+	Events.room_cleared.connect(_on_room_cleared)
 
 
 func _on_haul(amount: int, at: Vector2) -> void:
@@ -68,6 +69,12 @@ func _on_weapon_stowed(weapon: WeaponData) -> void:
 	if not _swap_hint_shown:
 		_swap_hint_shown = true
 		FloatingText.spawn(get_parent(), at + Vector2(0, -40), "%s swaps weapons" % Keybinds.hint_for(&"skill_1"), Color(0.8, 0.75, 0.65), 22)
+
+
+func _on_room_cleared() -> void:
+	var at: Vector2 = _player_head()
+	if at != Vector2.INF:
+		FloatingText.spawn(get_parent(), at + Vector2(0, -20), "CLEAR", Color(1.0, 0.88, 0.45), 42)
 
 
 func _on_shrine(shrine: ShrineData) -> void:

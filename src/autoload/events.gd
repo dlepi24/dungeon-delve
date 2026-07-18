@@ -76,5 +76,8 @@ signal shrine_accepted(shrine: ShrineData)
 signal run_started(seed_value: int)
 ## The player entered room `index` of the plan.
 signal room_entered(index: int, room_id: String)
+## The last living enemy in the current room fell. The payoff beat: loose loot
+## vacuums to the player and the HUD calls it.
+signal room_cleared
 ## Every room in the plan is done.
 signal delve_completed

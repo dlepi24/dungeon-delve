@@ -594,6 +594,9 @@ func _on_parry_succeeded() -> void:
 	Hitstop.request(hitstop_parry_frames)
 	_juice.flash()
 	Rumble.parry()
+	var host: Node = get_parent()
+	if host != null:
+		ParryShockwave.burst(host, global_position + Vector2(float(facing) * 26.0, -32.0))
 
 
 ## Squash on touchdown, stretch on take-off. Requested from physics, animated in
