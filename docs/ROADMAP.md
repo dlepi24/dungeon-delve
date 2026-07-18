@@ -1,6 +1,29 @@
 # Roadmap
 
 ## Status
+- **THE VARIETY SESSION, 2026-07-17 (latest). Dustin: "greatly vary it up,
+  polish it as a game, perfect the first-time journey." All four chosen tracks
+  landed:**
+  - **Projectiles + ranged enemies**: Projectile extends Hitbox (parry
+    REFLECTS it — double damage, stance break); Slinger (thrower, breaks
+    tier-camping) and Gnat (flyer, contests high ground) join via seeded spawn
+    variation. Ranged = projectile_speed on attacks; flight = can_fly on stats.
+  - **Branching descent**: two seeded candidate rooms per depth; descending
+    offers doors with flavour hints; choice writes into the plan; daily-seed
+    safe. delve_test's stream-isolation replica updated to the new draw.
+  - **FTUE**: first-run verb signs in the entry room, hub Training post ->
+    gym (parry-signed, returnable, pausable), teaching result screens,
+    one-time swap hint.
+  - **Juice**: pad rumble laddered like hitstop, room-entry fades, camera
+    dust, lantern flicker.
+  - Also this day (earlier rounds): interact on A + device-aware glyphs +
+    per-context music levels; extract fork needs a committed stick flick.
+  - **Deferred, next variety batch (Dustin's queued picks)**: mine hazards
+    (crumbling platforms, spikes, telegraphed debris — heat could shake more
+    loose) and data-cheap elite variants. Then: hardware-judge the new
+    enemies' tuning (slinger/gnat are first-guess numbers), heat curve, buff
+    durations, M8 daily seed + leaderboard over run_history.jsonl, name +
+    v1 scope (GDD questions 4/5).
 - **Round 5 BUILT 2026-07-17 (late): MINE HEAT + blacksmith round 2 + shop UX.**
   - **Mine heat** (Dustin: "shouldn't be able to roflstomp"): each survived
     extraction toughens enemies (+12% hp, +10% dmg, more brute promotions per
