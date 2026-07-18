@@ -193,6 +193,13 @@ PROG_C = [
     (-4, [0, 4, 7]),    # F
     (7,  [0, 3, 7]),    # Em
 ]
+# Boss vamp: two chords grinding against each other, fast. Menace over melody.
+PROG_BOSS = [
+    (0,  [0, 3, 7]),    # Am
+    (1,  [0, 3, 6]),    # Bb dim colour — the wrongness is the point
+    (0,  [0, 3, 7]),    # Am
+    (7,  [0, 3, 7]),    # Em
+]
 
 if __name__ == "__main__":
     random.seed(11)
@@ -201,4 +208,5 @@ if __name__ == "__main__":
     write("music_hub.wav", build(with_drums=False))
     write("music_delve_b.wav", build(with_drums=True, prog=PROG_B, bpm=84))
     write("music_delve_c.wav", build(with_drums=True, prog=PROG_C, bpm=108))
+    write("music_boss.wav", build(with_drums=True, prog=PROG_BOSS, bpm=128))
     print("done")

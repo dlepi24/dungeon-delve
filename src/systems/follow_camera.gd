@@ -1,3 +1,4 @@
+class_name FollowCamera
 extends Camera2D
 ## Screenshake, plus following the player.
 ##
@@ -10,6 +11,35 @@ extends Camera2D
 @export var target: Player
 ## 1.0 = snap. Lower values lag behind, which muddies the feel that was signed off.
 @export_range(0.05, 1.0) var follow_stiffness: float = 1.0
+
+@export_group("View")
+## How close the camera sits. 1.0 is the old static framing; higher shows less
+## of the room at once, so the camera SCROLLS and the world reads bigger —
+## Dustin's "feel like an actual world" call. His dial.
+@export var zoom_level: float = 1.45
+
+## Bounds of the current room, set by the Delve per room (variable-width rooms
+## report their own size). The camera clamps inside; an axis where the view is
+## bigger than the room centres instead.
+var _room_size: Vector2 = Vector2(1920, 640)
+
+
+func set_room_bounds(size: Vector2) -> void:
+	if size.x > 0.0 and size.y > 0.0:
+		_room_size = size
+
+
+func _clamp_to_room(goal: Vector2) -> Vector2:
+	var half: Vector2 = get_viewport_rect().size * 0.5 / zoom_level
+	if _room_size.x <= half.x * 2.0:
+		goal.x = _room_size.x * 0.5
+	else:
+		goal.x = clampf(goal.x, half.x, _room_size.x - half.x)
+	if _room_size.y <= half.y * 2.0:
+		goal.y = _room_size.y * 0.5
+	else:
+		goal.y = clampf(goal.y, half.y, _room_size.y - half.y)
+	return goal
 
 @export_group("Shake")
 @export_range(0.0, 1.0) var trauma_hit: float = 0.35
@@ -25,6 +55,7 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.randomize()
+	zoom = Vector2(zoom_level, zoom_level)
 	Events.hit_landed.connect(_on_hit_landed)
 	Events.parry_succeeded.connect(_on_parry_succeeded)
 	Events.player_hurt.connect(_on_player_hurt)
@@ -50,7 +81,7 @@ func _on_player_hurt(_damage: float) -> void:
 
 func _process(delta: float) -> void:
 	if target != null:
-		var goal: Vector2 = Vector2(target.global_position.x, target.global_position.y - 200.0)
+		var goal: Vector2 = _clamp_to_room(Vector2(target.global_position.x, target.global_position.y - 200.0))
 		global_position = global_position.lerp(goal, minf(1.0, follow_stiffness))
 
 	if _trauma <= 0.0:

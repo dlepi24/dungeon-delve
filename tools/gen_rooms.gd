@@ -42,9 +42,9 @@ var _errors: PackedStringArray = []
 
 func _is_surface(rows: Array, x: int, y: int) -> bool:
 	# Below the layout is the generated border floor: always solid.
-	if y >= RoomLayouts.HEIGHT:
+	if y >= rows.size():
 		return true
-	if y < 0 or x < 0 or x >= RoomLayouts.WIDTH:
+	if y < 0 or x < 0 or x >= (rows[0] as String).length():
 		return false
 	var c: String = rows[y][x]
 	return c == "#" or c == "="
@@ -56,14 +56,15 @@ func _is_surface(rows: Array, x: int, y: int) -> bool:
 ## perfectly good platform.
 func _runs(rows: Array) -> Array[Vector3i]:
 	var out: Array[Vector3i] = []
-	for y: int in RoomLayouts.HEIGHT:
+	for y: int in rows.size():
+		var width: int = (rows[0] as String).length()
 		var x: int = 0
-		while x < RoomLayouts.WIDTH:
+		while x < width:
 			if not _is_surface(rows, x, y):
 				x += 1
 				continue
 			var start: int = x
-			while x < RoomLayouts.WIDTH and _is_surface(rows, x, y):
+			while x < width and _is_surface(rows, x, y):
 				x += 1
 			# (row, first column, last column)
 			out.append(Vector3i(y, start, x - 1))
@@ -80,7 +81,7 @@ func _reachable_runs(rows: Array) -> Dictionary[Vector3i, bool]:
 	var runs: Array[Vector3i] = _runs(rows)
 	var reach: Dictionary[Vector3i, bool] = {}
 	for run: Vector3i in runs:
-		if run.x == RoomLayouts.HEIGHT - 1:
+		if run.x == rows.size() - 1:
 			reach[run] = true
 			continue
 		for c: int in range(run.y, run.z + 1):
@@ -143,7 +144,9 @@ func _validate(id: StringName, rows: Array) -> bool:
 	var exits: int = 0
 	for y: int in rows.size():
 		var row: String = rows[y]
-		if row.length() != RoomLayouts.WIDTH:
+		# Width is per-room (a hall can be double-wide); it just has to be
+		# consistent, sane, and every row the same.
+		if row.length() != (rows[0] as String).length() or row.length() < 40:
 			_errors.append("%s row %d: width %d, expected %d" % [id, y, row.length(), RoomLayouts.WIDTH])
 			ok = false
 		for x: int in row.length():
@@ -191,8 +194,8 @@ func _build(id: StringName, rows: Array, tile_set: TileSet) -> void:
 	layer.owner = root
 
 	# Solid border. Rooms are sealed boxes; the exit is a trigger, not a hole.
-	var w: int = RoomLayouts.WIDTH + 2
-	var h: int = RoomLayouts.HEIGHT + 2
+	var w: int = (rows[0] as String).length() + 2
+	var h: int = rows.size() + 2
 	for x: int in w:
 		layer.set_cell(Vector2i(x, 0), 0, _rock(x, 0))
 		layer.set_cell(Vector2i(x, h - 1), 0, _rock(x, h - 1))

@@ -21,7 +21,7 @@ const ROOM_DIR: String = "res://src/rooms/delve"
 const FIRST_ROOM: StringName = &"entry"
 const LAST_ROOM: StringName = &"deep"
 const MIDDLE_POOL: Array[StringName] = [
-	&"gap", &"climb", &"arena", &"corridor", &"cavern", &"shaft", &"gallery",
+	&"gap", &"climb", &"arena", &"corridor", &"cavern", &"shaft", &"gallery", &"halls",
 ]
 
 ## One scene for every enemy: there are no enemy subclasses any more, only data.
@@ -67,6 +67,9 @@ const SIDEWAYS: Dictionary[String, Array] = {
 ## and anything calling start() must turn this off, or the delve starts twice and
 ## the first room is entered twice.
 @export var auto_start: bool = true
+## The run's camera, told each room's size so it can clamp its scroll. Optional
+## — headless tests run the Delve with no camera at all.
+@export var camera: FollowCamera
 
 ## What each room id sounds like from the tunnel above it. Shown on the door
 ## choice — a hint, not a name, so the choice is informed but not spoiled.
@@ -79,6 +82,7 @@ const HINTS: Dictionary[StringName, String] = {
 	&"cavern": "gaping dark",
 	&"shaft": "rising timbers",
 	&"gallery": "a two-storey drop",
+	&"halls": "a long dark hall",
 	&"deep": "the deep vein",
 }
 
@@ -241,6 +245,8 @@ func _load_room(id: StringName) -> void:
 		return
 	_room = packed.instantiate() as Room
 	add_child(_room)
+	if camera != null:
+		camera.set_room_bounds(_room.room_size)
 
 	_spawn_enemies(_room)
 	# The very first run of a save gets its verbs taught in the world.

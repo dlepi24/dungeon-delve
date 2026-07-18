@@ -18,6 +18,13 @@ const DELVE_VARIANTS: Array[String] = [
 	"res://assets/audio/music_delve_c.wav",
 ]
 const HUB: String = "res://assets/audio/music_hub.wav"
+## The boss vamp: cut in when a boss engages, cut back out when it dies or you
+## leave the room.
+const BOSS: String = "res://assets/audio/music_boss.wav"
+
+## Chance to drift to a DIFFERENT delve mood on a room change, so a long run's
+## soundtrack breathes instead of looping one bed for five rooms.
+@export_range(0.0, 1.0) var room_shuffle_chance: float = 0.35
 
 ## Master music level in dB. Music sits under the SFX; -12 is a starting point.
 @export var volume_db: float = -12.0
@@ -33,9 +40,15 @@ var _user_volume: float = 1.0
 ## Context attenuation in dB, set per play() call by the scene that owns the
 ## moment (0 title, quieter in the hub, quieter still in the delve).
 var _attenuation: float = 0.0
+## The delve variant currently underground, so the boss fight can hand back to
+## the same mood it interrupted.
+var _delve_path: String = ""
+var _boss_active: bool = false
+var _mix_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 
 func _ready() -> void:
+	_mix_rng.randomize()
 	# Two players so we can crossfade one out while the other comes in.
 	for i: int in 2:
 		var p: AudioStreamPlayer = AudioStreamPlayer.new()
@@ -43,6 +56,42 @@ func _ready() -> void:
 		p.volume_db = -80.0
 		add_child(p)
 		_players.append(p)
+	# The mix reacts to the run: bosses cut in their own vamp, and room changes
+	# sometimes drift the delve to another mood. Ambience only — unseeded, and
+	# nothing here ever feeds back into gameplay.
+	Events.boss_engaged.connect(_on_boss_engaged)
+	Events.enemy_died.connect(_on_enemy_died)
+	Events.room_entered.connect(_on_room_entered)
+
+
+func _on_boss_engaged(_enemy: Node2D) -> void:
+	if _boss_active or _current != &"delve":
+		return
+	_boss_active = true
+	_crossfade_to(BOSS)
+
+
+func _on_enemy_died(enemy: Node2D) -> void:
+	var fallen: Enemy = enemy as Enemy
+	if not _boss_active or fallen == null or not fallen.stats.is_boss:
+		return
+	_boss_active = false
+	_crossfade_to(_delve_path)
+
+
+func _on_room_entered(_index: int, _id: String) -> void:
+	if _current != &"delve":
+		return
+	if _boss_active:
+		# Fled the boss room with the boss alive: the vamp does not follow you.
+		_boss_active = false
+		_crossfade_to(_delve_path)
+		return
+	if _mix_rng.randf() < room_shuffle_chance and DELVE_VARIANTS.size() > 1:
+		var pool: Array[String] = DELVE_VARIANTS.duplicate()
+		pool.erase(_delve_path)
+		_delve_path = pool[_mix_rng.randi_range(0, pool.size() - 1)]
+		_crossfade_to(_delve_path)
 
 
 ## Play a named track, looping, at a per-context attenuation below the tuned
@@ -57,11 +106,17 @@ func play(track: StringName, attenuation_db: float = 0.0) -> void:
 			_fade(_players[_active], _players[_active].volume_db, _target_db())
 		return
 	_current = track
+	_boss_active = false
 	var path: String = HUB
 	if track == &"delve":
-		var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-		rng.randomize()
-		path = DELVE_VARIANTS[rng.randi_range(0, DELVE_VARIANTS.size() - 1)]
+		path = DELVE_VARIANTS[_mix_rng.randi_range(0, DELVE_VARIANTS.size() - 1)]
+		_delve_path = path
+	_crossfade_to(path)
+
+
+## The actual player swap. Everything that changes what is playing goes
+## through here — play(), the boss cuts, the room-change drift.
+func _crossfade_to(path: String) -> void:
 	var stream: AudioStreamWAV = _looped(path)
 	if stream == null:
 		return

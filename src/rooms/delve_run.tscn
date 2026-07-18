@@ -28,9 +28,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.055, 0.042, 0.035, 1)
 
-[node name="Delve" type="Node2D" parent="."]
+[node name="Delve" type="Node2D" parent="." node_paths=PackedStringArray("camera")]
 script = ExtResource("1_delve")
 room_count = 5
+camera = NodePath("../Camera2D")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector2(200, 500)
