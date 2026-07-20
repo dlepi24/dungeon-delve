@@ -139,6 +139,16 @@ Gotchas found in M0/M1, worth not rediscovering:
   enemy telegraph colour, every hit flash and the whole F3 overlay for three
   milestones. If a node reference is a fixed child, prefer `@onready var x = $Child`
   and skip the export entirely — that is what `BodyJuice` and `Hitbox` do now.
+- **A Control INSTANCED under another Control silently collapses to a 0x0 rect
+  at the origin** unless the instance node declares `layout_mode = 1` plus its
+  full anchor set — the packed scene root's own anchors are NOT enough. The
+  editor writes these properties silently; hand-written `.tscn` files omit
+  them. Under a CanvasLayer or Node2D parent the rule does not apply, which is
+  why it hid for weeks: only the title screen's SettingsMenu/RecordsScreen and
+  the KeybindScreen inside settings ever met the failing case. Symptom: the
+  menu "opens in the top-left corner, half off-screen". Rule: instancing a
+  Control scene under a Control parent? Restate layout_mode + anchors +
+  offsets + grow on the instance node, always.
 - **Node `_ready` order is a trap for group lookups.** Godot runs `_enter_tree`
   on every node in a scene before it runs any `_ready`, and `_ready` fires
   children-first, siblings in tree order. A node whose `_ready` runs before the
