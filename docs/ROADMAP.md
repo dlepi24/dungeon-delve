@@ -1,6 +1,12 @@
 # Roadmap
 
 ## Status
+- **2026-07-20: EXPORT PIPELINE UP.** Presets for Web/Windows/macOS/Linux,
+  templates installed, all four builds produced and itch-zipped under build/
+  (git-ignored). Command: godot --headless --export-release "<Preset>" <path>.
+  Publishing checklist lives in the session log; M9's itch.io page is now a
+  content task, not a plumbing one. NOTE: builds still say "The Collapsing
+  Mine (working title)" — the NAME decision now gates the public page.
 - **2026-07-18: TIMBER HOOK + THE CHASM.** skill_2 zips to authored timber
   anchors (halls pits, undercroft roof, climb landing, chasm fast-lane);
   generator height is per-room and the 58x36 Chasm joins the big pool. The
