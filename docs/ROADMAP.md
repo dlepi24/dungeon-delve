@@ -1,6 +1,13 @@
 # Roadmap
 
 ## Status
+- **2026-07-21 (evening): WEAPONS IN HAND — the weapon layer is COMPLETE.**
+  weapons.png landed from the claude.ai session (4 tiles, shaft-up, grip
+  pixels), the baked pick is out of the Delver's frames, and every weapon
+  .tres carries its sheet region + grip. WeaponSprite draws the pickaxe
+  tile as the bare-hands fallback. All tests green. Remaining art round:
+  the Lost Crews enemy sheets. Dustin still owes the gym a feel pass: one
+  full swing per weapon, plus the gray-box swing-rect visibility call.
 - **2026-07-21 (later still): PAGES AUTO-DEPLOY FROM MAIN.** Every push to
   main now exports the Web build in CI (.github/workflows/deploy-web.yml,
   godot-ci 4.7.1) and publishes it to the web-build branch Pages serves —
