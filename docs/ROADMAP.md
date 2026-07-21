@@ -1,6 +1,15 @@
 # Roadmap
 
 ## Status
+- **2026-07-21 (night): TILESET v3 + DRESSED ROOMS + PROJECTILE-PARRY FIX.**
+  The claude.ai tileset rewrite landed (10 tiles, ids 0-2 stable) and the
+  room generator now wires the new set: backdrop fill behind every room,
+  hash-mixed rock variants and moss, worn planks, timber posts under
+  walkways. ORE_RICH (tile 6) is reserved for a later depth/heat pass.
+  Dustin's web freeze report (parried projectile) was a real, always-
+  reproducible bug: the reflect path re-swept its own overlap and recursed
+  the parry handler until the stack died. Fixed via Hitbox.reopen() (no
+  sweep) and pinned with an integration test in enemy_test.
 - **2026-07-21 (evening): WEAPONS IN HAND — the weapon layer is COMPLETE.**
   weapons.png landed from the claude.ai session (4 tiles, shaft-up, grip
   pixels), the baked pick is out of the Delver's frames, and every weapon
