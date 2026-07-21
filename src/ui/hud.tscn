@@ -342,44 +342,6 @@ offset_right = 797.0
 offset_bottom = 57.0
 color = Color(0.75, 0.14, 0.16, 1)
 
-; The boss bar: bottom-centre, Souls-style, raised by Events.boss_engaged.
-; Wide and named so a miniboss reads as an EVENT, not another purple brute.
-[node name="BossBar" type="Control" parent="."]
-visible = false
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -400.0
-offset_top = -150.0
-offset_right = 400.0
-offset_bottom = -70.0
-grow_horizontal = 2
-grow_vertical = 0
-
-[node name="BossName" type="Label" parent="BossBar"]
-offset_right = 800.0
-offset_bottom = 30.0
-theme_override_font_sizes/font_size = 22
-theme_override_colors/font_color = Color(0.92, 0.84, 0.7, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
-theme_override_constants/outline_size = 6
-text = "VAROK, THE OVERSEER"
-horizontal_alignment = 1
-
-[node name="BarBack" type="ColorRect" parent="BossBar"]
-offset_top = 38.0
-offset_right = 800.0
-offset_bottom = 60.0
-color = Color(0, 0, 0, 0.72)
-
-[node name="BarFill" type="ColorRect" parent="BossBar"]
-offset_left = 3.0
-offset_top = 41.0
-offset_right = 797.0
-offset_bottom = 57.0
-color = Color(0.75, 0.14, 0.16, 1)
-
 ; Pinned to the top-RIGHT edge, not to x=1552 — on an ultrawide the screen is
 ; wider than the 1920 design space (stretch aspect "expand").
 [node name="DepthPanel" type="Panel" parent="."]
