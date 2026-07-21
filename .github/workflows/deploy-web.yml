@@ -1,0 +1,52 @@
+# Deploys the game to GitHub Pages on every push to main.
+#
+# Exports the Web build with the same Godot version as local dev (the
+# godot-ci image bundles the editor AND the matching export templates),
+# then publishes build/web to the web-build branch, which Pages serves
+# (Settings -> Pages -> branch web-build, root). force_orphan keeps that
+# branch a single commit — it is an artifact, not history.
+#
+# Version bumps: update the container tag AND install the matching
+# templates locally; CLAUDE.md pins the local version.
+
+name: deploy-web
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-web
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.7.1
+    steps:
+      - uses: actions/checkout@v4
+
+      # First import populates .godot/ (class registry, asset imports).
+      # Import alone can exit non-zero on fresh projects; the export below
+      # is the real gate and fails loudly if the import truly failed.
+      - name: Import assets
+        run: godot --headless --import || true
+
+      - name: Export web build
+        run: |
+          mkdir -p build/web
+          godot --headless --export-release "Web" build/web/index.html
+
+      - name: Publish to the web-build branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: web-build
+          publish_dir: build/web
+          force_orphan: true
+          commit_message: "web build of ${{ github.sha }}"

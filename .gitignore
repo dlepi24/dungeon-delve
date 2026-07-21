@@ -4,8 +4,9 @@
 
 # Exports
 /build/
-export_presets.cfg
 *.translation
+# export_presets.cfg IS committed (no secrets in it): the deploy workflow
+# needs the Web preset to build Pages from main.
 
 # macOS
 .DS_Store
