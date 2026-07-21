@@ -94,5 +94,11 @@ func _on_parried() -> void:
 	collision_layer = CollisionLayers.PLAYER_ATTACK
 	collision_mask = CollisionLayers.ENEMY | CollisionLayers.WORLD
 	_rock.color = Color(0.85, 0.95, 1.0)
-	# notify_parried() closed the box; reopen it for the return flight.
-	activate()
+	# notify_parried() closed the box; reopen it for the return flight —
+	# WITHOUT activate()'s overlap sweep. The player's hurtbox is still inside
+	# the box right now (the mask change above does not re-filter the physics
+	# server's current overlap list), so a sweep hits the player again while
+	# the parry handler is still on the stack: parry -> reflect -> sweep ->
+	# parry, recursing until the stack dies. On the web export that is a
+	# frozen tab; this was Dustin's "parried a projectile and it froze".
+	reopen()

@@ -78,6 +78,7 @@ func _ready() -> void:
 	await _test_poise_scales_with_weight()
 	await _test_brute_cannot_be_poked_out_in_real_time()
 	await _test_parry_always_breaks_poise()
+	await _test_parried_projectile_reflects()
 	await _test_poise_break_gives_no_riposte()
 	await _test_flinches_when_not_attacking()
 	await _test_flinch_fatigue()
@@ -130,6 +131,43 @@ func _test_parry_always_breaks_poise() -> void:
 	_check(brute.get_state_name() == "STAGGER",
 		"the heaviest attack in the game still staggers on a parry (state=%s)" % brute.get_state_name())
 	brute.queue_free()
+	await get_tree().physics_frame
+
+
+## The parry pillar's ranged payoff — and a regression pin on the freeze it
+## shipped with: reflecting used to reopen the hitbox with a full overlap
+## sweep while the player's hurtbox was still inside it, so the parry handler
+## re-parried its own reflection recursively until the stack died (a frozen
+## tab on the web export). If this test hangs or crashes, that bug is back.
+func _test_parried_projectile_reflects() -> void:
+	print("a parried projectile reflects")
+	var player: Player = PLAYER.instantiate()
+	player.global_position = Vector2(900, 0)
+	add_child(player)
+	await get_tree().physics_frame
+	var before: float = player.health
+
+	player.get_buffer().press(&"parry", player.get_tick() + 1)
+	await get_tree().physics_frame  # Idle consumes the press -> Parry
+
+	var attack: EnemyAttackData = EnemyAttackData.new()
+	attack.damage = 10.0
+	attack.projectile_speed = 600.0
+	var rock: Projectile = Projectile.spawn(
+		self, player.global_position + Vector2(40, -28), Vector2(-1, 0), attack)
+	for i: int in 10:
+		await get_tree().physics_frame
+		if not is_instance_valid(rock) or rock._reflected:
+			break
+
+	_check(is_instance_valid(rock) and rock._reflected, "the rock reflected instead of despawning")
+	_check(is_instance_valid(rock) and rock.velocity.x > 0.0, "it flies back the way it came")
+	_check(player.health == before, "a clean parry costs no health")
+	_check(player.is_riposte_open(), "the parry opened the riposte")
+
+	player.queue_free()
+	if is_instance_valid(rock):
+		rock.queue_free()
 	await get_tree().physics_frame
 
 

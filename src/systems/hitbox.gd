@@ -83,6 +83,17 @@ func activate() -> void:
 		_try_hit(area)
 
 
+## Reopen WITHOUT the overlap sweep. For a reflected projectile: its previous
+## victim is still standing inside the box when the parry lands, and the sweep
+## in activate() would hit them again synchronously — mid-parry that means
+## parry -> reflect -> sweep -> parry again, an unbounded recursion that
+## freezes the game. New targets still fire area_entered on their own.
+func reopen() -> void:
+	_already_hit.clear()
+	_active = true
+	_visual_alpha = 1.0
+
+
 func deactivate() -> void:
 	_active = false
 
