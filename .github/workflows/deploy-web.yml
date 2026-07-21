@@ -31,6 +31,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The image ships templates under /root, but Actions containers run
+      # with HOME=/github/home — link them where Godot will actually look.
+      - name: Locate export templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates
+          mv /root/.local/share/godot/export_templates/4.7.1.stable \
+             ~/.local/share/godot/export_templates/4.7.1.stable
+
       # First import populates .godot/ (class registry, asset imports).
       # Import alone can exit non-zero on fresh projects; the export below
       # is the real gate and fails loudly if the import truly failed.
