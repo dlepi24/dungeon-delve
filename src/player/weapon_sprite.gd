@@ -20,6 +20,12 @@ extends Sprite2D
 @export var player: Player
 @export var body: PlayerSprite
 
+## The bare-hands default. The player's exports ARE the base pickaxe, so it
+## has no WeaponData to carry art — these two stand in for it. Wired in
+## player.tscn to the pickaxe tile of assets/sprites/weapons.png.
+@export var pickaxe_sprite: Texture2D
+@export var pickaxe_grip: Vector2 = Vector2(11, 16)
+
 ## Top-left of the 40x56 frame relative to the feet origin — matches the body
 ## Sprite's position. Converts manifest pixel coords to VisualRoot space.
 const FRAME_OFFSET: Vector2 = Vector2(-20, -56)
@@ -56,8 +62,13 @@ func _process(_delta: float) -> void:
 		return
 	_watch_for_contact()
 
+	# Bare hands fall back to the pickaxe tile. A WeaponData WITHOUT art hides
+	# entirely — since stage 2 removed the baked pick, an art-less weapon is
+	# invisible in hand, which is the loud kind of missing, on purpose.
 	var weapon: WeaponData = player.equipped_weapon
-	if weapon == null or weapon.sprite == null:
+	var tex: Texture2D = weapon.sprite if weapon != null else pickaxe_sprite
+	var grip: Vector2 = weapon.grip if weapon != null else pickaxe_grip
+	if tex == null:
 		visible = false
 		return
 	var entry: Dictionary = _anchor_entry(body.frame)
@@ -65,8 +76,8 @@ func _process(_delta: float) -> void:
 		visible = false
 		return
 
-	texture = weapon.sprite
-	offset = -weapon.grip
+	texture = tex
+	offset = -grip
 	var facing: float = float(player.facing)
 	position = _hand_position(entry, facing)
 	# Manifest angle: 0 = forward, 90 = up. Shaft-up art needs (90 - angle) of
@@ -118,11 +129,10 @@ func _spawn_smear() -> void:
 	var from_deg: float = float(wind.get("angle", 140.0))
 	var to_deg: float = float(contact.get("angle", -35.0))
 
-	var radius: float = smear_radius
+	# Grip-to-tip of the shaft-up art is how far the weapon actually reaches.
 	var weapon: WeaponData = player.equipped_weapon
-	if weapon != null and weapon.sprite != null:
-		# Grip-to-tip of the shaft-up art is how far the weapon actually reaches.
-		radius = maxf(smear_radius, weapon.grip.y)
+	var grip: Vector2 = weapon.grip if weapon != null else pickaxe_grip
+	var radius: float = maxf(smear_radius, grip.y)
 
 	var fan: Polygon2D = Polygon2D.new()
 	var points: PackedVector2Array = PackedVector2Array([Vector2.ZERO])

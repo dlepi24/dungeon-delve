@@ -1,6 +1,10 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="WeaponData" load_steps=5 format=3]
 [ext_resource type="Script" path="res://src/systems/weapon_data.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/icons/spear.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/weapons.png" id="3"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_hand"]
+atlas = ExtResource("3")
+region = Rect2(72, 0, 24, 24)
 [resource]
 script = ExtResource("1")
 display_name = "Spear"
@@ -16,3 +20,5 @@ move_control = 0.2
 swing_colour = Color(0.85, 0.9, 1.0, 0.85)
 icon = ExtResource("2")
 cost = 45
+sprite = SubResource("AtlasTexture_hand")
+grip = Vector2(11, 15)
