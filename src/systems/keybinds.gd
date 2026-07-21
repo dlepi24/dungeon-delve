@@ -144,22 +144,34 @@ func _first_key(action: StringName) -> InputEventKey:
 	return null
 
 
+## Labels are asked for EVERY FRAME (the HUD's swap hint, world prompts), so
+## they are cached — the display-server lookup is not per-frame cheap, and on
+## platforms where it is unsupported it LOGS AN ERROR PER CALL, which on the
+## web export meant an error-spam firehose in the browser console.
+var _label_cache: Dictionary[StringName, String] = {}
+
+
 ## What to show on a settings row.
 ##
 ## Bindings are stored as PHYSICAL keycodes so the layout follows the keys' places
 ## rather than their letters — WASD stays a square on AZERTY. But the LABEL must
 ## show what is printed on the player's actual key, which needs the display server
-## to map physical to logical. Headless has no keyboard to ask, and calling it
-## there logs an error every time, so fall back to the physical name.
+## to map physical to logical. Headless has no keyboard to ask, and the WEB
+## display server does not support the mapping at all — both log an error every
+## call, so both fall back to the physical name.
 func label_for(action: StringName) -> String:
+	if _label_cache.has(action):
+		return _label_cache[action]
 	var key: InputEventKey = _first_key(action)
 	if key == null:
 		return "—"
-	# There is no FEATURE_KEYBOARD to ask for; the headless driver simply has no
-	# keyboard, and calling the mapping there logs an error per row.
-	if DisplayServer.get_name() == "headless":
-		return OS.get_keycode_string(key.physical_keycode)
-	return OS.get_keycode_string(DisplayServer.keyboard_get_keycode_from_physical(key.physical_keycode))
+	var label: String
+	if DisplayServer.get_name() == "headless" or OS.has_feature("web"):
+		label = OS.get_keycode_string(key.physical_keycode)
+	else:
+		label = OS.get_keycode_string(DisplayServer.keyboard_get_keycode_from_physical(key.physical_keycode))
+	_label_cache[action] = label
+	return label
 
 
 ## Replace the keyboard binding for an action. Mouse and gamepad events survive.
@@ -173,6 +185,7 @@ func rebind(action: StringName, key: InputEventKey) -> void:
 	fresh.device = -1
 	fresh.physical_keycode = key.physical_keycode
 	InputMap.action_add_event(action, fresh)
+	_label_cache.erase(action)
 	save_overrides()
 
 
@@ -194,6 +207,7 @@ func reset_to_defaults() -> void:
 		if existing != null:
 			InputMap.action_erase_event(action, existing)
 		InputMap.action_add_event(action, _defaults[action].duplicate())
+	_label_cache.clear()
 	save_overrides()
 
 
