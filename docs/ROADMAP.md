@@ -1,6 +1,20 @@
 # Roadmap
 
 ## Status
+- **2026-07-20 (later): PLAYTEST PUNCH LIST, five fixes.** (1) Boss HUD bar
+  drains again — hud.tscn carried a duplicated BossBar node that rendered
+  frozen-at-full over the live one. (2) Swing animation now fits ONE cycle to
+  the weapon's real startup+active+recovery (no loop, restarts per attack via
+  player.attack_id) — the Maul "swings fast but locks me in several
+  animations" complaint was the fixed-rate anim looping ~4x per swing.
+  (3) Timber Hook: HOLD skill_2 through arrival to hang and pendulum-swing
+  (left/right pumps, release flies off with momentum, jump adds boost); tap
+  zip unchanged; exports hook_hang_length/swing_accel/swing_max_speed/
+  swing_gravity await a feel pass. (4) Gamepad A no longer doubles as
+  interact (pad interact = D-pad up) — jumping in the training room's exit
+  zone was teleporting players to the hub; exit zone shrunk off the spawn,
+  low step grounded. (5) Full-loadout weapon trades drop the replaced weapon
+  as a floor pickup instead of deleting it.
 - **2026-07-20: EXPORT PIPELINE UP.** Presets for Web/Windows/macOS/Linux,
   templates installed, all four builds produced and itch-zipped under build/
   (git-ignored). Command: godot --headless --export-release "<Preset>" <path>.
