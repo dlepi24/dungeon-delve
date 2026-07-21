@@ -110,6 +110,14 @@ const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll", "attack", "parry"]
 @export var hook_speed: float = 980.0
 ## Upward pop when the zip arrives at the beam.
 @export var hook_release_boost: float = 360.0
+## Rope length while HANGING under the beam (arrive with skill_2 still held).
+@export var hook_hang_length: float = 96.0
+## How hard holding left/right pumps the swing, rad/s².
+@export var hook_swing_accel: float = 6.0
+## Swing speed cap, rad/s. Raise it and a full pump flings you further.
+@export var hook_swing_max_speed: float = 3.4
+## Pendulum gravity, px/s². Higher = the swing snaps back to centre harder.
+@export var hook_swing_gravity: float = 2400.0
 
 ## The anchor the Hook state is flying toward. Set by whichever state consumed
 ## the press; cleared by the Hook state on exit.
