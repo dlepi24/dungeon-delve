@@ -24,6 +24,7 @@ import zlib
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "sprites"))
 import player_frames  # noqa: E402
 import enemy_frames  # noqa: E402
+import weapon_frames  # noqa: E402
 import shade_pass  # noqa: E402
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "assets", "sprites")
@@ -119,6 +120,48 @@ def bake(sheet_name, w, h, palette, frames, shade=None, anchors=None):
     return 0
 
 
+def bake_weapons():
+    """Weapon layer (stage 2): one 24x24 tile per weapon in a horizontal
+    strip, plus a manifest mapping name -> sheet region + grip pixel.
+    Shaded through the same pass as the player so they match in hand."""
+    size = weapon_frames.SIZE
+    palette = weapon_frames.PALETTE
+    errors = []
+    for name, spec in weapon_frames.WEAPONS.items():
+        errors += validate(f"weapons.{name}", [spec["rows"]], size, size, palette)
+        gx, gy = spec["grip"]
+        if not (0 <= gx < size and 0 <= gy < size):
+            errors.append(f"weapons.{name}: grip {(gx, gy)} outside the tile")
+        elif spec["rows"][gy][gx] == ".":
+            errors.append(f"weapons.{name}: grip {(gx, gy)} lands on transparency")
+    if errors:
+        print("INVALID weapons — refusing to write a broken sheet:")
+        for e in errors:
+            print("  " + e)
+        return 1
+
+    names = list(weapon_frames.WEAPONS.keys())
+    canvas = [[(0, 0, 0, 0)] * (size * len(names)) for _ in range(size)]
+    manifest = {"tile_size": [size, size], "weapons": {}}
+    for c, name in enumerate(names):
+        spec = weapon_frames.WEAPONS[name]
+        shaded = shade_pass.shade_frame(spec["rows"], palette)
+        for y in range(size):
+            for x in range(size):
+                canvas[y][c * size + x] = shaded[y][x]
+        manifest["weapons"][name] = {
+            "region": [c * size, 0, size, size],
+            "grip": list(spec["grip"]),
+        }
+
+    os.makedirs(OUT_DIR, exist_ok=True)
+    write_png(os.path.join(OUT_DIR, "weapons.png"), size * len(names), size, canvas)
+    with open(os.path.join(OUT_DIR, "weapons.json"), "w") as f:
+        json.dump(manifest, f, indent=2)
+    print(f"weapons.png  {size * len(names)}x{size}  ({len(names)} weapons: {', '.join(names)})")
+    return 0
+
+
 def main():
     # Player is full colour with a helmet lamp; enemies shade in value only
     # so the BodyJuice telegraph tints keep working (see enemy_frames.py).
@@ -130,6 +173,7 @@ def main():
         w, h = spec["size"]
         bad |= bake(sheet_name, w, h, spec["palette"], spec["frames"],
                     shade=spec.get("shade", {"greyscale": True}))
+    bad |= bake_weapons()
     return bad
 
 

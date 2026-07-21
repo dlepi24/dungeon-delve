@@ -11,12 +11,13 @@ CANVAS: 40 wide x 56 tall at 1x SCALE (the old sheet was 20x28 at 2x —
 same size on screen, four times the pixels). PlayerSprite's scale must be
 Vector2(1, 1) with this sheet. FEET SIT ON THE LAST ROW, always.
 
-WEAPON: the pickaxe is DRAWN INTO the frames for now (stage 1) via _pick(),
-anchored to the glove so it never floats. The module also exports ANCHORS —
-per-frame hand position + weapon angle + visibility — which gen_sprites
-writes into the manifest. That is stage 2's contract: a WeaponSprite node
-reads it and the baked pick comes OUT of these frames, letting any equipped
-WeaponData render in hand. See docs/art-specs/weapon-layer.md.
+WEAPON: stage 2 is live — the pickaxe is NO LONGER drawn into the frames.
+The module exports ANCHORS — per-frame hand position + weapon angle +
+visibility — which gen_sprites writes into the manifest; the WeaponSprite
+node reads it and renders the equipped weapon from assets/sprites/
+weapons.png (see tools/sprites/weapon_frames.py). The retired _pick()
+stays below as the reference for how the stage-1 bake anchored the shaft.
+See docs/art-specs/weapon-layer.md.
 
 LEGEND
   .  transparent    o  outline          H  helmet bronze   h  brim/band
@@ -345,8 +346,9 @@ def _frame(legs, pose="rest", bob=0, hot=False):
     g = _blank()
     arm, hand, angle, shown, length = _POSES[pose]
     hand = (hand[0], hand[1] + bob)
-    if shown:
-        _pick(g, hand, angle, length)  # weapon FIRST: body draws over it
+    # Stage 2: the weapon is no longer baked in — WeaponSprite renders it
+    # from the ANCHORS block. The `shown`/`length` fields stay in _POSES
+    # because `show` still drives the anchors (holstering on roll).
     _stamp(g, _head(hot), HEAD_TOP + bob)
     _stamp(g, TORSO, TORSO_TOP + bob)
     if arm:
