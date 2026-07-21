@@ -436,12 +436,31 @@ func equip_weapon(weapon: WeaponData) -> void:
 		Events.weapon_stowed.emit(weapon)
 		return
 	active_slot = 1 - active_slot
+	var replaced: WeaponData = held_weapons[active_slot]
 	held_weapons[active_slot] = weapon
 	_wield(weapon)
+	_drop_weapon_pickup(replaced)
 
 
 func loadout_full() -> bool:
 	return held_weapons.size() >= MAX_HELD_WEAPONS
+
+
+## The weapon a full-loadout trade discards goes to the FLOOR, not the void —
+## you can change your mind and take it back. It cannot magnet-return on its
+## own: a weapon facing a full loadout stays grounded as an offer (pickup.gd),
+## and the loadout is full again the instant the trade lands.
+func _drop_weapon_pickup(weapon: WeaponData) -> void:
+	if weapon == null:
+		return
+	var host: Node = get_parent()
+	if host == null:
+		return
+	var drop: Pickup = (load("res://src/systems/pickup.tscn") as PackedScene).instantiate() as Pickup
+	drop.kind = Pickup.Kind.WEAPON
+	drop.weapon = weapon
+	host.add_child(drop)
+	drop.global_position = global_position + Vector2(float(-facing) * 34.0, -40.0)
 
 
 ## What a full-loadout pickup would discard: the weapon you are NOT holding.
