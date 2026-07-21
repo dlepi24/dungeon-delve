@@ -24,6 +24,12 @@ size = Vector2(40, 1080)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_platform"]
 size = Vector2(240, 30)
 
+; The low step is a solid block down to the floor. As a floating slab its
+; underside sat 50 px up — too low to walk or roll beneath, so it read as a
+; passage and played as a wall you could only jump over.
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_step"]
+size = Vector2(240, 80)
+
 [node name="Gym" type="Node2D"]
 script = ExtResource("0_gym")
 
@@ -58,8 +64,8 @@ position = Vector2(1900, 540)
 shape = SubResource("RectangleShape2D_wall")
 
 [node name="StepLowShape" type="CollisionShape2D" parent="Geometry"]
-position = Vector2(420, 855)
-shape = SubResource("RectangleShape2D_platform")
+position = Vector2(420, 880)
+shape = SubResource("RectangleShape2D_step")
 
 [node name="StepHighShape" type="CollisionShape2D" parent="Geometry"]
 position = Vector2(760, 760)
@@ -97,7 +103,7 @@ color = Color(0.28, 0.3, 0.36, 1)
 offset_left = 300.0
 offset_top = 840.0
 offset_right = 540.0
-offset_bottom = 870.0
+offset_bottom = 920.0
 color = Color(0.34, 0.37, 0.44, 1)
 
 [node name="StepHigh" type="ColorRect" parent="GeometryVisuals"]

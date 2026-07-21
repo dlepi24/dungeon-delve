@@ -7,8 +7,10 @@ extends Node2D
 const HUB_SCENE: String = "res://src/hub/hub.tscn"
 const PAUSE_MENU: String = "res://src/ui/pause_menu.tscn"
 
-## Stand left of this to be offered the way out.
-@export var exit_x: float = 300.0
+## Stand left of this to be offered the way out. Tighter than the spawn point
+## (x=150) on purpose: spawning INSIDE the exit zone put the leave prompt up
+## the moment you arrived, so the room read as a revolving door.
+@export var exit_x: float = 120.0
 
 var _player: Player = null
 
