@@ -1,6 +1,16 @@
 # Roadmap
 
 ## Status
+- **2026-07-21 (later still): PAGES AUTO-DEPLOY FROM MAIN.** Every push to
+  main now exports the Web build in CI (.github/workflows/deploy-web.yml,
+  godot-ci 4.7.1) and publishes it to the web-build branch Pages serves —
+  verified end-to-end. export_presets.cfg is committed now (no secrets; CI
+  needs it). The manual build/web push loop is RETIRED — do not hand-push
+  web builds. Dustin confirmed the working title stays "The Collapsing
+  Mine" for now (the NAME open question stays open). Next art round in
+  claude.ai: weapons.png (spec: docs/art-specs/weapon-layer.md) and the
+  Lost Crews enemy sheets — both are decided-but-undrawn; engine side is
+  ready and waiting on frames.
 - **2026-07-21 (later): THE DELVER SHIPPED + WEAPON LAYER STAGE 2 BUILT.**
   Player redesign landed from the claude.ai session: 40x56 @ 1x (same
   on-screen size, 4x density), bronze helmet + lamp, cigarette flicker,
