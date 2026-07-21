@@ -1,7 +1,7 @@
 {
   "frame_size": [
-    20,
-    28
+    40,
+    56
   ],
   "animations": {
     "idle": {
@@ -22,7 +22,7 @@
     },
     "attack": {
       "row": 4,
-      "count": 3
+      "count": 5
     },
     "parry": {
       "row": 5,
@@ -32,5 +32,149 @@
       "row": 6,
       "count": 1
     }
+  },
+  "anchors": {
+    "idle": [
+      {
+        "hand": [
+          20,
+          35
+        ],
+        "angle": 75,
+        "show": true
+      },
+      {
+        "hand": [
+          20,
+          36
+        ],
+        "angle": 75,
+        "show": true
+      }
+    ],
+    "run": [
+      {
+        "hand": [
+          20,
+          35
+        ],
+        "angle": 75,
+        "show": true
+      },
+      {
+        "hand": [
+          20,
+          36
+        ],
+        "angle": 75,
+        "show": true
+      },
+      {
+        "hand": [
+          20,
+          35
+        ],
+        "angle": 75,
+        "show": true
+      },
+      {
+        "hand": [
+          20,
+          36
+        ],
+        "angle": 75,
+        "show": true
+      }
+    ],
+    "air": [
+      {
+        "hand": [
+          20,
+          35
+        ],
+        "angle": 75,
+        "show": true
+      }
+    ],
+    "roll": [
+      {
+        "hand": [
+          20,
+          35
+        ],
+        "angle": 75,
+        "show": false
+      },
+      {
+        "hand": [
+          20,
+          35
+        ],
+        "angle": 75,
+        "show": false
+      }
+    ],
+    "attack": [
+      {
+        "hand": [
+          27,
+          14
+        ],
+        "angle": 140,
+        "show": true
+      },
+      {
+        "hand": [
+          20,
+          8
+        ],
+        "angle": 85,
+        "show": true
+      },
+      {
+        "hand": [
+          29,
+          32
+        ],
+        "angle": 20,
+        "show": true
+      },
+      {
+        "hand": [
+          29,
+          38
+        ],
+        "angle": -35,
+        "show": true
+      },
+      {
+        "hand": [
+          20,
+          36
+        ],
+        "angle": 75,
+        "show": true
+      }
+    ],
+    "parry": [
+      {
+        "hand": [
+          26,
+          26
+        ],
+        "angle": 95,
+        "show": true
+      }
+    ],
+    "hitstun": [
+      {
+        "hand": [
+          20,
+          37
+        ],
+        "angle": 75,
+        "show": true
+      }
+    ]
   }
 }

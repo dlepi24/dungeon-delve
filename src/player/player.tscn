@@ -57,11 +57,13 @@ offset_top = -56.0
 offset_right = 14.0
 color = Color(0.96, 0.88, 0.72, 1)
 
-; 20x28 sheet at 2x = 40x56. centered=false with an offset puts the sprite's feet
-; on the player's origin, which is where the collision capsule's feet are.
+; 40x56 sheet at 1x (the Delver redesign) = same 40x56 on screen the old 20x28
+; sheet had at 2x, with four times the pixel density. centered=false with an
+; offset puts the sprite's feet on the player's origin, which is where the
+; collision capsule's feet are.
 [node name="Sprite" type="AnimatedSprite2D" parent="VisualRoot" node_paths=PackedStringArray("player")]
 position = Vector2(-20, -56)
-scale = Vector2(2, 2)
+scale = Vector2(1, 1)
 centered = false
 texture_filter = 1
 script = ExtResource("13_sprite")
