@@ -24,6 +24,7 @@ import zlib
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "sprites"))
 import player_frames  # noqa: E402
 import enemy_frames  # noqa: E402
+import shade_pass  # noqa: E402
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "assets", "sprites")
 
@@ -63,7 +64,10 @@ def write_png(path, width, height, pixels):
         f.write(png)
 
 
-def bake(sheet_name, w, h, palette, frames):
+def bake(sheet_name, w, h, palette, frames, shade=None):
+    """shade: None for flat colours, or a dict of shade_pass options —
+    {"greyscale": bool, "lamp": "l"}. Shading happens at bake time only;
+    the ASCII source and its palette stay exactly as authored."""
     errors = []
     for name, group in frames.items():
         errors += validate(f"{sheet_name}.{name}", group, w, h, palette)
@@ -87,9 +91,18 @@ def bake(sheet_name, w, h, palette, frames):
         group = frames[name]
         manifest["animations"][name] = {"row": r, "count": len(group)}
         for c, frame in enumerate(group):
-            for y, line in enumerate(frame):
-                for x, ch in enumerate(line):
-                    canvas[r * h + y][c * w + x] = palette[ch]
+            if shade is not None:
+                shaded = shade_pass.shade_frame(
+                    frame, palette,
+                    greyscale=shade.get("greyscale", False),
+                    lamp_ch=shade.get("lamp"))
+                for y in range(h):
+                    for x in range(w):
+                        canvas[r * h + y][c * w + x] = shaded[y][x]
+            else:
+                for y, line in enumerate(frame):
+                    for x, ch in enumerate(line):
+                        canvas[r * h + y][c * w + x] = palette[ch]
 
     os.makedirs(OUT_DIR, exist_ok=True)
     write_png(os.path.join(OUT_DIR, f"{sheet_name}.png"), sheet_w, sheet_h, canvas)
@@ -103,11 +116,15 @@ def bake(sheet_name, w, h, palette, frames):
 
 
 def main():
+    # Player is full colour with a helmet lamp; enemies shade in value only
+    # so the BodyJuice telegraph tints keep working (see enemy_frames.py).
     bad = bake("player", player_frames.W, player_frames.H,
-               player_frames.PALETTE, player_frames.FRAMES)
+               player_frames.PALETTE, player_frames.FRAMES,
+               shade={"lamp": "l"})
     for sheet_name, spec in enemy_frames.SHEETS.items():
         w, h = spec["size"]
-        bad |= bake(sheet_name, w, h, spec["palette"], spec["frames"])
+        bad |= bake(sheet_name, w, h, spec["palette"], spec["frames"],
+                    shade=spec.get("shade", {"greyscale": True}))
     return bad
 
 

@@ -98,6 +98,11 @@ Godot 4.7.1 installed via `brew install --cask godot`. Binary is on PATH at
     `tools/sprites/enemy_frames.py` — those are the source of truth, same
     discipline as the rooms. Validates and refuses to bake a broken sheet. Writes
     the PNG by hand (zlib+struct), so no Pillow needed.
+  - Shading is a BAKE-TIME POST-PASS (`tools/sprites/shade_pass.py`), not part
+    of the ASCII. Each palette colour becomes a 5-step hue-shifted ramp with
+    directional light, selective outlines and helmet-lamp glow. Enemies shade in
+    VALUE ONLY so the BodyJuice tint contract below survives — if you touch the
+    shader, check a baked enemy sheet stays greyscale.
   - **Enemy art is GREYSCALE on purpose.** `BodyJuice` tints it from `EnemyStats`
     — idle colour, yellow wind-up, red swing, blue stagger, white flash. That tint
     IS the telegraph the GDD demands, so it has to survive the art. Pre-coloured

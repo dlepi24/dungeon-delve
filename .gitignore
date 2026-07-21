@@ -20,4 +20,7 @@ Desktop.ini
 # Editor junk
 *.swp
 *~
+
+# Python tool caches
+__pycache__/
 build/
