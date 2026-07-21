@@ -31,6 +31,10 @@ const BEAM: Vector2i = Vector2i(9, 0)
 ## seed see the same veins because the maths is the same, not because a stream
 ## was consumed; keeping it out of Rng means it can never shift layout draws.
 const ORE_EVERY: int = 9
+## How far the backdrop spills past the room border, in tiles. Sized for the
+## worst case the camera can show beyond the box: an ultrawide viewport on the
+## standard 18-row room leaves ~6 tiles of overshoot per side at zoom 1.45.
+const BACKDROP_PAD: int = 8
 const OUT_DIR: String = "res://src/rooms/delve"
 const TILESET: String = "res://src/rooms/world_tileset.tres"
 
@@ -205,8 +209,13 @@ func _walkway(cell: Vector2i) -> Vector2i:
 	return ONE_WAY_B if _hash(cell.x, cell.y, 2) % 100 < 35 else ONE_WAY
 
 
-## A vertical timber post from just under `from` down to the first play tile.
+## A vertical timber post from the walkway down to the first play tile.
 ## Capped: a drop deeper than 10 tiles (a chasm) stays unpropped.
+##
+## The post starts in the walkway's OWN cell, not the one below: the plank art
+## only fills the top slice of its tile, so a post starting one cell down left
+## a visible gap of bare backdrop between plank and post. The beam draws on
+## the backdrop layer, so the plank renders over it and the joint reads solid.
 func _drop_beam(play: TileMapLayer, backdrop: TileMapLayer, from: Vector2i) -> void:
 	var y: int = from.y + 1
 	var length: int = 0
@@ -215,7 +224,7 @@ func _drop_beam(play: TileMapLayer, backdrop: TileMapLayer, from: Vector2i) -> v
 		length += 1
 	if play.get_cell_source_id(Vector2i(from.x, y)) == -1:
 		return
-	for by: int in range(from.y + 1, y):
+	for by: int in range(from.y, y):
 		backdrop.set_cell(Vector2i(from.x, by), 0, BEAM)
 
 
@@ -240,13 +249,16 @@ func _build(id: StringName, rows: Array, tile_set: TileSet) -> void:
 	# Backdrop first (tree order = draw order, so it sits BEHIND the play
 	# tiles): dim cool rock over the entire box, because the black void must
 	# never show through a room's interior. No collision — the TileSet says so.
+	# It overspills the box by BACKDROP_PAD tiles on every side: rooms shorter
+	# or narrower than the camera view let the clamped camera see PAST the
+	# border, and that spill was a hard black frame around the whole room.
 	var backdrop: TileMapLayer = TileMapLayer.new()
 	backdrop.name = "Backdrop"
 	backdrop.tile_set = tile_set
 	root.add_child(backdrop)
 	backdrop.owner = root
-	for y: int in h:
-		for x: int in w:
+	for y: int in range(-BACKDROP_PAD, h + BACKDROP_PAD):
+		for x: int in range(-BACKDROP_PAD, w + BACKDROP_PAD):
 			backdrop.set_cell(Vector2i(x, y), 0, BACKDROP)
 
 	var layer: TileMapLayer = TileMapLayer.new()
