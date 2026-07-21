@@ -89,8 +89,9 @@ What it settles:
 - **Why you leave:** the mine is failing. Depth is the timer.
 - **Visual language:** rock, timber supports, ore veins, lantern light against
   cold dark. Warm = yours and safe; cold = the mine. Amber = value.
-- **What the enemies are:** things that live down there, or things the digging
-  woke. Not yet ruled on — that is a roster question for M6.
+- **What the enemies are:** the LOST CREWS — miners who never came back up.
+  Settled 2026-07-21 (see decision log); the woken-things/fauna direction was
+  rejected.
 
 Still open, and NOT implied by this: death and extraction rules (question 2), the
 meta shape (question 3), and the name (question 5). Locking the theme does not
@@ -169,3 +170,5 @@ The greed loop, in three decisions:
 - 2026-07-18: **DAILY DELVE + RECORDS shipped (M8 first half). Dustin's rules:** one ranked attempt per calendar day (spent at run START — no quit-refunds; later replays are practice), banked haul ranks with depth as tiebreak, and dailies are a LEVEL FIELD: heat 0, bare pickaxe, streak and session loadout untouched in both directions. Records screen ranks the run history (logging since round 4): today's daily, top-5 ranked dailies, top-5 free extractions, career line. Ghost replays + any online board remain M8's back half.
 - 2026-07-18: **Daily ghosts shipped as POSITION TAPES** (room + position + facing at 20 Hz), not input logs — tiny, cannot desync, survive game updates; the GDD's input-resimulation ghosts remain a possible later upgrade for verification, not experience. The ghost rises only on PRACTICE runs of the recorded seed; the ranked attempt is deliberately unaccompanied. Tape holds exactly one run: today's ranked daily.
 - 2026-07-18: **TIMBER HOOK + THE CHASM shipped.** The hook is skill_2 (E/RB): a straight zip to authored timber anchors ('o' glyphs) with an arrival pop; jump releases early keeping momentum; a hit cuts the rope. Zip-not-pendulum was deliberate — deterministic and shippable; a swing upgrade can replace the state later without touching anchors or bindings. Room HEIGHT is per-layout now (18 minimum): the Chasm (58x36) is the first tall room — zigzag tiers climbable both ways per the validator's law, anchors as the fast lane. Movement kit is now complete for v1: jump/roll/parry/pogo/hook.
+- 2026-07-21 (claude.ai art session): **ENEMY IDENTITY SETTLED — the LOST CREWS.** The enemies are miners who never came back up: hollow, lantern-eyed, still carrying their tools. The woken-things/fauna direction was rejected. Closes the roster question the Setting section left open since 2026-07-15. Fits the fiction (the mine's casualties ARE its defenders), the visual language (lantern light against cold dark), and the greyscale/BodyJuice tint contract — a lantern-eyed silhouette reads through any telegraph colour.
+- 2026-07-21 (claude.ai art session): **Player redesign direction: SMALL AND QUICK.** Compact Celeste-like proportions, big helmet, oversized pickaxe. Full character redesigns arrive via concept rounds in claude.ai sessions; production art stays in the ASCII sprite pipeline at the current canvas sizes, so the redesign is a frames-file change, not a pipeline change.

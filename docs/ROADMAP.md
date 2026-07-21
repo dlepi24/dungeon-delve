@@ -1,6 +1,18 @@
 # Roadmap
 
 ## Status
+- **2026-07-21: ART DIRECTION SESSION (claude.ai) synced.** Bake-time shading
+  post-pass landed (tools/sprites/shade_pass.py): 5-step hue-shifted ramps,
+  directional light, selective outlines, helmet-lamp glow; enemies shade in
+  value only, so the BodyJuice telegraph-tint contract holds (verified pixel-
+  level: bodies pure grey, only the near-black outline colour passes through).
+  Fixed a nondeterminism in the delivered pass (set-order tie-break) — bakes
+  now round-trip byte-identical. Two GDD decisions logged: enemies are the
+  LOST CREWS (miners who never came back up — woken-things/fauna rejected;
+  Setting's roster question closed), and the player redesign direction is
+  SMALL AND QUICK (Celeste-like proportions, big helmet, oversized pickaxe).
+  Sprite redesigns come via claude.ai concept rounds; ASCII pipeline and
+  canvas sizes unchanged. Do not redesign sprites outside that loop.
 - **2026-07-20 (later): PLAYTEST PUNCH LIST, five fixes.** (1) Boss HUD bar
   drains again — hud.tscn carried a duplicated BossBar node that rendered
   frozen-at-full over the live one. (2) Swing animation now fits ONE cycle to
