@@ -371,6 +371,19 @@ func attack_cancel_ticks() -> int:
 	return ms_to_ticks(roundi(float(_w_cancel()) / attack_speed_multiplier()))
 
 
+## Full swing duration in ticks. The sprite fits exactly ONE cycle of the attack
+## animation into this, so a Maul reads as one heavy committed swing and a
+## Dagger as one flick — not a fixed-rate loop that replays mid-swing.
+func attack_total_ticks() -> int:
+	return attack_startup_ticks() + attack_active_ticks() + attack_recovery_ticks()
+
+
+## Bumped by the Attack state on entry. The sprite watches it to restart the
+## swing animation per attack — back-to-back swings are too fast for _process
+## to catch the one-tick Idle between them, so state alone cannot signal it.
+var attack_id: int = 0
+
+
 # --- Weapons ---
 # The player's own exports ARE the base pickaxe. Equipping a WeaponData overrides
 # them for the run; a null equipped_weapon means the pickaxe. Found weapons are

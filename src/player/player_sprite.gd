@@ -22,12 +22,13 @@ const MANIFEST: String = "res://assets/sprites/player.json"
 ## Frames per second per animation. Run is tied to speed below instead.
 @export var idle_fps: float = 3.0
 @export var roll_fps: float = 14.0
-@export var attack_fps: float = 18.0
 ## The run cycle is driven by how fast you are actually moving, so the feet
 ## roughly keep up with the ground instead of skating.
 @export var run_fps_at_top_speed: float = 14.0
 
 var _current: StringName = &""
+## Last attack the swing animation was restarted for (player.attack_id).
+var _last_attack_id: int = -1
 
 
 func _ready() -> void:
@@ -74,6 +75,11 @@ func _build_frames() -> SpriteFrames:
 			region.atlas = texture
 			region.region = Rect2(float(i * fw), float(row * fh), float(fw), float(fh))
 			frames.add_frame(StringName(name), region)
+	# The swing must NOT loop: one cycle is fitted to the weapon's full swing
+	# duration below, and a loop would replay it mid-commitment — which reads
+	# as "several fast swings while I am locked in place".
+	if frames.has_animation(&"attack"):
+		frames.set_animation_loop(&"attack", false)
 	return frames
 
 
@@ -106,6 +112,18 @@ func _process(_delta: float) -> void:
 		&"roll":
 			speed_scale = roll_fps / maxf(0.01, idle_fps)
 		&"attack":
-			speed_scale = attack_fps / maxf(0.01, idle_fps)
+			# One animation cycle spans the weapon's REAL startup+active+recovery,
+			# so what you see is exactly what you are committed to: a Maul is one
+			# slow heavy arc, a Dagger one flick, and attack-speed buffs speed the
+			# picture up along with the hitbox.
+			var count: int = sprite_frames.get_frame_count(&"attack")
+			var total_secs: float = float(player.attack_total_ticks()) / float(Engine.physics_ticks_per_second)
+			var base_fps: float = sprite_frames.get_animation_speed(&"attack")
+			speed_scale = (float(count) / maxf(0.05, total_secs)) / maxf(0.01, base_fps)
+			if player.attack_id != _last_attack_id:
+				_last_attack_id = player.attack_id
+				play(&"attack")
+				frame = 0
+				frame_progress = 0.0
 		_:
 			speed_scale = 1.0

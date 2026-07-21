@@ -13,6 +13,7 @@ var _hitbox_open: bool = false
 func enter() -> void:
 	_elapsed = 0
 	_hitbox_open = false
+	player.attack_id += 1
 	# Lock facing now. Holding a direction commits to it (weight); with no
 	# direction, aim at the nearest enemy so a deliberate swing lands instead of
 	# whiffing behind you.
