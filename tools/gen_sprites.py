@@ -64,7 +64,7 @@ def write_png(path, width, height, pixels):
         f.write(png)
 
 
-def bake(sheet_name, w, h, palette, frames, shade=None):
+def bake(sheet_name, w, h, palette, frames, shade=None, anchors=None):
     """shade: None for flat colours, or a dict of shade_pass options —
     {"greyscale": bool, "lamp": "l"}. Shading happens at bake time only;
     the ASCII source and its palette stay exactly as authored."""
@@ -86,6 +86,10 @@ def bake(sheet_name, w, h, palette, frames, shade=None):
 
     canvas = [[(0, 0, 0, 0)] * sheet_w for _ in range(sheet_h)]
     manifest = {"frame_size": [w, h], "animations": {}}
+    if anchors:
+        # Stage-2 weapon-layer contract: per-frame hand anchor, weapon angle
+        # and visibility. Ignored by PlayerSprite today; WeaponSprite reads it.
+        manifest["anchors"] = anchors
 
     for r, name in enumerate(names):
         group = frames[name]
@@ -120,7 +124,8 @@ def main():
     # so the BodyJuice telegraph tints keep working (see enemy_frames.py).
     bad = bake("player", player_frames.W, player_frames.H,
                player_frames.PALETTE, player_frames.FRAMES,
-               shade={"lamp": "l"})
+               shade=getattr(player_frames, "SHADE", {"lamp": "l"}),
+               anchors=getattr(player_frames, "ANCHORS", None))
     for sheet_name, spec in enemy_frames.SHEETS.items():
         w, h = spec["size"]
         bad |= bake(sheet_name, w, h, spec["palette"], spec["frames"],
