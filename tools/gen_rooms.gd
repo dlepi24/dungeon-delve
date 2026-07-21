@@ -16,6 +16,15 @@ const TILE: int = 32
 const SOLID: Vector2i = Vector2i(0, 0)
 const ONE_WAY: Vector2i = Vector2i(1, 0)
 const ORE: Vector2i = Vector2i(2, 0)
+# Tileset art-pass v3 (tools/gen_tileset.gd): cosmetic variants and dressing.
+# All four collide exactly like their base tile (or not at all) — the TileSet
+# defines it; rooms only choose which face to show.
+const SOLID_B: Vector2i = Vector2i(3, 0)
+const CRACKED: Vector2i = Vector2i(4, 0)
+const MOSSY: Vector2i = Vector2i(5, 0)
+const ONE_WAY_B: Vector2i = Vector2i(7, 0)
+const BACKDROP: Vector2i = Vector2i(8, 0)
+const BEAM: Vector2i = Vector2i(9, 0)
 ## Roughly one rock tile in this many becomes an ore vein. Purely visual — ore
 ## collides exactly like rock — so it is scattered deterministically from the
 ## tile's own coordinates rather than from the seeded RNG. Two players on one
@@ -169,9 +178,45 @@ func _validate(id: StringName, rows: Array) -> bool:
 	return ok
 
 
-## Rock, with a vein every so often. Deterministic in the cell coordinates.
+## Deterministic per-cell hash for cosmetic variety. NOT the seeded Rng service
+## (same reasoning as ORE_EVERY): bake-time cosmetics must never consume
+## gameplay streams, and identical layouts must always bake identical rooms.
+func _hash(x: int, y: int, salt: int) -> int:
+	var n: int = x * 374761393 + y * 668265263 + salt * 2246822519
+	n = (n ^ (n >> 13)) * 1274126177
+	return absi(n ^ (n >> 16))
+
+
+## Rock, with a vein every so often, and the v3 variants mixed in so big walls
+## stop reading as wallpaper. Deterministic in the cell coordinates.
 func _rock(x: int, y: int) -> Vector2i:
-	return ORE if (x * 7 + y * 13) % ORE_EVERY == 0 else SOLID
+	if (x * 7 + y * 13) % ORE_EVERY == 0:
+		return ORE
+	var roll: int = _hash(x, y, 1) % 100
+	if roll < 22:
+		return SOLID_B
+	if roll < 34:
+		return CRACKED
+	return SOLID
+
+
+## Walkway plank, occasionally the worn variant.
+func _walkway(cell: Vector2i) -> Vector2i:
+	return ONE_WAY_B if _hash(cell.x, cell.y, 2) % 100 < 35 else ONE_WAY
+
+
+## A vertical timber post from just under `from` down to the first play tile.
+## Capped: a drop deeper than 10 tiles (a chasm) stays unpropped.
+func _drop_beam(play: TileMapLayer, backdrop: TileMapLayer, from: Vector2i) -> void:
+	var y: int = from.y + 1
+	var length: int = 0
+	while length < 10 and play.get_cell_source_id(Vector2i(from.x, y)) == -1:
+		y += 1
+		length += 1
+	if play.get_cell_source_id(Vector2i(from.x, y)) == -1:
+		return
+	for by: int in range(from.y + 1, y):
+		backdrop.set_cell(Vector2i(from.x, by), 0, BEAM)
 
 
 func _cell(x: int, y: int) -> Vector2i:
@@ -189,6 +234,21 @@ func _build(id: StringName, rows: Array, tile_set: TileSet) -> void:
 	root.name = "Room_" + String(id)
 	root.set_script(load("res://src/rooms/room.gd"))
 
+	var w: int = (rows[0] as String).length() + 2
+	var h: int = rows.size() + 2
+
+	# Backdrop first (tree order = draw order, so it sits BEHIND the play
+	# tiles): dim cool rock over the entire box, because the black void must
+	# never show through a room's interior. No collision — the TileSet says so.
+	var backdrop: TileMapLayer = TileMapLayer.new()
+	backdrop.name = "Backdrop"
+	backdrop.tile_set = tile_set
+	root.add_child(backdrop)
+	backdrop.owner = root
+	for y: int in h:
+		for x: int in w:
+			backdrop.set_cell(Vector2i(x, y), 0, BACKDROP)
+
 	var layer: TileMapLayer = TileMapLayer.new()
 	layer.name = "Tiles"
 	layer.tile_set = tile_set
@@ -196,8 +256,6 @@ func _build(id: StringName, rows: Array, tile_set: TileSet) -> void:
 	layer.owner = root
 
 	# Solid border. Rooms are sealed boxes; the exit is a trigger, not a hole.
-	var w: int = (rows[0] as String).length() + 2
-	var h: int = rows.size() + 2
 	for x: int in w:
 		layer.set_cell(Vector2i(x, 0), 0, _rock(x, 0))
 		layer.set_cell(Vector2i(x, h - 1), 0, _rock(x, h - 1))
@@ -217,7 +275,7 @@ func _build(id: StringName, rows: Array, tile_set: TileSet) -> void:
 					var cell: Vector2i = _cell(x, y)
 					layer.set_cell(cell, 0, _rock(cell.x, cell.y))
 				"=":
-					layer.set_cell(_cell(x, y), 0, ONE_WAY)
+					layer.set_cell(_cell(x, y), 0, _walkway(_cell(x, y)))
 				"P":
 					entry = _world(x, y)
 				"X":
@@ -238,6 +296,41 @@ func _build(id: StringName, rows: Array, tile_set: TileSet) -> void:
 					spawns.append({"kind": "spikes", "at": _world(x, y)})
 				"o":
 					spawns.append({"kind": "anchor", "at": _world(x, y)})
+
+	# Moss takes the lit lip: rock whose cell above is open air. A post-pass,
+	# because "is the air open" is only known once every play tile is down.
+	for cell: Vector2i in layer.get_used_cells():
+		if cell.y == 0:
+			continue  # the ceiling's top face points out of the room
+		var tile: Vector2i = layer.get_cell_atlas_coords(cell)
+		if tile != SOLID and tile != SOLID_B:
+			continue
+		if layer.get_cell_source_id(cell + Vector2i.UP) != -1:
+			continue
+		if _hash(cell.x, cell.y, 3) % 100 < 30:
+			layer.set_cell(cell, 0, MOSSY)
+
+	# Timber posts prop the walkways (backdrop layer — set dressing, no
+	# collision): a stack under each end of a run and every 4th column of long
+	# ones, dropped until they meet rock. An unproppable span (nothing below
+	# within reach) gets no post — better bare than a beam hanging in air.
+	for y: int in rows.size():
+		var row: String = rows[y]
+		var x: int = 0
+		while x < row.length():
+			if row[x] != "=":
+				x += 1
+				continue
+			var start: int = x
+			while x < row.length() and row[x] == "=":
+				x += 1
+			var posts: Array[int] = [start, x - 1]
+			var c: int = start + 3
+			while c < x - 1:
+				posts.append(c)
+				c += 4
+			for col: int in posts:
+				_drop_beam(layer, backdrop, _cell(col, y))
 
 	var entry_marker: Marker2D = Marker2D.new()
 	entry_marker.name = "Entry"
