@@ -34,6 +34,14 @@ extends Resource
 ## Fraction of run speed kept while swinging. Heavy weapons plant your feet.
 @export_range(0.0, 1.0) var move_control: float = 0.15
 
+@export_group("In-hand art")
+## Stage-2 weapon layer (docs/art-specs/weapon-layer.md): the texture drawn in
+## the Delver's glove, authored SHAFT-UP (the manifest's 90 degrees). Null
+## means the pickaxe baked into the body frames keeps covering, as before.
+@export var sprite: Texture2D
+## The pixel of `sprite` the glove grips — it sits exactly on the hand anchor.
+@export var grip: Vector2 = Vector2(12, 20)
+
 @export_group("Readability")
 @export var swing_colour: Color = Color(0.85, 0.95, 1.0, 0.85)
 ## HUD/shop icon (assets/icons/, baked by tools/gen_icons.py). Null falls back

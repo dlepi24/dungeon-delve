@@ -1,6 +1,22 @@
 # Roadmap
 
 ## Status
+- **2026-07-21 (later): THE DELVER SHIPPED + WEAPON LAYER STAGE 2 BUILT.**
+  Player redesign landed from the claude.ai session: 40x56 @ 1x (same
+  on-screen size, 4x density), bronze helmet + lamp, cigarette flicker,
+  five-pose attack. Stage 2 engine work done per docs/art-specs/
+  weapon-layer.md: WeaponSprite under VisualRoot renders the equipped
+  weapon from the manifest's per-frame anchors (hand pixel, shaft angle,
+  show flag; rolls holster), WeaponData grew sprite + grip exports, and an
+  engine-drawn amber arc smear fires on the contact frame. The baked pick
+  stays in the body frames as the visible fallback until
+  assets/sprites/weapons.png is authored (next claude.ai art round) —
+  assign a WeaponData.sprite and that weapon switches to the rig
+  instantly. Deviations from the spec are flagged in the session notes:
+  rotation formula corrected for shaft-up art, mirroring via scale not
+  flip_h, weapon rides the body's modulate for flashes, and when the pick
+  is lifted out delete the _pick call rather than flipping _POSES show
+  flags (those also drive the anchors).
 - **2026-07-21: ART DIRECTION SESSION (claude.ai) synced.** Bake-time shading
   post-pass landed (tools/sprites/shade_pass.py): 5-step hue-shifted ramps,
   directional light, selective outlines, helmet-lamp glow; enemies shade in

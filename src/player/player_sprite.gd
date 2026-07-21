@@ -30,6 +30,11 @@ var _current: StringName = &""
 ## Last attack the swing animation was restarted for (player.attack_id).
 var _last_attack_id: int = -1
 
+## The manifest's per-frame weapon anchors (hand pixel, shaft angle, show).
+## Parsed here because this node already owns the manifest read; consumed by
+## WeaponSprite. Empty on old sheets — everything degrades to hidden weapons.
+var anchors: Dictionary = {}
+
 
 func _ready() -> void:
 	sprite_frames = _build_frames()
@@ -58,6 +63,7 @@ func _build_frames() -> SpriteFrames:
 		push_error("PlayerSprite: manifest is not valid JSON")
 		return frames
 	var data: Dictionary = parsed as Dictionary
+	anchors = data.get("anchors", {}) as Dictionary
 
 	var size: Array = data["frame_size"]
 	var fw: int = int(size[0])
