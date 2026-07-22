@@ -75,72 +75,62 @@ script = ExtResource("1_hud")
 [node name="Backdrop" type="Panel" parent="."]
 offset_left = 24.0
 offset_top = 24.0
-offset_right = 300.0
-offset_bottom = 194.0
+offset_right = 372.0
+offset_bottom = 226.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_back")
 
+; Row 1: heart + the number, above the chunky bar (SoR/TMNT style — the bar is
+; the glance read, the number is the detail).
 [node name="HeartIcon" type="TextureRect" parent="."]
-offset_left = 38.0
+offset_left = 40.0
 offset_top = 38.0
-offset_right = 60.0
-offset_bottom = 60.0
+offset_right = 66.0
+offset_bottom = 64.0
 texture = ExtResource("3_heart")
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
-; HealthBar is a Node2D centred on its position; bar_size is set in hud.gd.
-[node name="Bar" parent="." instance=ExtResource("2_bar")]
-position = Vector2(144, 47)
-
-; The number rides ON the bar: a dark plate for legibility, then the label,
-; both centred on the bar (144, width 152).
-[node name="HealthPlate" type="Panel" parent="."]
-offset_left = 96.0
-offset_top = 42.0
-offset_right = 192.0
-offset_bottom = 64.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_hpplate")
-
 [node name="HealthLabel" type="Label" parent="."]
-offset_left = 96.0
-offset_top = 43.0
-offset_right = 192.0
+offset_left = 76.0
+offset_top = 38.0
+offset_right = 300.0
 offset_bottom = 64.0
-theme_override_colors/font_color = Color(0.96, 0.937, 0.886, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.92, 0.88, 0.8, 1)
+theme_override_font_sizes/font_size = 18
 text = "100 / 100"
-horizontal_alignment = 1
 vertical_alignment = 1
 
+; Row 2: the big segmented health bar. A Node2D drawing cells left-to-right
+; from this position; one cell per 25 HP, grows as max health rises.
+[node name="Bar" parent="." instance=ExtResource("2_bar")]
+position = Vector2(42, 74)
+
 [node name="OreIcon" type="TextureRect" parent="."]
-offset_left = 38.0
-offset_top = 72.0
-offset_right = 60.0
-offset_bottom = 94.0
+offset_left = 40.0
+offset_top = 118.0
+offset_right = 64.0
+offset_bottom = 142.0
 texture = ExtResource("4_ore")
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
 [node name="OreCount" type="Label" parent="."]
-offset_left = 68.0
-offset_top = 70.0
-offset_right = 200.0
-offset_bottom = 96.0
+offset_left = 74.0
+offset_top = 116.0
+offset_right = 220.0
+offset_bottom = 142.0
 theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1.0, 0.85, 0.35, 1)
 text = "0"
 vertical_alignment = 1
 
 [node name="WeaponSlots" type="Control" parent="."]
-offset_left = 38.0
-offset_top = 104.0
-offset_right = 198.0
-offset_bottom = 178.0
+offset_left = 40.0
+offset_top = 150.0
+offset_right = 200.0
+offset_bottom = 224.0
 
 ; The stowed weapon: smaller, dimmer, tucked behind the active square's
 ; shoulder. Swapping visually trades the two.
@@ -187,10 +177,10 @@ text = "Q swap"
 
 ; Beside the weapon square — the weapon in hand, named.
 [node name="WeaponName" type="Label" parent="."]
-offset_left = 110.0
-offset_top = 112.0
-offset_right = 292.0
-offset_bottom = 138.0
+offset_left = 112.0
+offset_top = 158.0
+offset_right = 300.0
+offset_bottom = 184.0
 theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.88, 0.82, 0.7, 1)
 text = "Pickaxe"
@@ -198,9 +188,9 @@ vertical_alignment = 1
 
 [node name="BuffRows" type="VBoxContainer" parent="."]
 offset_left = 40.0
-offset_top = 210.0
+offset_top = 240.0
 offset_right = 220.0
-offset_bottom = 418.0
+offset_bottom = 448.0
 theme_override_constants/separation = 8
 
 ; Reserved for debuffs — empty until a DebuffData exists. See hud.gd.

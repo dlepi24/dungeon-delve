@@ -53,10 +53,9 @@ func _ready() -> void:
 	if player == null:
 		return
 	_bar.hide_when_full = false
-	# Shorter and squarer than before; the number rides on top of it now.
-	_bar.bar_size = Vector2(152, 15)
-	# A notch per 25 HP (a max-health boon visibly adds chunks) and a low-health
-	# pulse under 25%. Enemy bars leave both off, so they stay clean.
+	# The chunky beat-em-up bar: one big cell per 25 HP (a max-health boon adds
+	# whole cells and the bar grows), plus a low-health pulse under 25%. Cell
+	# size lives on the bar; enemy bars leave segment_hp at 0 and stay thin.
 	_bar.segment_hp = 25.0
 	_bar.low_pulse_below = 0.25
 	_bar.set_ratio(1.0)
