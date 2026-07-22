@@ -54,6 +54,9 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [node name="Hud" type="CanvasLayer"]
+; Above the atmosphere overlay (layer 2) so the vignette and top shadow never
+; dim the HUD; still below the door choice (8) and pause menu (10).
+layer = 5
 script = ExtResource("1_hud")
 
 ; One backdrop panel so the cluster reads as a HUD, not floating debug text.

@@ -1,7 +1,8 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://src/hub/hub.gd" id="1"]
 [ext_resource type="Script" path="res://src/systems/baked_sprite.gd" id="8_baked"]
+[ext_resource type="Script" path="res://src/systems/mine_atmosphere.gd" id="9_atmo"]
 [ext_resource type="PackedScene" path="res://src/player/player.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://src/hub/vendor_panel.tscn" id="4"]
 [ext_resource type="Script" path="res://src/systems/pickup_feedback.gd" id="5"]
@@ -141,6 +142,17 @@ horizontal_alignment = 1
 [node name="VendorPanel" parent="." instance=ExtResource("4")]
 
 [node name="BlacksmithPanel" parent="." instance=ExtResource("6")]
+
+; The surface is warm and safe, so the grade is warm and only lightly dimmed,
+; the headroom sinks less than the mine's, and the same helmet lamp rides the
+; player. Same system as the delve, tuned bright.
+[node name="MineAtmosphere" type="Node" parent="."]
+script = ExtResource("9_atmo")
+darkness = Color(0.72, 0.64, 0.55, 1)
+top_shadow = 0.5
+dust_amount = 20
+haze_amount = 6
+vignette_strength = 0.42
 
 [node name="PickupFeedback" type="Node" parent="."]
 script = ExtResource("5")
