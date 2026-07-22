@@ -25,6 +25,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "sprites"))
 import player_frames  # noqa: E402
 import enemy_frames  # noqa: E402
 import weapon_frames  # noqa: E402
+import object_frames  # noqa: E402
+import building_frames  # noqa: E402
 import shade_pass  # noqa: E402
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "assets", "sprites")
@@ -173,6 +175,14 @@ def main():
         w, h = spec["size"]
         bad |= bake(sheet_name, w, h, spec["palette"], spec["frames"],
                     shade=spec.get("shade", {"greyscale": True}))
+    # Delve furniture and hub buildings: FULL COLOUR (they are scenery, not
+    # telegraphs — the greyscale contract is for BodyJuice-tinted enemies only),
+    # with the warm lamp boost around each sheet's glow pixels.
+    for sheets in (object_frames.SHEETS, building_frames.SHEETS):
+        for sheet_name, spec in sheets.items():
+            w, h = spec["size"]
+            bad |= bake(sheet_name, w, h, spec["palette"], spec["frames"],
+                        shade=spec.get("shade"))
     bad |= bake_weapons()
     return bad
 

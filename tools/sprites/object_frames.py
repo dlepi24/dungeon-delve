@@ -1,0 +1,477 @@
+#!/usr/bin/env python3
+"""In-world object sprites, authored as ASCII. Bake via tools/gen_sprites.py.
+
+v1 (2026-07-21, claude.ai art session): the mine's furniture, drawn in the
+tileset's language — warm lantern light from above, near-black outlines, big
+value shapes. COLOURED, unlike the enemies: objects never take BodyJuice
+telegraph tints. The one runtime-tinted piece is the shrine GLOW, which bakes
+near-white warm so a modulate tint reads cleanly (same trick as the HUD).
+
+Sheets (sizes match the scene nodes they replace, 1:1 pixels):
+  shrine   48x56  altar: cap slab + candle stubs + carved amber rune +
+                  plinth. "altar" is the stone; "glow" (2-frame pulse) is a
+                  SEPARATE animation the scene layers above it, tinted with
+                  the bargain's colour (shrine.gd tints the Glow node today).
+  anchor   44x26  timber crossbeam + rope wrap + frayed knot tail. The
+                  PointLight2D in timber_anchor.gd stays — sprite is unlit.
+  bridge   96x14  crumbling plank bridge. "solid" and "cracking" (swap on
+                  the SHAKING state in crumble_platform.gd).
+  spikes   24x14  two teeth; tile horizontally to cover Spikes.width
+                  (spikes.gd _draw becomes a texture loop).
+  rock     12x12  debris projectile, 2 variants (pick by event index parity
+                  — keep it seeded-deterministic, no randf).
+  ore      14x14  carried-haul pickup, 2-frame glint (replaces the amber
+                  diamond in pickup.tscn).
+  heart    14x14  heal pickup, 2-frame pulse.
+
+Bake wiring (gen_sprites.py): import object_frames and loop SHEETS exactly
+like enemy_frames, passing shade={"greyscale": False, "lamp": "e"} — colour
+ramps on, candle/glow pixels get the warm lamp boost.
+
+STRUCTURE: everything between the DATA markers is PURE LITERALS — the browser
+preview tool parses that block. Frames here are direct row-lists (no parts or
+specs; objects do not animate enough to need composition).
+
+LEGEND
+  .  transparent      o  outline (near-black)
+  r  stone mid        R  stone dark        h  stone lit
+  t  timber mid       T  timber dark       u  timber lit
+  p  rope             P  rope shadow       m  iron (bolts, nails)
+  a  amber ore        A  amber deep        e  glow (flame, glint, shrine)
+  v  heart mid        V  heart dark        w  heart lit
+"""
+
+# === DATA (parsed by the preview tool; literals only) ===
+DATA = {
+    "palette": {
+        ".": (0, 0, 0, 0),
+        "o": (20, 16, 14, 255),
+        "r": (112, 104, 96, 255),
+        "R": (74, 68, 62, 255),
+        "h": (156, 146, 132, 255),
+        "t": (128, 92, 54, 255),
+        "T": (88, 62, 38, 255),
+        "u": (172, 130, 80, 255),
+        "p": (178, 148, 98, 255),
+        "P": (128, 104, 66, 255),
+        "m": (152, 142, 132, 255),
+        "a": (222, 158, 64, 255),
+        "A": (162, 106, 40, 255),
+        "e": (255, 232, 170, 255),
+        "v": (206, 84, 84, 255),
+        "V": (138, 50, 56, 255),
+        "w": (240, 152, 152, 255),
+    },
+    "sheets": {
+        "spikes": {
+            "size": (24, 14),
+            "frames": {
+                "idle": [
+                    [
+                        ".....oo..........oo.....",
+                        ".....hh..........hh.....",
+                        ".....hh..........hh.....",
+                        "....ohRo........ohRo....",
+                        "....ohRo........ohRo....",
+                        "...ohrrRo......ohrrRo...",
+                        "...ohrrRo......ohrrRo...",
+                        "...ohrrRo......ohrrRo...",
+                        "..ohrrrrRo....ohrrrrRo..",
+                        "..ohrrrrRo....ohrrrrRo..",
+                        ".ohrrrrrrRo..ohrrrrrrRo.",
+                        ".ohrrrrrrRo..ohrrrrrrRo.",
+                        "ohrrrrrrrrRoohrrrrrrrrRo",
+                        "oooooooooooooooooooooooo",
+                    ],
+                ],
+            },
+        },
+        "rock": {
+            "size": (12, 12),
+            "frames": {
+                "idle": [
+                    [
+                        "............",
+                        "...ooooo....",
+                        "..ohhrrro...",
+                        ".ohhrrrrRo..",
+                        ".ohrrrrrRo..",
+                        "orrrrrrrRRo.",
+                        "orrrrRrrRRo.",
+                        "orrRrrrrRRo.",
+                        ".oRrrrrRRo..",
+                        ".oRRrRRRRo..",
+                        "..ooooooo...",
+                        "............",
+                    ],
+                    [
+                        "............",
+                        "....oooo....",
+                        "..oohhrroo..",
+                        ".ohhrrrrrRo.",
+                        "ohrrrrrrrRRo",
+                        "orrrrRrrrRo.",
+                        "oRrrrrrrRRo.",
+                        ".oRrRRrRRo..",
+                        "..oooooo....",
+                        "............",
+                        "............",
+                        "............",
+                    ],
+                ],
+            },
+        },
+        "ore": {
+            "size": (14, 14),
+            "frames": {
+                "idle": [
+                    [
+                        "..............",
+                        "....oooo......",
+                        "...oaaaao.....",
+                        "..oaeaaaao....",
+                        ".oaaeaaaaao...",
+                        ".oaaaaaAAao...",
+                        "oaaaaaaaAAao..",
+                        "oaaaAaaaaAao..",
+                        "oaAAaaaaaAao..",
+                        ".oAaaaaaAAo...",
+                        ".oaaaAAAAo....",
+                        "..ooAAAoo.....",
+                        "....ooo.......",
+                        "..............",
+                    ],
+                    [
+                        "..............",
+                        "....oooo......",
+                        "...oaaaao.....",
+                        "..oaaaaaao....",
+                        ".oaaaaaaaao...",
+                        ".oaaaaaAAao...",
+                        "oaaaaaaaeAao..",
+                        "oaaaAaaeaAao..",
+                        "oaAAaaaaaAao..",
+                        ".oAaaaaaAAo...",
+                        ".oaaaAAAAo....",
+                        "..ooAAAoo.....",
+                        "....ooo.......",
+                        "..............",
+                    ],
+                ],
+            },
+        },
+        "heart": {
+            "size": (14, 14),
+            "frames": {
+                "idle": [
+                    [
+                        "..............",
+                        "..ooo....ooo..",
+                        ".ovvvo..ovvvo.",
+                        "ovwvvvoovvvVo.",
+                        "ovwvvvvvvvvVo.",
+                        "ovvvvvvvvvvVo.",
+                        ".ovvvvvvvvVo..",
+                        ".ovvvvvvvVVo..",
+                        "..ovvvvvvVo...",
+                        "...ovvvvVo....",
+                        "....ovvVo.....",
+                        ".....ovo......",
+                        "......o.......",
+                        "..............",
+                    ],
+                    [
+                        "..............",
+                        "..ooo....ooo..",
+                        ".ovvvo..ovvvo.",
+                        "ovvvvvoovvvVo.",
+                        "ovvvvvvvvvvVo.",
+                        "ovvvvvvvvvvVo.",
+                        ".ovvvvvvvvVo..",
+                        ".ovvvvvvvVVo..",
+                        "..ovvvvvvVo...",
+                        "...ovvvvVo....",
+                        "....ovvVo.....",
+                        ".....ovo......",
+                        "......o.......",
+                        "..............",
+                    ],
+                ],
+            },
+        },
+        "anchor": {
+            "size": (44, 26),
+            "frames": {
+                "idle": [
+                    [
+                        "............................................",
+                        "............................................",
+                        "............................................",
+                        "............................................",
+                        "oooooooooooooooooooooooooooooooooooooooooooo",
+                        "ouuuuuuuuuuuuuuuuoppppppppouuuuuuuuuuuuuuuuo",
+                        "ouuuuuuuuuuuuuuuuoppppppppouuuuuuuuuuuuuuuuo",
+                        "ottttttttttttttttoPPPPPPPPotttttttttttttttto",
+                        "ottmttTTtttttttttoppppppppotTTttttttttttmtto",
+                        "ottmttttttttttTTtoppppppppotttttttttTTttmtto",
+                        "ottttttttttttttttoPPPPPPPPotttttttttttttttto",
+                        "oTTTTTTTTTTTTTTTToppppppppoTTTTTTTTTTTTTTTTo",
+                        "oTTTTTTTTTTTTTTTToppppppppoTTTTTTTTTTTTTTTTo",
+                        "ooooooooooooooooooPPPPPPPPoooooooooooooooooo",
+                        ".................oppppppppo.................",
+                        ".................oooooooooo.................",
+                        "...................oppppo...................",
+                        "...................oppppo...................",
+                        "...................oPPppo...................",
+                        "...................oppppo...................",
+                        "...................oppppo...................",
+                        "...................oppppo...................",
+                        "...................oppppo...................",
+                        "...................oppooo...................",
+                        "....................o.o.....................",
+                        ".....................o......................",
+                    ],
+                ],
+            },
+        },
+        "bridge": {
+            "size": (96, 14),
+            "frames": {
+                "solid": [
+                    [
+                        "oooooooooooooooooooooo...ooooooooooooooooooooooooooooooooo...ooooooooooooooooooooooooooooo..oooo",
+                        "ouuuuuuuuuuuuuuouuuuuu...uuuuuuouuuuuuuuuuuuuuuouuuuuuuuuu...uuouuuuuuuuuuuuuuuouuuuuuuuuu..uuuo",
+                        "ottttttttttttmtotmtttoooootttmtotmtttttttttttmtotmtttttttooooototmtttttttttttmtotmtttttttooootto",
+                        "ottttttttttttttotttttttttttttttotttttttttttttttotttttttttttttttotttttttttttttttottttttttttttttto",
+                        "otttTTTttttttttotttttttttttttttotttttttttttttttotttttttttttttttottttTTTttttttttottttttttttttttto",
+                        "ottttttttttttttotttttttttttttttottttTTTttttttttotttttttttttttttottttttttTTTttttottttttttttttttto",
+                        "ottttttttttttttottttTTTttttttttotttttttttttttttotttttttttttttttotttttttttttttttottttTTTtttttttto",
+                        "otttttttTTTttttotttttttttttttttotttttttttttttttottttTTTttttttttotttttttttttttttottttttttttttttto",
+                        "ottttttttttttttotttttttttttttttotttttttttttttttotttttttttttttttotttttttttttttttottttttttttttttto",
+                        "oTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTTo",
+                        "oTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTTo",
+                        "oTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTTo",
+                        "oTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTTo",
+                        "oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo",
+                    ],
+                ],
+                "cracking": [
+                    [
+                        "oooooooooooooooooooooo...ooooooooooooo....oooooooooooooooo...ooooooo...ooooooooooooooooooo..oooo",
+                        "ouuuuuuuuuuuuuuouuuuuu...uuuuuuouuuuuoooooouuuuouuuuuuuuuu...uuouuuooooouuuuuuuouuuuuuuuuu..uuuo",
+                        "ottttttttttttmtotmtttoooootttmtotmttttttottttmtotmtttttttooooototmttttottttttmtotmtttttttooootto",
+                        "otttttttttttottotttttttttttttttottttttttootttttotttttttttttttttottttttottttttttottttttttttttttto",
+                        "otttTTTttttotttotttttttttttttttotttttttototttttotttttttttttttttottttTTTotttttttottttttttttttttto",
+                        "ottttttttttotttotttttttttttttttottttTTTottottttotttttttttttttttotttttttoTTTttttottttttttttttttto",
+                        "otttttttttottttottttTTTttttttttotttttttottottttotttttttttttttttottttttttottttttottttTTTtttttttto",
+                        "otttttttTTottttotttttttttttttttottttttottttotttottttTTTttttttttotttttttttotttttottttttttttttttto",
+                        "ottttttttotttttotttttttttttttttottttttottttotttotttttttttttttttotttttttttotttttottttttttttttttto",
+                        "oTTTTTTTToTTTTToTTTTTTTTTTTTTTToTTTTToTTTTTToTToTTTTTTTTTTTTTTToTTTTTTTTTToTTTToTTTTTTTTTTTTTTTo",
+                        "oTTTTTTToTTTTTToTTTTTTTTTTTTTTToTTTTToTTTTTToTToTTTTTTTTTTTTTTToTTTTTTTTTToTTTToTTTTTTTTTTTTTTTo",
+                        "oTTTTTTToTTTTTToTTTTTTTTTTTTTTToTTTTToTTTTTTToToTTTTTTTTTTTTTTToTTTTTTTTTTToTTToTTTTTTTTTTTTTTTo",
+                        "oTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTToTTTTTTTTTTTTTTTo",
+                        "oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo",
+                    ],
+                ],
+            },
+        },
+        "shrine": {
+            "size": (48, 56),
+            "frames": {
+                "altar": [
+                    [
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        ".......e................................e.......",
+                        ".......e................................e.......",
+                        "......opo..............................opo......",
+                        "......opo..............................opo......",
+                        "......opo..............................opo......",
+                        "......opo..............................opo......",
+                        "......opo..............................opo......",
+                        "......opo..............................opo......",
+                        "oooooooooooooooooooooooooooooooooooooooooooooooo",
+                        "ohhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhho",
+                        "orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrro",
+                        "orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrro",
+                        "oRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRo",
+                        "oooooooooooooooooooooooooooooooooooooooooooooooo",
+                        "......ohrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrRRRRRRRRRRRRrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrraarrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrraaaarrrrrrrrrrrrrRRo......",
+                        "......ohRRRRRRRRRRrrraaaaaaRRRRRRRRRRRrRRo......",
+                        "......ohrrrrrrrrrrrrrraaaarrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrraarrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrrAArrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrRRRRRRRRRAARrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrrAArrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrrAArrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrrAArrrrrrrrrrrrrrRRo......",
+                        "......ohRRRRRRRRRRrrrrrAARRRRRRRRRRRRRrRRo......",
+                        "......ohrrrrrrrrrrrrrrrAArrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrAAAArrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrRRRRRRRRRRRRrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrRRo......",
+                        "......ohrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrRRo......",
+                        "......ohRRRRRRRRRRrrrrrrRRRRRRRRRRRRRRrRRo......",
+                        "......ohrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrRRo......",
+                        "......oRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRo......",
+                        "......oRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRo......",
+                        "..oooooooooooooooooooooooooooooooooooooooooooo..",
+                        "..ohhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhho..",
+                        "..orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrro..",
+                        "..orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrro..",
+                        "..oRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRo..",
+                        "..oooooooooooooooooooooooooooooooooooooooooooo..",
+                    ],
+                ],
+                "glow": [
+                    [
+                        "................................................",
+                        "................................................",
+                        ".......................aaa......................",
+                        ".....................aaaaaaa....................",
+                        "....................aeeeeeeea...................",
+                        "...................aeeeeeeeeea..................",
+                        "..................aeeeeeeeeeeea.................",
+                        "................aeeeeeeeeeeeeeeea...............",
+                        "...............aeeeeeeeeeeeeeeeeea..............",
+                        "................aeeeeeeeeeeeeeeea...............",
+                        "..................aeeeeeeeeeeea.................",
+                        "...................aeeeeeeeeea..................",
+                        "....................aeeeeeeea...................",
+                        ".....................aaaaaaa....................",
+                        ".......................aaa......................",
+                        ".......................aaa......................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                    ],
+                    [
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        ".......................aaa......................",
+                        "......................aaaaa.....................",
+                        ".....................aeeeeea....................",
+                        "....................aeeeeeeea...................",
+                        "..................aeeeeeeeeeeea.................",
+                        ".................aeeeeeeeeeeeeea................",
+                        "..................aeeeeeeeeeeea.................",
+                        "....................aeeeeeeea...................",
+                        ".....................aeeeeea....................",
+                        "......................aaaaa.....................",
+                        ".......................aaa......................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                        "................................................",
+                    ],
+                ],
+            },
+        },
+    },
+}
+# === END DATA ===
+
+PALETTE = {k: tuple(v) for k, v in DATA["palette"].items()}
+
+# gen_sprites iterates this: every sheet bakes to <name>.png + <name>.json,
+# full-colour shaded with the warm lamp boost around 'e' pixels.
+SHEETS = {
+    sheet: {
+        "size": tuple(spec["size"]),
+        "palette": PALETTE,
+        "frames": spec["frames"],
+        "shade": {"greyscale": False, "lamp": "e"},
+    }
+    for sheet, spec in DATA["sheets"].items()
+}

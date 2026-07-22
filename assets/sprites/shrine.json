@@ -1,0 +1,16 @@
+{
+  "frame_size": [
+    48,
+    56
+  ],
+  "animations": {
+    "altar": {
+      "row": 0,
+      "count": 1
+    },
+    "glow": {
+      "row": 1,
+      "count": 2
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "frame_size": [
+    80,
+    100
+  ],
+  "animations": {
+    "idle": {
+      "row": 0,
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "frame_size": [
+    20,
+    36
+  ],
+  "animations": {
+    "idle": {
+      "row": 0,
+      "count": 2
+    },
+    "chase": {
+      "row": 1,
+      "count": 4
+    },
+    "telegraph": {
+      "row": 2,
+      "count": 2
+    },
+    "attack": {
+      "row": 3,
+      "count": 2
+    },
+    "recover": {
+      "row": 4,
+      "count": 1
+    },
+    "hurt": {
+      "row": 5,
+      "count": 1
+    },
+    "stagger": {
+      "row": 6,
+      "count": 1
+    },
+    "dead": {
+      "row": 7,
+      "count": 1
+    }
+  }
+}
