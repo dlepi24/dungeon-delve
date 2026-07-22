@@ -53,4 +53,5 @@ func _drop(index: int, x: float) -> void:
 		column.queue_free()
 		_warnings.erase(index)
 	var attack: EnemyAttackData = load(DEBRIS_ATTACK) as EnemyAttackData
-	Projectile.spawn(get_parent(), Vector2(x, 44.0), Vector2.DOWN, attack)
+	# Variant from the event index: seeded schedule in, deterministic face out.
+	Projectile.spawn(get_parent(), Vector2(x, 44.0), Vector2.DOWN, attack, index % 2)

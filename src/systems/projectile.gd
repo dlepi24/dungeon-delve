@@ -21,14 +21,20 @@ const MAX_LIFE_TICKS: int = 240
 const REFLECT_SPEED_BONUS: float = 1.3
 const REFLECT_DAMAGE_MULT: float = 2.0
 
-@onready var _rock: ColorRect = $Rock
+@onready var _rock: Sprite2D = $Rock
 
 
-static func spawn(parent: Node, from: Vector2, direction: Vector2, attack: EnemyAttackData) -> Projectile:
+## `variant` picks one of rock.png's two faces. Callers with a natural index
+## (debris events) pass its parity; the default derives one from the spawn
+## position — deterministic either way, never randf (daily seeds replay this).
+static func spawn(parent: Node, from: Vector2, direction: Vector2, attack: EnemyAttackData, variant: int = -1) -> Projectile:
 	var scene: PackedScene = load("res://src/systems/projectile.tscn") as PackedScene
 	var projectile: Projectile = scene.instantiate() as Projectile
+	if variant < 0:
+		variant = absi(int(from.x)) % 2
 	parent.add_child(projectile)
 	projectile.global_position = from
+	projectile._rock.region_rect.position.x = 12.0 * float(variant % 2)
 	projectile.velocity = direction.normalized() * attack.projectile_speed
 	projectile.damage = attack.damage * GameState.heat_damage_multiplier()
 	# Projectiles never chip poise on the way OUT; the reflected return does.
@@ -93,7 +99,8 @@ func _on_parried() -> void:
 	# Switch sides: it is the player's projectile now.
 	collision_layer = CollisionLayers.PLAYER_ATTACK
 	collision_mask = CollisionLayers.ENEMY | CollisionLayers.WORLD
-	_rock.color = Color(0.85, 0.95, 1.0)
+	# Cold overbright tint: the rock art stays, but it reads as yours now.
+	_rock.modulate = Color(1.4, 1.7, 2.0)
 	# notify_parried() closed the box; reopen it for the return flight —
 	# WITHOUT activate()'s overlap sweep. The player's hurtbox is still inside
 	# the box right now (the mask change above does not re-filter the physics

@@ -27,15 +27,14 @@ enum Kind { HAUL, HEAL, BUFF, WEAPON }
 @export var magnet_speed: float = 520.0
 @export var spawn_pop: Vector2 = Vector2(0, -140)
 
-const ORE_ICON: Texture2D = preload("res://assets/icons/ore.png")
-const HEART_ICON: Texture2D = preload("res://assets/icons/heart.png")
-
 var _velocity: Vector2 = Vector2.ZERO
 var _player: Player = null
 var _collected: bool = false
-## Icon sprite, when this pickup has art. The ColorRect stays the fallback for
-## anything without an icon (buffs), so missing art degrades to gray-box.
-var _icon: Sprite2D = null
+## Art node, when this pickup has any: a BakedSprite for ore/hearts (2-frame
+## glint/pulse from the object sheets), a plain Sprite2D for weapon icons. The
+## ColorRect stays the fallback for anything without art (buffs), so missing
+## art degrades to gray-box.
+var _icon: Node2D = null
 ## The trade offer shown over a weapon when the loadout is full. Built lazily.
 var _offer: Label = null
 
@@ -82,15 +81,16 @@ func _apply_style() -> void:
 	var size: float = 14.0
 	var colour: Color = Color(0.95, 0.7, 0.25)
 	var texture: Texture2D = null
+	var sheet: String = ""
 	match kind:
 		Kind.HAUL:
 			size = clampf(12.0 + float(amount) * 1.6, 12.0, 30.0)
 			colour = Color(0.95, 0.7, 0.25) if amount < 5 else Color(1.0, 0.85, 0.35)
-			texture = ORE_ICON
+			sheet = "ore"
 		Kind.HEAL:
 			size = 20.0
 			colour = Color(0.95, 0.3, 0.35)
-			texture = HEART_ICON
+			sheet = "heart"
 		Kind.BUFF:
 			size = 20.0
 			colour = buff.colour if buff != null else Color(0.6, 0.8, 1.0)
@@ -98,11 +98,20 @@ func _apply_style() -> void:
 			size = 34.0
 			colour = weapon.swing_colour if weapon != null else Color(0.8, 0.9, 1.0)
 			texture = weapon.icon if weapon != null else null
-	if texture != null:
-		_icon = Sprite2D.new()
-		_icon.texture = texture
-		_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		_icon.scale = Vector2.ONE * (size / 16.0)
+	if sheet != "":
+		# Ore glints, hearts pulse — the 2-frame loops from the object sheets.
+		# Big nuggets still read big: value scales the sprite like the rect.
+		var baked: BakedSprite = BakedSprite.make(sheet, 2.5)
+		baked.scale = Vector2.ONE * (size / 14.0)
+		_icon = baked
+		add_child(_icon)
+		_visual.visible = false
+	elif texture != null:
+		var flat: Sprite2D = Sprite2D.new()
+		flat.texture = texture
+		flat.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		flat.scale = Vector2.ONE * (size / 16.0)
+		_icon = flat
 		add_child(_icon)
 		_visual.visible = false
 	_visual.color = colour

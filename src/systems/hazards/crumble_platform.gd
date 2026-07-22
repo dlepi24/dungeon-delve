@@ -12,14 +12,17 @@ extends StaticBody2D
 ## How long it stays gone before re-forming.
 @export var gone_ms: int = 2600
 @export var size: Vector2 = Vector2(96, 14)
-@export var colour: Color = Color(0.5, 0.4, 0.26)
+
+## bridge.png: row 0 "solid", row 1 "cracking". Region-swapped by state.
+const SHEET: Texture2D = preload("res://assets/sprites/bridge.png")
+const SHEET_FRAME: Vector2 = Vector2(96, 14)
 
 enum State { SOLID, SHAKING, GONE }
 var _state: State = State.SOLID
 var _elapsed: int = 0
 
 var _shape: CollisionShape2D
-var _visual: ColorRect
+var _visual: Sprite2D
 
 
 func _ready() -> void:
@@ -33,10 +36,16 @@ func _ready() -> void:
 	_shape.position = Vector2(0, -size.y * 0.5)
 	add_child(_shape)
 
-	_visual = ColorRect.new()
-	_visual.size = size
+	# A non-default exported size scales the art rather than tiling it — plank
+	# grain stretching a little beats a seam.
+	_visual = Sprite2D.new()
+	_visual.texture = SHEET
+	_visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_visual.centered = false
+	_visual.region_enabled = true
+	_visual.region_rect = Rect2(Vector2.ZERO, SHEET_FRAME)
 	_visual.position = Vector2(-size.x * 0.5, -size.y)
-	_visual.color = colour
+	_visual.scale = size / SHEET_FRAME
 	add_child(_visual)
 
 	# The tripwire: a sensor riding just above the surface, watching for the
@@ -83,9 +92,11 @@ func _process(_delta: float) -> void:
 	match _state:
 		State.SOLID:
 			_visual.modulate.a = 1.0
+			_visual.region_rect.position.y = 0.0
 			_visual.position.x = -size.x * 0.5
 		State.SHAKING:
 			_visual.modulate.a = 1.0
+			_visual.region_rect.position.y = SHEET_FRAME.y
 			_visual.position.x = -size.x * 0.5 + randf_range(-2.5, 2.5)
 		State.GONE:
 			_visual.modulate.a = maxf(0.0, _visual.modulate.a - 0.1)

@@ -16,7 +16,9 @@ extends Hitbox
 
 @export var width: float = 96.0
 @export var tooth_height: float = 14.0
-@export var colour: Color = Color(0.55, 0.4, 0.38)
+
+## spikes.png: two 12 px teeth, tiled across `width`.
+const TEXTURE: Texture2D = preload("res://assets/sprites/spikes.png")
 
 var _tick: int = 0
 
@@ -45,10 +47,6 @@ func _physics_process(_delta: float) -> void:
 
 
 func _draw() -> void:
-	var teeth: int = maxi(1, int(width / 12.0))
-	var step: float = width / float(teeth)
-	for i: int in teeth:
-		var x0: float = -width * 0.5 + float(i) * step
-		draw_colored_polygon(PackedVector2Array([
-			Vector2(x0, 0), Vector2(x0 + step, 0), Vector2(x0 + step * 0.5, -tooth_height),
-		]), colour)
+	# Tiled at native art size; a non-default tooth_height clips or repeats
+	# vertically rather than stretching the teeth into needles.
+	draw_texture_rect(TEXTURE, Rect2(-width * 0.5, -tooth_height, width, tooth_height), true)

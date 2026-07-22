@@ -9,17 +9,12 @@ extends Node2D
 func _ready() -> void:
 	add_to_group(&"anchors")
 
-	var beam: ColorRect = ColorRect.new()
-	beam.size = Vector2(44, 10)
-	beam.position = Vector2(-22, -5)
-	beam.color = Color(0.42, 0.32, 0.2)
-	add_child(beam)
-
-	var knot: ColorRect = ColorRect.new()
-	knot.size = Vector2(10, 16)
-	knot.position = Vector2(-5, 2)
-	knot.color = Color(0.68, 0.54, 0.34)
-	add_child(knot)
+	# anchor.png: crossbeam with the rope knot, the beam band centred where the
+	# old 44x10 rect sat (sprite top at y=-5).
+	var art: BakedSprite = BakedSprite.make("anchor", 1.0)
+	art.centered = false
+	art.offset = Vector2(-22, -5)
+	add_child(art)
 
 	var gradient: Gradient = Gradient.new()
 	gradient.set_color(0, Color.WHITE)

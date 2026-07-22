@@ -16,13 +16,25 @@ var _accepted: bool = false
 var _player: Player = null
 var _light: PointLight2D = null
 
-@onready var _glow: ColorRect = $Glow
+## The pulsing offering light. Baked near-white on the sheet precisely so this
+## modulate tint (the bargain's colour) reads through it.
+var _glow: BakedSprite = null
+
 @onready var _offer: Label = $Offer
 
 
 func _ready() -> void:
+	# The altar art, feet at y=0 like the old pedestal rect.
+	var altar: BakedSprite = BakedSprite.make("shrine", 1.0, &"altar")
+	altar.centered = false
+	altar.offset = Vector2(-24, -56)
+	add_child(altar)
+	_glow = BakedSprite.make("shrine", 2.5, &"glow")
+	_glow.centered = false
+	_glow.offset = Vector2(-24, -56)
+	add_child(_glow)
 	if data != null:
-		_glow.color = data.colour
+		_glow.modulate = data.colour
 		# A real light in the mine's darkness, so an altar beckons from across
 		# the room. Dies to an ember on accept, with the glow.
 		_light = PointLight2D.new()
@@ -91,6 +103,6 @@ func _accept() -> void:
 		_player.health = minf(_player.health, _player.effective_max_health())
 	_offer.visible = false
 	# The spent altar keeps a coal of its colour, so you can see what you took.
-	_glow.color = Color(data.colour, 0.25)
+	_glow.modulate = Color(data.colour, 0.25)
 	if _light != null:
 		_light.energy = 0.25
