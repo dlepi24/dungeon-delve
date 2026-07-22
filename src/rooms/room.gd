@@ -21,16 +21,18 @@ signal exit_zone_changed(inside: bool)
 
 @export_group("Exit marker")
 ## The exit was an invisible trigger, so a cleared room looked like a dead end —
-## you could kill everything and have no idea where to go. It is drawn, and it
-## pulses, because a static rectangle reads as scenery.
-@export var exit_colour: Color = Color(0.45, 0.95, 0.7)
-@export var exit_size: Vector2 = Vector2(38, 76)
-@export var exit_pulse_hz: float = 1.6
+## you could kill everything and have no idea where to go. It reads as a warm
+## SHAFT OF SURFACE LIGHT with a real glow: "up = out = light" made literal, so
+## it fits the graded dark instead of fighting it the way the old mint rect did.
+@export var exit_colour: Color = Color(1.0, 0.83, 0.48)
+@export var exit_size: Vector2 = Vector2(46, 150)
+@export var exit_pulse_hz: float = 1.2
 
 var _player: Player = null
 var _in_exit_zone: bool = false
 var _pulse: float = 0.0
-var _exit_rect: ColorRect = null
+var _exit_shaft: Sprite2D = null
+var _exit_light: PointLight2D = null
 
 @onready var entry: Marker2D = $Entry
 @onready var exit_marker: Marker2D = $Exit
@@ -40,20 +42,65 @@ var _exit_rect: ColorRect = null
 ## Built in code rather than baked into the generated scenes, so changing how the
 ## exit reads does not mean regenerating every room.
 func _ready() -> void:
-	_exit_rect = ColorRect.new()
-	_exit_rect.color = exit_colour
-	_exit_rect.size = exit_size
-	# Sit it on the ground the marker stands on, centred horizontally.
-	_exit_rect.position = Vector2(-exit_size.x * 0.5, -exit_size.y)
-	exit_marker.add_child(_exit_rect)
+	# The shaft: a soft warm column, brightest at the floor where you stand to
+	# extract, fading up into the dark like light spilling down from the surface.
+	_exit_shaft = Sprite2D.new()
+	_exit_shaft.texture = _shaft_texture()
+	_exit_shaft.modulate = exit_colour
+	_exit_shaft.centered = false
+	_exit_shaft.position = Vector2(-exit_size.x * 0.5, -exit_size.y)
+	_exit_shaft.scale = exit_size / Vector2(32, 128)
+	exit_marker.add_child(_exit_shaft)
+
+	# A real light so the exit glows a pool onto the surrounding rock — a beacon
+	# across a dark room, which is the whole point of drawing it.
+	_exit_light = PointLight2D.new()
+	_exit_light.texture = _glow_texture()
+	_exit_light.color = exit_colour
+	_exit_light.energy = 1.2
+	_exit_light.texture_scale = 2.4
+	_exit_light.position = Vector2(0, -exit_size.y * 0.4)
+	exit_marker.add_child(_exit_light)
 
 
-## Visual only.
+## Visual only: the beacon breathes.
 func _process(delta: float) -> void:
-	if _exit_rect == null:
+	if _exit_shaft == null:
 		return
 	_pulse = fposmod(_pulse + delta * exit_pulse_hz, 1.0)
-	_exit_rect.modulate.a = 0.45 + 0.35 * sin(_pulse * TAU)
+	var breath: float = 0.5 + 0.5 * sin(_pulse * TAU)
+	_exit_shaft.modulate.a = 0.5 + 0.4 * breath
+	if _exit_light != null:
+		_exit_light.energy = 0.95 + 0.5 * breath
+
+
+## A vertical column: opaque at the base, fading to nothing at the top.
+func _shaft_texture() -> GradientTexture2D:
+	var gradient: Gradient = Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 1.0])
+	gradient.colors = PackedColorArray([Color(1, 1, 1, 0), Color(1, 1, 1, 0.9)])
+	var texture: GradientTexture2D = GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_LINEAR
+	texture.fill_from = Vector2(0.5, 0.0)
+	texture.fill_to = Vector2(0.5, 1.0)
+	texture.width = 32
+	texture.height = 128
+	return texture
+
+
+func _glow_texture() -> GradientTexture2D:
+	var gradient: Gradient = Gradient.new()
+	gradient.set_color(0, Color.WHITE)
+	gradient.set_color(1, Color(1, 1, 1, 0))
+	var texture: GradientTexture2D = GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(0.5, 1.0)
+	texture.width = 256
+	texture.height = 256
+	return texture
 
 
 ## Lazy, not resolved in _ready — see the note in enemy.gd. A null player here

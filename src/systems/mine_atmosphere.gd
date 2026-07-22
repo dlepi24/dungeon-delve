@@ -78,10 +78,12 @@ func _build() -> void:
 		top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		layer.add_child(top)
 
+	# Haze: big and very faint, so it reads as diffuse depth rather than a
+	# handful of discrete blobs. Dust: small and sharp, drifting through the light.
 	if haze_amount > 0:
-		layer.add_child(_motes(haze_amount, 46.0, 90.0, 10.0, 0.06))
+		layer.add_child(_motes(haze_amount, 130.0, 240.0, 8.0, 0.028))
 	if dust_amount > 0:
-		layer.add_child(_motes(dust_amount, 2.5, 6.0, 26.0, 0.14))
+		layer.add_child(_motes(dust_amount, 2.0, 5.0, 24.0, 0.16))
 
 	if vignette_strength > 0.0:
 		var rect: TextureRect = TextureRect.new()
