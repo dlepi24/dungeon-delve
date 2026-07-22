@@ -1,6 +1,18 @@
 # Roadmap
 
 ## Status
+- **2026-07-21 (late night): FULL ART SWEEP LANDED — Lost Crews + objects +
+  hub.** The v3 enemy sheets are in (Digger/Hauler/Pit Rat/Canary/
+  Powder-Monkey/Varok); gnat, slinger and overseer now have DEDICATED sheets
+  and their .tres point at them. Greyscale tint contract pixel-verified on
+  all six. All delve furniture (shrine, anchor, crumble bridge, spikes,
+  rocks, ore/heart pickups) and the four hub buildings wear baked art via
+  the new BakedSprite helper. Gray-box remaining: room tile art is
+  generated (fine), weapon swing rect (Dustin's call), gym props, UI.
+  OPEN for Dustin: the Pit Rat crawler's hurtbox is still 26x48 — twice the
+  visible crawler's height; lowering body_size would let attacks/projectiles
+  pass over it (gameplay change, design call). Screenshot comparisons
+  against the claude.ai previews are Dustin's pass.
 - **2026-07-21 (night): TILESET v3 + DRESSED ROOMS + PROJECTILE-PARRY FIX.**
   The claude.ai tileset rewrite landed (10 tiles, ids 0-2 stable) and the
   room generator now wires the new set: backdrop fill behind every room,
