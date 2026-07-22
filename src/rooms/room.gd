@@ -64,6 +64,54 @@ func _ready() -> void:
 
 	_build_dressing.call_deferred()
 	_build_glints.call_deferred()
+	_build_story_prop.call_deferred()
+
+
+## Environmental storytelling (round 5): exactly ONE prop per room, sparse so it
+## reads as story, not clutter. A lost-crew helmet pile beside a shrine (they
+## knelt here and never rose), otherwise an abandoned ore cart tucked against a
+## far wall — clear of the entry, the exit beacon, and the main path.
+func _build_story_prop() -> void:
+	var shrine: Node2D = _first_spawn(&"shrine")
+	if shrine != null:
+		_place_prop("helmets", &"idle", 26, 14, shrine.global_position + Vector2(34, 0))
+		return
+	var tiles: TileMapLayer = get_node_or_null(^"Tiles") as TileMapLayer
+	if tiles == null:
+		return
+	var entry_x: float = entry.global_position.x
+	var exit_x: float = exit_marker.global_position.x
+	# The floor top furthest from both the entry and the exit — the quiet corner.
+	var best: Vector2 = Vector2.INF
+	var best_score: float = -1.0
+	for cell: Vector2i in tiles.get_used_cells():
+		if tiles.get_cell_source_id(cell + Vector2i.UP) != -1:
+			continue
+		var top: Vector2 = tiles.map_to_local(cell) + Vector2(0, -16)
+		var score: float = minf(absf(top.x - entry_x), absf(top.x - exit_x))
+		if score > best_score:
+			best_score = score
+			best = top
+	# Only if that corner is genuinely clear of both markers.
+	if best_score > 150.0 and best != Vector2.INF:
+		var full: StringName = &"full" if _cell_hash(int(best.x), 3) % 2 == 0 else &"empty"
+		_place_prop("cart", full, 36, 26, best)
+
+
+func _first_spawn(kind: StringName) -> Node2D:
+	for marker: Node in spawns.get_children():
+		if marker is Node2D and marker.get_meta(&"kind", &"") == kind:
+			return marker as Node2D
+	return null
+
+
+func _place_prop(sheet: String, anim: StringName, w: int, h: int, at: Vector2) -> void:
+	var prop: BakedSprite = BakedSprite.make(sheet, 1.0, anim)
+	prop.centered = false
+	prop.offset = Vector2(-w * 0.5, -h)
+	prop.position = at
+	prop.z_index = 1
+	add_child(prop)
 
 
 ## Ore glints: a rare white sparkle on ORE tiles, so a vein catches the eye and

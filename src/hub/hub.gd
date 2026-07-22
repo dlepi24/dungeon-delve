@@ -68,6 +68,21 @@ func _build_dressing() -> void:
 		var lantern: Node2D = SetDressing.make_lantern(120.0)
 		lantern.position = at
 		add_child(lantern)
+	# Story props (round 5): a lost-crew helmet pile by the training post, a coal
+	# heap by the smithy, and an abandoned ore cart at the mine mouth apron.
+	_story_prop("helmets", &"idle", 26, 14, Vector2(470, floor_y))
+	_story_prop("coal", &"idle", 30, 12, Vector2(900, floor_y))
+	_story_prop("cart", &"empty", 36, 26, Vector2(1300, floor_y))
+
+
+## A baked story prop standing on the floor (bottom at `at.y`). No collision —
+## set dressing, drawn behind the player.
+func _story_prop(sheet: String, anim: StringName, w: int, h: int, at: Vector2) -> void:
+	var prop: BakedSprite = BakedSprite.make(sheet, 1.0, anim)
+	prop.centered = false
+	prop.offset = Vector2(-w * 0.5, -h)
+	prop.position = at
+	add_child(prop)
 
 
 func _refresh_banked() -> void:
