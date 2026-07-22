@@ -1,6 +1,17 @@
 # Roadmap
 
 ## Status
+- **2026-07-22 (later): PROPS/TITLE/HUD cleanup from Dustin's screenshots.**
+  (1) Delve set dressing is now CEILING-ONLY — floor crates/barrels read as
+  "walk-behind blocks, are they solid?" confusion, so only clearly-overhead
+  short structure remains (hub clutter kept — it's a town). (2) Title menu
+  re-spaced: six buttons were overflowing into the stats line; verified fixed
+  in-browser. (3) HUD: health bar framed + top-highlight lip (was a naked
+  green rect), top-left panel tightened with the weapon name moved beside the
+  loadout square. Title verified via browser; HUD + delve prop changes ship
+  boot-clean but weren't drivable into gameplay via automation, so they're
+  unconfirmed-by-me. HUD is likely still iterative — Dustin's next screenshots
+  drive it.
 - **2026-07-22: COMPOSITION PASS — the "still some work to do" follow-up.**
   Atmosphere landed well; remaining problem was emptiness/composition (tiny
   player, sparse space). Dustin picked all four levers. Done: (1) camera zoom
