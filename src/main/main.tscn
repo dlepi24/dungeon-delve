@@ -32,10 +32,10 @@ color = Color(0.055, 0.042, 0.035, 1)
 [node name="Accent" type="ColorRect" parent="."]
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -200.0
-offset_top = 268.0
-offset_right = 200.0
-offset_bottom = 274.0
+offset_left = -140.0
+offset_top = 236.0
+offset_right = 140.0
+offset_bottom = 240.0
 grow_horizontal = 2
 color = Color(1.0, 0.85, 0.5, 0.5)
 
@@ -43,9 +43,9 @@ color = Color(1.0, 0.85, 0.5, 0.5)
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -600.0
-offset_top = 290.0
+offset_top = 262.0
 offset_right = 600.0
-offset_bottom = 400.0
+offset_bottom = 350.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 72
 text = "THE COLLAPSING MINE"
@@ -55,9 +55,9 @@ horizontal_alignment = 1
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -600.0
-offset_top = 400.0
+offset_top = 356.0
 offset_right = 600.0
-offset_bottom = 430.0
+offset_bottom = 386.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.65, 0.58, 0.5, 1)
 text = "working title — delve deep, extract or die"
@@ -66,12 +66,12 @@ horizontal_alignment = 1
 [node name="Menu" type="VBoxContainer" parent="."]
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -130.0
-offset_top = 500.0
-offset_right = 130.0
-offset_bottom = 760.0
+offset_left = -140.0
+offset_top = 440.0
+offset_right = 140.0
+offset_bottom = 740.0
 grow_horizontal = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 
 [node name="Play" type="Button" parent="Menu"]
 layout_mode = 2
@@ -97,13 +97,15 @@ text = "Settings"
 layout_mode = 2
 text = "Quit"
 
+; Clear of the last button (the six now end ~740) with real breathing room —
+; it was overlapping the Quit button before.
 [node name="Stats" type="Label" parent="."]
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -600.0
-offset_top = 800.0
+offset_top = 776.0
 offset_right = 600.0
-offset_bottom = 830.0
+offset_bottom = 806.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.75, 0.66, 0.5, 1)
 text = ""

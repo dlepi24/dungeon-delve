@@ -76,6 +76,12 @@ func _ready() -> void:
 ## Hard cap on props per room, so a huge hall does not turn into a junkyard.
 @export var dressing_max: int = 16
 
+## Delve dressing is CEILING-ONLY on purpose. Props on the floor sat at the
+## player's own depth but weren't solid, so "can I stand on this? is an enemy
+## behind it?" — the walk-behind confusion Dustin flagged. Everything here hangs
+## clearly overhead from the ceiling (short, so nothing dangles into the play
+## space) and reads as background structure, never something you interact with.
+## This is also the "denser rooms" answer that never touches the combat layout.
 func _build_dressing() -> void:
 	if dressing_percent <= 0:
 		return
@@ -84,32 +90,6 @@ func _build_dressing() -> void:
 		return
 	var entry_x: float = entry.global_position.x
 	var exit_x: float = exit_marker.global_position.x
-	var placed: int = 0
-	for cell: Vector2i in tiles.get_used_cells():
-		if placed >= dressing_max:
-			break
-		# A standable top: something here, nothing in the Tiles layer above it.
-		if tiles.get_cell_source_id(cell + Vector2i.UP) != -1:
-			continue
-		var h: int = _cell_hash(cell.x, cell.y)
-		if h % 100 >= dressing_percent:
-			continue
-		var top: Vector2 = tiles.map_to_local(cell) + Vector2(0, -16)
-		# Keep the spawn and the exit beacon clear.
-		if absf(top.x - entry_x) < 90.0 or absf(top.x - exit_x) < 90.0:
-			continue
-		var prop: Node2D = _dressing_prop(h)
-		prop.position = top
-		add_child(prop)
-		placed += 1
-	_hang_from_ceiling(tiles, entry_x, exit_x)
-
-
-## Fill the upper dead air with NON-gameplay silhouette dressing hung from the
-## ceiling — chains, the odd lantern, timber brackets. This is the "denser
-## rooms" answer that does NOT touch the combat-tuned platforming: the layouts
-## are deliberately shaped for their fights, so we add depth, not obstacles.
-func _hang_from_ceiling(tiles: TileMapLayer, entry_x: float, exit_x: float) -> void:
 	var placed: int = 0
 	for cell: Vector2i in tiles.get_used_cells():
 		if placed >= dressing_max:
@@ -129,14 +109,16 @@ func _hang_from_ceiling(tiles: TileMapLayer, entry_x: float, exit_x: float) -> v
 		placed += 1
 
 
+## Kept SHORT so it stays up in the dead air and never reaches player height —
+## timber brackets, a warm lantern, a stub chain. No floor-standing props.
 func _ceiling_prop(h: int) -> Node2D:
-	match (h / 100) % 6:
-		0:
-			return SetDressing.make_lantern(60.0 + float(h % 60))
-		1, 2:
-			return SetDressing.make_bracket(56.0 + float(h % 40), 16.0 + float(h % 14))
+	match (h / 100) % 5:
+		0, 1:
+			return SetDressing.make_bracket(56.0 + float(h % 40), 14.0 + float(h % 10))
+		2:
+			return SetDressing.make_lantern(40.0 + float(h % 30))
 		_:
-			return SetDressing.make_chain(50.0 + float(h % 110))
+			return SetDressing.make_chain(28.0 + float(h % 40))
 
 
 ## Pick a prop from the cell hash — mostly crates and rubble, a barrel now and
