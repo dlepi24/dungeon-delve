@@ -1,6 +1,23 @@
 # Roadmap
 
 ## Status
+- **2026-07-21 (latest): ATMOSPHERE PASS — the "it feels bleh" fix.** Dustin's
+  direction critique (not cohesive / flat / no purpose) was diagnosed as a
+  SCENE-level gap, not a sprite problem: no lighting, no depth, no unifying
+  grade, dead black headroom. He chose the full engine pass (lighting + depth
+  + grade; keep the sprites). Reworked MineAtmosphere in delve AND hub: the
+  CanvasModulate now grades+dims (one world, not three asset packs), the
+  helmet lamp casts a real flickering Light2D pool, a top-of-frame shadow
+  sinks the empty headroom, two planes of dust/haze add volume, stronger
+  vignette. Also removed the stray gray-box swing rect and hub Lantern that
+  were bleeding through the finished art. All exported for tuning — the exact
+  darkness/lamp/dust values are DUSTIN'S feel call. NOTE: verified boot-clean
+  + tests, but the web build could not be driven into gameplay via browser
+  automation (Godot canvas ignores synthetic input), so the live mood is
+  unconfirmed-by-me — first real playtest is the check. Still gray-box:
+  exit portal (mint rect), buff pickups (no art yet), room tile art
+  (generated, fine). Geometry parallax deferred: the room backdrop is opaque,
+  so true far-layer parallax needs transparent backdrops (a bigger change).
 - **2026-07-21 (late night): FULL ART SWEEP LANDED — Lost Crews + objects +
   hub.** The v3 enemy sheets are in (Digger/Hauler/Pit Rat/Canary/
   Powder-Monkey/Varok); gnat, slinger and overseer now have DEDICATED sheets
