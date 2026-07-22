@@ -112,13 +112,9 @@ script = ExtResource("10_hitbox")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
 shape = SubResource("RectangleShape2D_attack")
 
-; Matches RectangleShape2D_attack (46x44) exactly. What you see is what hits.
-[node name="Swing" type="ColorRect" parent="AttackHitbox"]
-offset_left = -23.0
-offset_top = -22.0
-offset_right = 23.0
-offset_bottom = 22.0
-color = Color(0.85, 0.95, 1, 0.85)
+; No gray-box swing rect any more: the in-hand weapon art plus WeaponSprite's
+; amber arc smear ARE the swing now. Hitbox.visual resolves to null (it is a
+; get_node_or_null lookup) and every consumer already guards for that.
 
 [node name="StateMachine" type="Node" parent="."]
 script = ExtResource("2_machine")
