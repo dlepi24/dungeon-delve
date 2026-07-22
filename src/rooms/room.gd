@@ -102,6 +102,41 @@ func _build_dressing() -> void:
 		prop.position = top
 		add_child(prop)
 		placed += 1
+	_hang_from_ceiling(tiles, entry_x, exit_x)
+
+
+## Fill the upper dead air with NON-gameplay silhouette dressing hung from the
+## ceiling — chains, the odd lantern, timber brackets. This is the "denser
+## rooms" answer that does NOT touch the combat-tuned platforming: the layouts
+## are deliberately shaped for their fights, so we add depth, not obstacles.
+func _hang_from_ceiling(tiles: TileMapLayer, entry_x: float, exit_x: float) -> void:
+	var placed: int = 0
+	for cell: Vector2i in tiles.get_used_cells():
+		if placed >= dressing_max:
+			break
+		# A ceiling underside: something here, open air just below it.
+		if tiles.get_cell_source_id(cell + Vector2i.DOWN) != -1:
+			continue
+		var h: int = _cell_hash(cell.x, cell.y + 777)
+		if h % 100 >= dressing_percent:
+			continue
+		var under: Vector2 = tiles.map_to_local(cell) + Vector2(0, 16)
+		if absf(under.x - entry_x) < 70.0 or absf(under.x - exit_x) < 70.0:
+			continue
+		var prop: Node2D = _ceiling_prop(h)
+		prop.position = under
+		add_child(prop)
+		placed += 1
+
+
+func _ceiling_prop(h: int) -> Node2D:
+	match (h / 100) % 6:
+		0:
+			return SetDressing.make_lantern(60.0 + float(h % 60))
+		1, 2:
+			return SetDressing.make_bracket(56.0 + float(h % 40), 16.0 + float(h % 14))
+		_:
+			return SetDressing.make_chain(50.0 + float(h % 110))
 
 
 ## Pick a prop from the cell hash — mostly crates and rubble, a barrel now and

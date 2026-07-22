@@ -91,6 +91,30 @@ static func make_lantern(drop: float = 70.0) -> Node2D:
 	return n
 
 
+## A bare hanging chain from the ceiling, ending in a hook or an ore hook-lump.
+## No light — it is silhouette depth for the upper dead air. `drop` is length.
+static func make_chain(drop: float = 90.0) -> Node2D:
+	var n: Node2D = Node2D.new()
+	# Links as a dotted column, so it reads as chain rather than a solid bar.
+	var y: float = 0.0
+	while y < drop:
+		_rect(n, Vector2(-1.5, y), Vector2(3, 5), IRON)
+		y += 8.0
+	_rect(n, Vector2(-4, drop), Vector2(8, 7), Color(0.28, 0.26, 0.26))  # hook lump
+	return n
+
+
+## A shallow timber support bracket tucked against a ceiling — a bit of worked
+## structure up in the dead air. Spans `w`, hangs `h` down from the origin.
+static func make_bracket(w: float = 70.0, h: float = 20.0) -> Node2D:
+	var n: Node2D = Node2D.new()
+	_rect(n, Vector2(-w * 0.5, 0), Vector2(w, 7), WOOD_BODY)
+	_rect(n, Vector2(-w * 0.5, 0), Vector2(w, 3), WOOD_LIT)
+	_rect(n, Vector2(-w * 0.5, 0), Vector2(7, h), WOOD_DARK)      # left post
+	_rect(n, Vector2(w * 0.5 - 7, 0), Vector2(7, h), WOOD_DARK)   # right post
+	return n
+
+
 static func _glow() -> GradientTexture2D:
 	var g: Gradient = Gradient.new()
 	g.set_color(0, Color.WHITE)
