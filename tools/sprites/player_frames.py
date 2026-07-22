@@ -58,8 +58,10 @@ PALETTE = {
     "S": (208, 202, 194, 255),
 }
 
-# gen_sprites reads this: full-colour sheet, lamp glow around the lens.
-SHADE = {"lamp": "L"}
+# gen_sprites reads this: full-colour sheet, lamp glow around the lens,
+# warm rim light on the lit silhouette so the Delver reads against the
+# dark back wall (feedback round 4).
+SHADE = {"lamp": "L", "rim": True}
 
 
 # ---------------------------------------------------------------- parts

@@ -20,6 +20,12 @@ Sheets (sizes match the scene nodes they replace, 1:1 pixels):
                   (spikes.gd _draw becomes a texture loop).
   rock     12x12  debris projectile, 2 variants (pick by event index parity
                   — keep it seeded-deterministic, no randf).
+  cart     36x26  ore cart, "full" / "empty" — storytelling dressing for hub
+                  and delve rooms (StaticBody or plain Sprite2D, no collision
+                  needed; sit it on a floor tile).
+  helmets  26x14  pile of lost-crew helmets — grim set dressing; place near
+                  shrine rooms and dead-end shelves. One has a dead lamp.
+  coal     30x12  coal heap — dressing for the mine entrance / smithy apron.
   ore      14x14  carried-haul pickup, 2-frame glint (replaces the amber
                   diamond in pickup.tscn).
   heart    14x14  heal pickup, 2-frame pulse.
@@ -39,6 +45,8 @@ LEGEND
   p  rope             P  rope shadow       m  iron (bolts, nails)
   a  amber ore        A  amber deep        e  glow (flame, glint, shrine)
   v  heart mid        V  heart dark        w  heart lit
+  H  helmet bronze    B  bronze dark
+  k  coal             K  coal dark
 """
 
 # === DATA (parsed by the preview tool; literals only) ===
@@ -61,6 +69,10 @@ DATA = {
         "v": (206, 84, 84, 255),
         "V": (138, 50, 56, 255),
         "w": (240, 152, 152, 255),
+        "H": (168, 132, 84, 255),
+        "B": (104, 78, 50, 255),
+        "k": (66, 60, 64, 255),
+        "K": (40, 36, 42, 255),
     },
     "sheets": {
         "spikes": {
@@ -454,6 +466,115 @@ DATA = {
                         "................................................",
                         "................................................",
                         "................................................",
+                    ],
+                ],
+            },
+        },
+        "cart": {
+            "size": (36, 26),
+            "frames": {
+                "full": [
+                    [
+                        "....................................",
+                        "...............oaaao................",
+                        ".............oaaeaaaaAo.............",
+                        "..........oaaaaaAaaaaaAAao..........",
+                        "........oaaeaaaaaaAaaaaaAAAo........",
+                        "......oaaaaaaaAaaaaaaaaAAaAAAo......",
+                        "....ommmmmmmmmmmmmmmmmmmmmmmmmmo....",
+                        "....ouuuuuTuuuuuTuuuuuTuuuuuuuuo....",
+                        "....otmtttTtttttTtttttTttttttmto....",
+                        "....otttttTtttttTtttttTtttttttto....",
+                        "....otttttTtttttTtttttTtttttttto....",
+                        "....otttttTtttttTtttttTtttttttto....",
+                        "....otttttTtttttTtttttTtttttttto....",
+                        "....otmtttTtttttTtttttTttttttmto....",
+                        "....otttttTtttttTtttttTtttttttto....",
+                        "....oTTTTTTTTTTTTTTTTTTTTTTTTTTo....",
+                        "....oTTTTTTTTTTTTTTTTTTTTTTTTTTo....",
+                        "....oTTTTTTTTTTTTTTTTTTTTTTTTTTo....",
+                        "....oooooooooooooooooooooooooooo....",
+                        ".......ommo.oTTTTTTTTo.ommo.........",
+                        ".......ommmmo..........ommmmo.......",
+                        ".......omoomo..........omoomo.......",
+                        ".......omoomo..........omoomo.......",
+                        ".......ommmmo..........ommmmo.......",
+                        "........oooo............oooo........",
+                        "....................................",
+                    ],
+                ],
+                "empty": [
+                    [
+                        "....................................",
+                        "....................................",
+                        "....................................",
+                        "....................................",
+                        "....................................",
+                        "....................................",
+                        "....ommmmmmmmmmmmmmmmmmmmmmmmmmo....",
+                        "....ouuuuuTuuuuuTuuuuuTuuuuuuuuo....",
+                        "....otmtttTtttttTtttttTttttttmto....",
+                        "....otttttTtttttTtttttTtttttttto....",
+                        "....otttttTtttttTtttttTtttttttto....",
+                        "....otttttTtttttTtttttTtttttttto....",
+                        "....otttttTtttttTtttttTtttttttto....",
+                        "....otmtttTtttttTtttttTttttttmto....",
+                        "....otttttTtttttTtttttTtttttttto....",
+                        "....oTTTTTTTTTTTTTTTTTTTTTTTTTTo....",
+                        "....oTTTTTTTTTTTTTTTTTTTTTTTTTTo....",
+                        "....oTTTTTTTTTTTTTTTTTTTTTTTTTTo....",
+                        "....oooooooooooooooooooooooooooo....",
+                        ".......ommo.oTTTTTTTTo.ommo.........",
+                        ".......ommmmo..........ommmmo.......",
+                        ".......omoomo..........omoomo.......",
+                        ".......omoomo..........omoomo.......",
+                        ".......ommmmo..........ommmmo.......",
+                        "........oooo............oooo........",
+                        "....................................",
+                    ],
+                ],
+            },
+        },
+        "helmets": {
+            "size": (26, 14),
+            "frames": {
+                "idle": [
+                    [
+                        "..........................",
+                        "..........................",
+                        ".....ooooo................",
+                        "....oHHHHHo...............",
+                        "...oHHHHHHHo..............",
+                        "...oHHHHHmHo.....ooooo....",
+                        "...oHHHBBHHo....oHHHHHo...",
+                        "..oHHHHHHHHHo..oBHHHHHHo..",
+                        "..oBBBBBBBBBo..oBoHHHHHHo.",
+                        "...oBBBBBBBo...oBoHHHHHHo.",
+                        "....ooooooo.....oBHHHHHo..",
+                        ".................oooooo...",
+                        ".ooo......oo.......ooo....",
+                        "..........................",
+                    ],
+                ],
+            },
+        },
+        "coal": {
+            "size": (30, 12),
+            "frames": {
+                "idle": [
+                    [
+                        "..............................",
+                        ".............ooo..............",
+                        "...........okkko..............",
+                        ".........okkkkKkko............",
+                        ".......okkhkkKkkKko...........",
+                        ".....okkkkKkkhkkKkkko.........",
+                        "....okkKkkkkKkkkKkkkKo........",
+                        "...okkkkKkkKkkkkkKkkKko.......",
+                        "..oKkkKkkkkKkkkKkkkKkkKo......",
+                        ".oKKkKKkkKKkKkkKKkKKkKKKo.....",
+                        ".oooooooooooooooooooooooo.....",
+                        "..............................",
                     ],
                 ],
             },

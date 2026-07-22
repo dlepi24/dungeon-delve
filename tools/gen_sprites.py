@@ -102,7 +102,8 @@ def bake(sheet_name, w, h, palette, frames, shade=None, anchors=None):
                 shaded = shade_pass.shade_frame(
                     frame, palette,
                     greyscale=shade.get("greyscale", False),
-                    lamp_ch=shade.get("lamp"))
+                    lamp_ch=shade.get("lamp"),
+                    rim=shade.get("rim", False))
                 for y in range(h):
                     for x in range(w):
                         canvas[r * h + y][c * w + x] = shaded[y][x]

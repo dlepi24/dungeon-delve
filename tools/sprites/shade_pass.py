@@ -11,7 +11,10 @@ pixel becomes:
   3. Selective outlines — the silhouette (outline touching transparency)
                         stays near-black so readability survives; interior
                         outline pixels soften to the darkest shade of the
-                        material they border
+                        material they border. With `rim=True`, silhouette
+                        pixels on the LIT side (top / upper-front) instead
+                        take a warm rim-light colour — used on the player so
+                        the Delver reads against the dark back wall.
   4. Lamp glow        — pixels near a designated lamp character get a
                         one-step warm boost
 
@@ -47,7 +50,7 @@ def _is_warm(h):
 
 
 def shade_frame(frame, palette, greyscale=False, outline_ch="o",
-                lamp_ch=None, light=(1, -1)):
+                lamp_ch=None, light=(1, -1), rim=False):
     """frame: list of equal-width strings. Returns a grid of RGBA tuples.
 
     `light` is the light direction the FRONT of the sprite faces; sprites
@@ -76,7 +79,20 @@ def shade_frame(frame, palette, greyscale=False, outline_ch="o",
                 touching_air = any(at(x + dx, y + dy) == "."
                                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
                 if touching_air:
-                    out[y][x] = palette[outline_ch]
+                    lit_air = (at(x, y - 1) == "." or at(x + lx, y + ly) == ".")
+                    neigh = [at(x + dx, y + dy) for dx, dy in
+                             ((1, 0), (-1, 0), (0, 1), (0, -1))]
+                    mats = [c for c in neigh if c not in (".", outline_ch)]
+                    if rim and lit_air and mats and not greyscale:
+                        # Warm rim light: brightest ramp step of the touched
+                        # material, pushed toward lantern-warm.
+                        mat = max(sorted(set(mats)), key=mats.count)
+                        hi = ramps[mat][4]
+                        out[y][x] = (int(hi[0] * 0.55 + 255 * 0.45),
+                                     int(hi[1] * 0.55 + 214 * 0.45),
+                                     int(hi[2] * 0.55 + 150 * 0.45), 255)
+                    else:
+                        out[y][x] = palette[outline_ch]
                 else:
                     neigh = [at(x + dx, y + dy) for dx, dy in
                              ((1, 0), (-1, 0), (0, 1), (0, -1))]
