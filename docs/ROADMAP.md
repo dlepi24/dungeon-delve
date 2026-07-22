@@ -1,6 +1,19 @@
 # Roadmap
 
 ## Status
+- **2026-07-22 (art drop round 2 + feel pass).** INSTRUCTIONS.md re-sent the
+  already-done Lost Crews/objects/buildings art (sprite .py files verified
+  byte-identical — not redone). Genuinely new: (a) HUD health bar v4 —
+  segmented, green→red colour-shift, low-health pulse, number on a plate at
+  font 15; (b) beam void fix — _beam_pixel now composites over the exact
+  backdrop tile (salt 23) so posts no longer show black columns; (c) deleted
+  the leftover empty DepthPanel; (d) 8-item engine-feel pass: camera 1.7→1.85,
+  ~90ms kill hit-stop, screen-shake accessibility toggle (in settings,
+  persisted, gated in both shakers), brighter swing smear, deterministic ore
+  glints, shrine drama (bigger pulsing light + altar dust; HUM DEFERRED —
+  needs an audio asset), pause-world dim, +15% HUD fonts. Verified in-browser
+  by booting straight into a delve room: HUD clean, beam void gone, depth
+  chip-only. All tests green.
 - **2026-07-22 (later): PROPS/TITLE/HUD cleanup from Dustin's screenshots.**
   (1) Delve set dressing is now CEILING-ONLY — floor crates/barrels read as
   "walk-behind blocks, are they solid?" confusion, so only clearly-overhead
