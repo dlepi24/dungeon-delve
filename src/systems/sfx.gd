@@ -30,6 +30,13 @@ const HURT: AudioStream = preload("res://assets/audio/hurt.wav")
 var _voices: Array[AudioStreamPlayer] = []
 var _next: int = 0
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## The player's SFX slider (0..1) as a dB trim, added to every voice.
+var _user_db: float = 0.0
+
+
+## Settings drives this from the options screen's SFX slider.
+func set_user_volume(value: float) -> void:
+	_user_db = -80.0 if value <= 0.001 else linear_to_db(clampf(value, 0.0, 1.0))
 
 
 func _ready() -> void:
@@ -56,7 +63,7 @@ func play(stream: AudioStream, pitch: float = 1.0, volume_offset_db: float = 0.0
 	_next = (_next + 1) % _voices.size()
 	voice.stream = stream
 	voice.pitch_scale = maxf(0.01, pitch + _rng.randf_range(-pitch_jitter, pitch_jitter))
-	voice.volume_db = volume_db + volume_offset_db
+	voice.volume_db = volume_db + volume_offset_db + _user_db
 	voice.play()
 
 

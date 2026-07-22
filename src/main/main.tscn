@@ -29,38 +29,51 @@ anchor_bottom = 1.0
 color = Color(0.055, 0.042, 0.035, 1)
 
 ; Lantern-warm accent bar over the title, echoing the mine's palette.
-[node name="Accent" type="ColorRect" parent="."]
+; Kicker above the title — uppercase, tracked, muted (round-6 tokens).
+[node name="Accent" type="Label" parent="."]
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -140.0
-offset_top = 236.0
-offset_right = 140.0
-offset_bottom = 240.0
+offset_left = -600.0
+offset_top = 214.0
+offset_right = 600.0
+offset_bottom = 244.0
 grow_horizontal = 2
-color = Color(1.0, 0.85, 0.5, 0.5)
+theme_override_colors/font_color = Color(0.541, 0.498, 0.431, 1)
+theme_override_constants/line_spacing = 0
+theme_override_font_sizes/font_size = 22
+text = "T H E   M I N E   A L W A Y S   P A Y S"
+horizontal_alignment = 1
 
+; PAYDIRT — big gold slab. Alfa Slab One TTF was not in the drop, so this uses
+; the bundled Rajdhani Bold at scale with the gold + hard drop shadow; swap the
+; font in when the slab TTF lands.
 [node name="Title" type="Label" parent="."]
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -600.0
-offset_top = 262.0
+offset_top = 250.0
 offset_right = 600.0
-offset_bottom = 350.0
+offset_bottom = 400.0
 grow_horizontal = 2
-theme_override_font_sizes/font_size = 72
-text = "THE COLLAPSING MINE"
+theme_override_colors/font_color = Color(0.949, 0.702, 0.251, 1)
+theme_override_colors/font_shadow_color = Color(0.478, 0.322, 0.082, 1)
+theme_override_constants/shadow_offset_x = 6
+theme_override_constants/shadow_offset_y = 6
+theme_override_font_sizes/font_size = 150
+text = "PAYDIRT"
 horizontal_alignment = 1
 
 [node name="Subtitle" type="Label" parent="."]
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -600.0
-offset_top = 356.0
+offset_top = 408.0
 offset_right = 600.0
-offset_bottom = 386.0
+offset_bottom = 438.0
 grow_horizontal = 2
-theme_override_colors/font_color = Color(0.65, 0.58, 0.5, 1)
-text = "working title — delve deep, extract or die"
+theme_override_colors/font_color = Color(0.541, 0.498, 0.431, 1)
+theme_override_font_sizes/font_size = 20
+text = "—  O N E   W A Y   O R   A N O T H E R  —"
 horizontal_alignment = 1
 
 [node name="Menu" type="VBoxContainer" parent="."]
@@ -125,6 +138,23 @@ grow_vertical = 0
 theme_override_colors/font_color = Color(0.55, 0.5, 0.44, 1)
 text = "controls"
 horizontal_alignment = 1
+
+; Bottom-right deadpan flavor + version (round-6 tokens: faint, uppercase).
+[node name="Flavor" type="Label" parent="."]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -820.0
+offset_top = -38.0
+offset_right = -32.0
+offset_bottom = -14.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.365, 0.333, 0.29, 1)
+theme_override_font_sizes/font_size = 15
+text = ""
+horizontal_alignment = 2
 
 [node name="Confirm" type="PanelContainer" parent="."]
 visible = false

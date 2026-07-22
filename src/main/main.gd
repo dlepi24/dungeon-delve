@@ -24,6 +24,9 @@ const DELVE_SCENE: String = "res://src/rooms/delve_run.tscn"
 @onready var _quit: Button = $Menu/Quit
 @onready var _controls: Label = $Controls
 @onready var _stats: Label = $Stats
+@onready var _flavor: Label = $Flavor
+
+const VERSION: String = "v0.6"
 @onready var _confirm: PanelContainer = $Confirm
 @onready var _confirm_yes: Button = $Confirm/Margin/Rows/Buttons/Yes
 @onready var _confirm_cancel: Button = $Confirm/Margin/Rows/Buttons/Cancel
@@ -43,17 +46,24 @@ func _ready() -> void:
 	_daily.pressed.connect(_on_daily)
 	_records_button.pressed.connect(_on_records)
 	_records.closed.connect(_on_records_closed)
+	# Uppercase, spec voice (round-6 tokens). DESCEND is a fresh drop; CONTINUE
+	# when there is a save worth continuing — the distinction tells the player
+	# their progress is still here.
+	var has_save: bool = GameState.banked_haul > 0 or not GameState.upgrade_levels.is_empty()
+	_play.text = "CONTINUE" if has_save else "DESCEND"
+	_daily.text = "DAILY DELVE"
 	# One ranked shot per day; after that the same seed is open practice.
 	if not GameState.daily_available():
-		_daily.text = "Daily Delve  (practice)"
+		_daily.text = "DAILY DELVE  (PRACTICE)"
+	_records_button.text = "RECORDS"
+	_new_game.text = "NEW GAME"
+	_settings_button.text = "OPTIONS"
+	_quit.text = "QUIT"
 	_confirm_yes.pressed.connect(_on_wipe_confirmed)
 	_confirm_cancel.pressed.connect(func() -> void: _confirm.visible = false; _play.grab_focus())
-	# "Continue" when there is a save worth continuing; the distinction tells the
-	# player their progress is still here.
-	if GameState.banked_haul > 0 or not GameState.upgrade_levels.is_empty():
-		_play.text = "Continue"
 	_refresh_controls_line()
 	_refresh_stats_line()
+	_refresh_flavor()
 	# The verbs line follows whichever device is driving.
 	Keybinds.input_device_changed.connect(_refresh_controls_line)
 	_play.grab_focus()
@@ -87,6 +97,21 @@ func _refresh_stats_line() -> void:
 	_stats.text = "runs %d   ·   deepest room %d   ·   best extract %d ore   ·   kills %d" % [
 		GameState.total_runs, GameState.deepest_room, GameState.best_haul, GameState.total_kills,
 	]
+
+
+## Bottom-right flavor: a deadpan "shift" number and a real days-since-death
+## counter (cheap joke, real data). Uppercase, faint, per the tokens.
+func _refresh_flavor() -> void:
+	if _flavor == null:
+		return
+	var shift: int = GameState.total_runs + 1
+	var tail: String
+	if GameState.last_collapse_unix <= 0:
+		tail = "NO COLLAPSE ON RECORD"
+	else:
+		var days: int = int((Time.get_unix_time_from_system() - float(GameState.last_collapse_unix)) / 86400.0)
+		tail = "%d DAYS SINCE LAST COLLAPSE" % days
+	_flavor.text = "SHIFT %d  —  %s   ·   %s" % [shift, tail, VERSION]
 
 
 ## Gamepad B (or ESC) backs out of the wipe confirm. The settings menu handles

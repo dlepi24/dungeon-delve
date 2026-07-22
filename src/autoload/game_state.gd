@@ -177,6 +177,9 @@ func heat_promote_bonus() -> float:
 # always be one save behind.
 ## Runs finished, by either exit: extraction or death.
 var total_runs: int = 0
+## Unix time of the last death, for the title screen's "days since last
+## collapse" flavor counter. 0 = never died.
+var last_collapse_unix: int = 0
 ## Deepest room ever reached, 1-based ("room 3"). 0 = never delved.
 var deepest_room: int = 0
 ## Most haul banked in a single extract.
@@ -260,6 +263,7 @@ func lose_run() -> void:
 		# session weapons belong to free play and were never brought along.
 		clear_session_loadout()
 		mine_heat = 0
+	last_collapse_unix = int(Time.get_unix_time_from_system())
 	_record_run_end()
 	_log_run(&"died", lost)
 	save_game()
@@ -361,6 +365,7 @@ func save_game() -> void:
 	config.set_value("meta", "mine_heat", mine_heat)
 	config.set_value("meta", "daily_played", daily_played)
 	config.set_value("stats", "total_runs", total_runs)
+	config.set_value("stats", "last_collapse_unix", last_collapse_unix)
 	config.set_value("stats", "deepest_room", deepest_room)
 	config.set_value("stats", "best_haul", best_haul)
 	config.set_value("stats", "total_kills", total_kills)
@@ -379,6 +384,7 @@ func load_game() -> void:
 	mine_heat = int(config.get_value("meta", "mine_heat", 0))
 	daily_played = str(config.get_value("meta", "daily_played", ""))
 	total_runs = int(config.get_value("stats", "total_runs", 0))
+	last_collapse_unix = int(config.get_value("stats", "last_collapse_unix", 0))
 	deepest_room = int(config.get_value("stats", "deepest_room", 0))
 	best_haul = int(config.get_value("stats", "best_haul", 0))
 	total_kills = int(config.get_value("stats", "total_kills", 0))
@@ -391,6 +397,7 @@ func reset_save() -> void:
 	carried_haul = 0
 	clear_session_loadout()
 	total_runs = 0
+	last_collapse_unix = 0
 	deepest_room = 0
 	best_haul = 0
 	total_kills = 0
