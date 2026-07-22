@@ -38,6 +38,8 @@ func _ready() -> void:
 
 
 func add_trauma(amount: float) -> void:
+	if not Settings.screen_shake:  # accessibility toggle, same as FollowCamera
+		return
 	_trauma = clampf(_trauma + amount, 0.0, 1.0)
 
 

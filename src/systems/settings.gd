@@ -15,6 +15,9 @@ const SAVE_PATH: String = "user://settings.cfg"
 var music_volume: float = 1.0
 ## Borderless fullscreen (the project default) vs a plain window.
 var fullscreen: bool = true
+## Accessibility: camera screen-shake. Off kills all trauma-driven camera kick
+## (hits, parries, damage taken) for motion-sensitive players.
+var screen_shake: bool = true
 
 
 func _ready() -> void:
@@ -40,6 +43,11 @@ func set_fullscreen(on: bool) -> void:
 	_save()
 
 
+func set_screen_shake(on: bool) -> void:
+	screen_shake = on
+	_save()
+
+
 ## Headless-guarded like every DisplayServer call: the check gate and the test
 ## scenes load all autoloads with no window to set a mode on.
 func _apply_window() -> void:
@@ -55,6 +63,7 @@ func _save() -> void:
 	var config: ConfigFile = ConfigFile.new()
 	config.set_value("audio", "music_volume", music_volume)
 	config.set_value("display", "fullscreen", fullscreen)
+	config.set_value("accessibility", "screen_shake", screen_shake)
 	config.save(SAVE_PATH)
 
 
@@ -64,3 +73,4 @@ func _load() -> void:
 		return
 	music_volume = clampf(float(config.get_value("audio", "music_volume", 1.0)), 0.0, 1.0)
 	fullscreen = bool(config.get_value("display", "fullscreen", true))
+	screen_shake = bool(config.get_value("accessibility", "screen_shake", true))

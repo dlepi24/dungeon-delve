@@ -15,6 +15,7 @@ signal run_action_taken
 @onready var _volume: HSlider = $Panel/Margin/Rows/VolumeRow/Slider
 @onready var _volume_value: Label = $Panel/Margin/Rows/VolumeRow/Value
 @onready var _fullscreen: CheckButton = $Panel/Margin/Rows/FullscreenRow/Toggle
+@onready var _screen_shake: CheckButton = $Panel/Margin/Rows/ScreenShakeRow/Toggle
 @onready var _controls: Button = $Panel/Margin/Rows/Controls
 @onready var _back: Button = $Panel/Margin/Rows/Back
 @onready var _keybinds: Control = $KeybindScreen
@@ -35,6 +36,7 @@ func _ready() -> void:
 	_back.pressed.connect(func() -> void: closed.emit())
 	_volume.value_changed.connect(_on_volume_changed)
 	_fullscreen.toggled.connect(func(on: bool) -> void: Settings.set_fullscreen(on))
+	_screen_shake.toggled.connect(func(on: bool) -> void: Settings.set_screen_shake(on))
 	_replay.pressed.connect(_on_replay)
 	_fresh.pressed.connect(_on_fresh)
 	_seed_field.text_submitted.connect(func(_t: String) -> void: _on_replay())
@@ -68,6 +70,7 @@ func open() -> void:
 	_volume.set_value_no_signal(Settings.music_volume * 100.0)
 	_volume_value.text = "%d%%" % roundi(Settings.music_volume * 100.0)
 	_fullscreen.set_pressed_no_signal(Settings.fullscreen)
+	_screen_shake.set_pressed_no_signal(Settings.screen_shake)
 	# The run tools only exist mid-run; from the title or hub they are noise.
 	var in_run: bool = GameState.run_active
 	_run_sep.visible = in_run

@@ -216,7 +216,8 @@ func _make_row() -> Control:
 	var label: Label = Label.new()
 	label.name = "Label"
 	label.position = Vector2(12, 2)
-	label.add_theme_font_size_override(&"font_size", 14)
+	# +15% for Steam Deck readability (art-director review).
+	label.add_theme_font_size_override(&"font_size", 16)
 	label.add_theme_color_override(&"font_color", Color(0.88, 0.83, 0.72))
 	row.add_child(label)
 	var bar: ColorRect = ColorRect.new()

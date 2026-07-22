@@ -85,6 +85,19 @@ text = "Fullscreen"
 layout_mode = 2
 button_pressed = true
 
+[node name="ScreenShakeRow" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Margin/Rows/ScreenShakeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Screen shake"
+
+[node name="Toggle" type="CheckButton" parent="Panel/Margin/Rows/ScreenShakeRow"]
+layout_mode = 2
+button_pressed = true
+
 [node name="Controls" type="Button" parent="Panel/Margin/Rows"]
 layout_mode = 2
 text = "Controls / rebind keys…"

@@ -63,6 +63,56 @@ func _ready() -> void:
 	exit_marker.add_child(_exit_light)
 
 	_build_dressing.call_deferred()
+	_build_glints.call_deferred()
+
+
+## Ore glints: a rare white sparkle on ORE tiles, so a vein catches the eye and
+## "there is value in this rock" reads without a label. Deterministic — the
+## phase is the cell hash, animated over wall-clock (visual only), never Rng.
+const ORE_ATLAS: Vector2i = Vector2i(2, 0)
+const ORE_RICH_ATLAS: Vector2i = Vector2i(6, 0)
+## Cap so an ore-rich hall does not strobe.
+@export var glint_max: int = 12
+
+var _glints: Array[Sprite2D] = []
+var _glint_phase: Array[float] = []
+
+
+func _build_glints() -> void:
+	var tiles: TileMapLayer = get_node_or_null(^"Tiles") as TileMapLayer
+	if tiles == null:
+		return
+	var tex: ImageTexture = _glint_texture()
+	for cell: Vector2i in tiles.get_used_cells():
+		if _glints.size() >= glint_max:
+			break
+		var atlas: Vector2i = tiles.get_cell_atlas_coords(cell)
+		if atlas != ORE_ATLAS and atlas != ORE_RICH_ATLAS:
+			continue
+		# Only a fraction of veins glint, so it stays rare, not a light show.
+		var h: int = _cell_hash(cell.x + 41, cell.y + 17)
+		if h % 100 >= 45:
+			continue
+		var glint: Sprite2D = Sprite2D.new()
+		glint.texture = tex
+		glint.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		glint.position = tiles.map_to_local(cell)
+		glint.modulate.a = 0.0
+		glint.z_index = 1
+		add_child(glint)
+		_glints.append(glint)
+		_glint_phase.append(float(h % 1000) / 1000.0 * TAU)
+
+
+## A small 4-point white cross that reads as a spark.
+func _glint_texture() -> ImageTexture:
+	var img: Image = Image.create(9, 9, false, Image.FORMAT_RGBA8)
+	for i: int in 9:
+		var f: float = 1.0 - absf(float(i) - 4.0) / 4.0
+		img.set_pixel(i, 4, Color(1, 1, 1, f))
+		img.set_pixel(4, i, Color(1, 1, 1, f))
+	img.set_pixel(4, 4, Color(1, 1, 1, 1))
+	return ImageTexture.create_from_image(img)
 
 
 ## Scatter set dressing on the room's floor surfaces so the delve reads as a
@@ -140,8 +190,9 @@ func _cell_hash(x: int, y: int) -> int:
 	return absi(n ^ (n >> 16))
 
 
-## Visual only: the beacon breathes.
+## Visual only: the beacon breathes, and ore veins glint.
 func _process(delta: float) -> void:
+	_animate_glints()
 	if _exit_shaft == null:
 		return
 	_pulse = fposmod(_pulse + delta * exit_pulse_hz, 1.0)
@@ -149,6 +200,18 @@ func _process(delta: float) -> void:
 	_exit_shaft.modulate.a = 0.5 + 0.4 * breath
 	if _exit_light != null:
 		_exit_light.energy = 0.95 + 0.5 * breath
+
+
+## Each glint is dark most of the time and spikes to a brief spark — a high
+## power on a slow sine gives a sharp, occasional flash on its own phase, so no
+## two veins twinkle together.
+func _animate_glints() -> void:
+	if _glints.is_empty():
+		return
+	var t: float = float(Time.get_ticks_msec()) / 1000.0
+	for i: int in _glints.size():
+		var s: float = 0.5 + 0.5 * sin(t * 0.9 + _glint_phase[i])
+		_glints[i].modulate.a = pow(s, 7.0)
 
 
 ## A vertical column: opaque at the base, fading to nothing at the top.

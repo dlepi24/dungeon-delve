@@ -36,15 +36,48 @@ func _ready() -> void:
 	if data != null:
 		_glow.modulate = data.colour
 		# A real light in the mine's darkness, so an altar beckons from across
-		# the room. Dies to an ember on accept, with the glow.
+		# the room — bigger and slow-pulsing now, so it reads as a live shrine
+		# and not a static prop. Dies to an ember on accept, with the glow.
 		_light = PointLight2D.new()
 		_light.texture = _radial_light()
 		_light.color = data.colour
-		_light.energy = 0.9
-		_light.texture_scale = 2.2
+		_light.energy = 1.15
+		_light.texture_scale = 3.2
 		_light.position = Vector2(0, -46)
 		add_child(_light)
+		# Offering motes drifting up off the altar, tinted to the bargain.
+		add_child(_altar_dust())
 	_offer.visible = false
+
+
+## Slow pulse on the light and glow (visual only) while the offer stands. Stops
+## once accepted — the spent altar keeps a steady ember, set in _accept.
+func _process(_delta: float) -> void:
+	if _accepted or _light == null:
+		return
+	var t: float = float(Time.get_ticks_msec()) / 1000.0
+	var pulse: float = 0.5 + 0.5 * sin(t * 2.4)
+	_light.energy = 0.95 + 0.45 * pulse
+	_glow.modulate.a = 0.7 + 0.3 * pulse
+
+
+func _altar_dust() -> CPUParticles2D:
+	var p: CPUParticles2D = CPUParticles2D.new()
+	p.amount = 12
+	p.lifetime = 3.2
+	p.preprocess = 3.0
+	p.position = Vector2(0, -30)
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(18, 6)
+	p.direction = Vector2(0, -1)
+	p.spread = 24.0
+	p.gravity = Vector2.ZERO
+	p.initial_velocity_min = 6.0
+	p.initial_velocity_max = 16.0
+	p.scale_amount_min = 1.0
+	p.scale_amount_max = 2.2
+	p.color = Color(data.colour.r, data.colour.g, data.colour.b, 0.32)
+	return p
 
 
 func _radial_light() -> GradientTexture2D:

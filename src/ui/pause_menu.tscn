@@ -19,6 +19,15 @@ corner_radius_bottom_left = 6
 layer = 10
 script = ExtResource("1_pause")
 
+; Darkens the frozen world so the menu reads as a modal, not an overlay on live
+; gameplay (art-director review). Behind the Panel; ignores the mouse so the
+; buttons above it still take clicks.
+[node name="Dim" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.4)
+mouse_filter = 2
+
 [node name="Panel" type="PanelContainer" parent="."]
 anchors_preset = 8
 anchor_left = 0.5

@@ -39,7 +39,8 @@ const ATTACK_CONTACT_FRAME: int = 3
 @export_group("Arc smear")
 ## The amber sweep between the wind and contact angles, spawned on the contact
 ## frame. Engine-drawn, so it fits any weapon's length and speed for free.
-@export var smear_colour: Color = Color(1.0, 0.78, 0.35, 0.55)
+## Brightened (art-director review): a swing should read as a bright arc.
+@export var smear_colour: Color = Color(1.0, 0.88, 0.55, 0.78)
 ## Seconds the smear lives (spec: ~2 visual frames).
 @export var smear_life: float = 0.07
 ## Sweep radius when the weapon has no sprite to measure (the baked pick).

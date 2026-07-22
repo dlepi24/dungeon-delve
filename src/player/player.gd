@@ -188,6 +188,9 @@ func find_hook_anchor() -> Node2D:
 @export var hitstop_hit_frames: int = 3
 @export var hitstop_parry_frames: int = 6
 @export var hitstop_hurt_frames: int = 4
+## The kill crunch: a longer freeze when a hit drops an enemy (~90 ms at 60 Hz).
+## Hitstop.request takes the max, so this cleanly overrides the connect freeze.
+@export var hitstop_kill_frames: int = 5
 ## Squash on landing: wide and short. Scales from the feet.
 @export var land_squash: Vector2 = Vector2(1.3, 0.72)
 ## Stretch on take-off: tall and thin.
@@ -253,6 +256,8 @@ func _ready() -> void:
 	hurtbox.hurt.connect(_on_hurt)
 	Events.hit_landed.connect(_on_hit_landed)
 	Events.parry_succeeded.connect(_on_parry_succeeded)
+	# The kill crunch — a beat longer than a normal connect.
+	Events.enemy_died.connect(func(_e: Node) -> void: Hitstop.request(hitstop_kill_frames))
 
 
 func _physics_process(delta: float) -> void:
