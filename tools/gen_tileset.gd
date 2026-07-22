@@ -36,6 +36,9 @@ const OUT_TEXTURE: String = "res://assets/tiles/tiles.png"
 const OUT_TILESET: String = "res://src/rooms/world_tileset.tres"
 
 const ROCK_DEEP: Color = Color(0.13, 0.11, 0.10)
+## Cool desaturated haze the BACKDROP tile flattens toward, so the back wall
+## recedes and the warm foreground pops (art-director wall calm-down, v3.1).
+const BACKDROP_FOG: Color = Color(0.13, 0.145, 0.19)
 const ROCK_BODY: Color = Color(0.22, 0.19, 0.17)
 const ROCK_LIT: Color = Color(0.44, 0.35, 0.26)
 const TIMBER: Color = Color(0.42, 0.29, 0.17)
@@ -133,14 +136,17 @@ func _rock_pixel(x: int, y: int, salt: int, cracked: bool = false,
 	if y > 20:                                               # depth cools
 		l -= float(y - 20) / 11.0 * 0.45
 	if backdrop:
-		l = l * 0.3 - 0.55
+		# v3.1 (art-director calm-down): flatter bevel so the wall stops
+		# competing with the foreground platforms. Was 0.3/-0.55.
+		l = l * 0.18 - 0.5
 		if y < 7:
 			l -= float(7 - y) / 7.0 * 0.3
 	var body: Color = _shade(base, l)
 	if edge < 1.3:                                           # crevices
-		body = body.lerp(ROCK_DEEP, 0.5 if backdrop else 0.8)
+		# Backdrop crevices much fainter (was 0.5/0.25): kills the pebble noise.
+		body = body.lerp(ROCK_DEEP, 0.22 if backdrop else 0.8)
 	elif edge < 2.2:
-		body = body.lerp(ROCK_DEEP, 0.25 if backdrop else 0.4)
+		body = body.lerp(ROCK_DEEP, 0.1 if backdrop else 0.4)
 	elif not backdrop and ny < -0.3 and _noise(x, y, salt + 41) > 0.94:
 		body = body.lightened(0.25)                          # glints on lit tops
 	if cracked:
@@ -160,6 +166,10 @@ func _rock_pixel(x: int, y: int, salt: int, cracked: bool = false,
 			var ml: float = 0.5 if y < 2 \
 				else (0.2 if clump and _noise(x, y, salt + 67) > 0.6 else -0.2)
 			body = _shade(MOSS_LIT if y < 2 else MOSS, ml)
+	if backdrop:
+		# 45% fog flatten toward a cool desaturated blue-grey: the back wall
+		# recedes into haze so the warm foreground rock reads as nearer.
+		body = body.lerp(BACKDROP_FOG, 0.45)
 	return body
 
 
