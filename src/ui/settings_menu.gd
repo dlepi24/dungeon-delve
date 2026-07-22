@@ -12,10 +12,15 @@ signal closed
 signal run_action_taken
 
 @onready var _panel: PanelContainer = $Panel
+@onready var _master: HSlider = $Panel/Margin/Rows/MasterRow/Slider
+@onready var _master_value: Label = $Panel/Margin/Rows/MasterRow/Value
 @onready var _volume: HSlider = $Panel/Margin/Rows/VolumeRow/Slider
 @onready var _volume_value: Label = $Panel/Margin/Rows/VolumeRow/Value
+@onready var _sfx: HSlider = $Panel/Margin/Rows/SfxRow/Slider
+@onready var _sfx_value: Label = $Panel/Margin/Rows/SfxRow/Value
 @onready var _fullscreen: CheckButton = $Panel/Margin/Rows/FullscreenRow/Toggle
 @onready var _screen_shake: CheckButton = $Panel/Margin/Rows/ScreenShakeRow/Toggle
+@onready var _pause_blur: CheckButton = $Panel/Margin/Rows/PauseBlurRow/Toggle
 @onready var _controls: Button = $Panel/Margin/Rows/Controls
 @onready var _back: Button = $Panel/Margin/Rows/Back
 @onready var _keybinds: Control = $KeybindScreen
@@ -34,9 +39,14 @@ func _ready() -> void:
 	_keybinds.closed.connect(_on_keybinds_closed)
 	_controls.pressed.connect(_on_controls)
 	_back.pressed.connect(func() -> void: closed.emit())
+	_master.value_changed.connect(func(v: float) -> void:
+		Settings.set_master_volume(v / 100.0); _master_value.text = "%d%%" % roundi(v))
 	_volume.value_changed.connect(_on_volume_changed)
+	_sfx.value_changed.connect(func(v: float) -> void:
+		Settings.set_sfx_volume(v / 100.0); _sfx_value.text = "%d%%" % roundi(v))
 	_fullscreen.toggled.connect(func(on: bool) -> void: Settings.set_fullscreen(on))
 	_screen_shake.toggled.connect(func(on: bool) -> void: Settings.set_screen_shake(on))
+	_pause_blur.toggled.connect(func(on: bool) -> void: Settings.set_pause_blur(on))
 	_replay.pressed.connect(_on_replay)
 	_fresh.pressed.connect(_on_fresh)
 	_seed_field.text_submitted.connect(func(_t: String) -> void: _on_replay())
@@ -67,10 +77,15 @@ func open() -> void:
 	visible = true
 	_panel.visible = true
 	_keybinds.visible = false
+	_master.set_value_no_signal(Settings.master_volume * 100.0)
+	_master_value.text = "%d%%" % roundi(Settings.master_volume * 100.0)
 	_volume.set_value_no_signal(Settings.music_volume * 100.0)
 	_volume_value.text = "%d%%" % roundi(Settings.music_volume * 100.0)
+	_sfx.set_value_no_signal(Settings.sfx_volume * 100.0)
+	_sfx_value.text = "%d%%" % roundi(Settings.sfx_volume * 100.0)
 	_fullscreen.set_pressed_no_signal(Settings.fullscreen)
 	_screen_shake.set_pressed_no_signal(Settings.screen_shake)
+	_pause_blur.set_pressed_no_signal(Settings.pause_blur)
 	# The run tools only exist mid-run; from the title or hub they are noise.
 	var in_run: bool = GameState.run_active
 	_run_sep.visible = in_run

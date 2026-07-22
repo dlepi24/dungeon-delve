@@ -48,8 +48,29 @@ theme_override_constants/separation = 16
 
 [node name="Title" type="Label" parent="Panel/Margin/Rows"]
 layout_mode = 2
-text = "SETTINGS"
+text = "OPTIONS"
 horizontal_alignment = 1
+
+[node name="MasterRow" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Margin/Rows/MasterRow"]
+layout_mode = 2
+text = "MASTER VOLUME"
+
+[node name="Slider" type="HSlider" parent="Panel/Margin/Rows/MasterRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 100.0
+value = 100.0
+
+[node name="Value" type="Label" parent="Panel/Margin/Rows/MasterRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(52, 0)
+text = "100%"
+horizontal_alignment = 2
 
 [node name="VolumeRow" type="HBoxContainer" parent="Panel/Margin/Rows"]
 layout_mode = 2
@@ -57,7 +78,7 @@ theme_override_constants/separation = 12
 
 [node name="Label" type="Label" parent="Panel/Margin/Rows/VolumeRow"]
 layout_mode = 2
-text = "Music"
+text = "MUSIC"
 
 [node name="Slider" type="HSlider" parent="Panel/Margin/Rows/VolumeRow"]
 layout_mode = 2
@@ -67,6 +88,27 @@ max_value = 100.0
 value = 100.0
 
 [node name="Value" type="Label" parent="Panel/Margin/Rows/VolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(52, 0)
+text = "100%"
+horizontal_alignment = 2
+
+[node name="SfxRow" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Margin/Rows/SfxRow"]
+layout_mode = 2
+text = "SFX"
+
+[node name="Slider" type="HSlider" parent="Panel/Margin/Rows/SfxRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 100.0
+value = 100.0
+
+[node name="Value" type="Label" parent="Panel/Margin/Rows/SfxRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(52, 0)
 text = "100%"
@@ -92,9 +134,22 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="Panel/Margin/Rows/ScreenShakeRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Screen shake"
+text = "SCREEN SHAKE"
 
 [node name="Toggle" type="CheckButton" parent="Panel/Margin/Rows/ScreenShakeRow"]
+layout_mode = 2
+button_pressed = true
+
+[node name="PauseBlurRow" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Margin/Rows/PauseBlurRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "PAUSE BLUR"
+
+[node name="Toggle" type="CheckButton" parent="Panel/Margin/Rows/PauseBlurRow"]
 layout_mode = 2
 button_pressed = true
 

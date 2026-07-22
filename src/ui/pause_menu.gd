@@ -10,6 +10,7 @@ extends CanvasLayer
 ## whole game makes, not a delve feature. It found this out the hard way:
 ## round 2 shipped with ESC only working underground.
 
+@onready var _dim: ColorRect = $Dim
 @onready var _panel: PanelContainer = $Panel
 @onready var _resume: Button = $Panel/Margin/Rows/Resume
 @onready var _settings_button: Button = $Panel/Margin/Rows/Settings
@@ -73,10 +74,20 @@ func _on_settings_run_action() -> void:
 
 func _open() -> void:
 	Cursor.menu()
+	# No blur shader in the build yet, so PAUSE BLUR controls the dim weight:
+	# on = the spec's heavy rgba(13,11,9,0.72) stand-in, off = a lighter dim.
+	_dim.color = Color(0.051, 0.043, 0.035, 0.72 if Settings.pause_blur else 0.5)
 	_panel.visible = true
 	_settings.visible = false
-	_status.text = "room %d of %d" % [GameState.depth + 1, maxi(1, GameState.run_plan.size())] \
-		if GameState.run_active else "the surface"
+	# Live run readout (spec stats strip): depth, haul at risk, ore multiplier.
+	if GameState.run_active:
+		var rooms: int = maxi(1, GameState.run_plan.size())
+		_status.text = "DEPTH %d/%d          HAUL %d          MULT ×%.2f" % [
+			GameState.depth + 1, rooms, GameState.carried_haul,
+			GameState.depth_haul_multiplier(),
+		]
+	else:
+		_status.text = "THE SURFACE"
 	visible = true
 	get_tree().paused = true
 	# Gamepad/keyboard navigation needs a starting point — with the cursor
