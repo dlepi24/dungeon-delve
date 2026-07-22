@@ -1,6 +1,20 @@
 # Roadmap
 
 ## Status
+- **2026-07-22: COMPOSITION PASS — the "still some work to do" follow-up.**
+  Atmosphere landed well; remaining problem was emptiness/composition (tiny
+  player, sparse space). Dustin picked all four levers. Done: (1) camera zoom
+  1.45->1.7 delve, hub 1.0->1.3 with buildings clustered into a tight outpost;
+  (2+3) new SetDressing helper — shaded procedural crates/barrels/rubble/
+  lanterns/chains/brackets — scattered on delve floors AND hung from ceilings
+  by a stable per-cell hash (never seeded Rng), plus warm clutter + hanging
+  lanterns in the hub; (4) "denser rooms" done as NON-gameplay ceiling
+  silhouette depth rather than rewriting the combat-tuned ASCII layouts (their
+  design comments are load-bearing). Also: the mint-green exit gray-box became
+  a warm "up=out" light-shaft beacon; dust retuned to diffuse haze + fine
+  motes. All zoom/dust/dressing values exported. OPEN: whether the rooms want
+  actual gameplay-platform density (a level-design pass to tune WITH Dustin,
+  judging the jumps) is deliberately deferred; buff pickups still need art.
 - **2026-07-21 (latest): ATMOSPHERE PASS — the "it feels bleh" fix.** Dustin's
   direction critique (not cohesive / flat / no purpose) was diagnosed as a
   SCENE-level gap, not a sprite problem: no lighting, no depth, no unifying
