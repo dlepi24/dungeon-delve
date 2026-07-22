@@ -204,7 +204,10 @@ func _timber_pixel(x: int, y: int, worn: bool) -> Color:
 
 func _beam_pixel(x: int, y: int) -> Color:
 	if x < 11 or x > 20:
-		return Color(0, 0, 0, 0)
+		# Composite the post over BACKDROP rock (tile 8's exact salt/flags), not
+		# transparency — _drop_beam replaces the backdrop tile in this cell, so a
+		# transparent surround let the black void show behind the post.
+		return _rock_pixel(x, y, 23, false, false, true)
 	var base: Color = TIMBER
 	var grain: float = _vnoise(x * 5, y * 2, 81, 8)
 	if grain > 0.62:

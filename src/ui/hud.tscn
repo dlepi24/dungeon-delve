@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://src/ui/hud.gd" id="1_hud"]
 [ext_resource type="PackedScene" path="res://src/ui/health_bar.tscn" id="2_bar"]
@@ -18,6 +18,15 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 shadow_color = Color(0, 0, 0, 0.4)
 shadow_size = 6
+
+; A solid dark plate behind the health number so it reads on any fill colour —
+; more legible than an outline alone (approved in the HUD preview).
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hpplate"]
+bg_color = Color(0.047, 0.039, 0.031, 0.78)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_active"]
 bg_color = Color(0.08, 0.07, 0.055, 0.95)
@@ -84,17 +93,25 @@ texture_filter = 1
 [node name="Bar" parent="." instance=ExtResource("2_bar")]
 position = Vector2(144, 47)
 
-; The number rides ON the bar, centred, with an outline so it reads on any fill
-; colour — cleaner than a second line under the bar.
+; The number rides ON the bar: a dark plate for legibility, then the label,
+; both centred on the bar (144, width 152).
+[node name="HealthPlate" type="Panel" parent="."]
+offset_left = 96.0
+offset_top = 42.0
+offset_right = 192.0
+offset_bottom = 64.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_hpplate")
+
 [node name="HealthLabel" type="Label" parent="."]
-offset_left = 68.0
-offset_top = 40.0
-offset_right = 220.0
-offset_bottom = 58.0
-theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(1, 1, 1, 0.95)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 4
+offset_left = 96.0
+offset_top = 43.0
+offset_right = 192.0
+offset_bottom = 64.0
+theme_override_colors/font_color = Color(0.96, 0.937, 0.886, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 15
 text = "100 / 100"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -356,22 +373,3 @@ offset_right = 797.0
 offset_bottom = 57.0
 color = Color(0.75, 0.14, 0.16, 1)
 
-; Pinned to the top-RIGHT edge, not to x=1552 — on an ultrawide the screen is
-; wider than the 1920 design space (stretch aspect "expand").
-[node name="DepthPanel" type="Panel" parent="."]
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -368.0
-offset_top = 24.0
-offset_right = -24.0
-offset_bottom = 66.0
-grow_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_back")
-
-[node name="Depth" type="Label" parent="DepthPanel"]
-offset_left = 12.0
-offset_top = 8.0
-offset_right = 332.0
-offset_bottom = 34.0
-horizontal_alignment = 2
-text = "Room 1/5"

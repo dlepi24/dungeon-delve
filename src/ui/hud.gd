@@ -55,12 +55,18 @@ func _ready() -> void:
 	_bar.hide_when_full = false
 	# Shorter and squarer than before; the number rides on top of it now.
 	_bar.bar_size = Vector2(152, 15)
+	# A notch per 25 HP (a max-health boon visibly adds chunks) and a low-health
+	# pulse under 25%. Enemy bars leave both off, so they stay clean.
+	_bar.segment_hp = 25.0
+	_bar.low_pulse_below = 0.25
 	_bar.set_ratio(1.0)
 
 
 func _process(_delta: float) -> void:
 	if player == null:
 		return
+	# Kept current so the segment notches track a max-health boon live.
+	_bar.max_health = player.effective_max_health()
 	_bar.set_ratio(player.health / maxf(1.0, player.effective_max_health()))
 	_health_label.text = "%d / %d" % [roundi(player.health), roundi(player.effective_max_health())]
 	_refresh_weapons()
