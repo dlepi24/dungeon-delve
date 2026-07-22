@@ -37,10 +37,37 @@ func _ready() -> void:
 		_player.global_position = $PlayerStart.global_position
 	_vendor_panel.visible = false
 	_blacksmith_panel.visible = false
+	_build_dressing()
 	Cursor.gameplay()
 	Music.play(&"hub", music_attenuation_db)
 	_refresh_banked()
 	Events.upgrade_purchased.connect(func(_id: StringName, _lvl: int) -> void: _refresh_banked())
+
+
+## Warm clutter so the outpost reads as lived-in, not four buildings on an empty
+## floor. Props are set dressing (no collision), placed by hand at floor height
+## (y=780); hanging lanterns drop from the dark ceiling as warm points of light.
+func _build_dressing() -> void:
+	var floor_y: float = 780.0
+	var props: Array[Node2D] = [
+		SetDressing.make_rubble(76),
+		SetDressing.make_crate(48, 48),
+		SetDressing.make_crate(30, 30),
+		SetDressing.make_barrel(),
+		SetDressing.make_barrel(30, 42),
+		SetDressing.make_crate(42, 42),
+	]
+	var spots: Array[Vector2] = [
+		Vector2(400, floor_y), Vector2(630, floor_y), Vector2(650, floor_y - 48),
+		Vector2(1085, floor_y), Vector2(1112, floor_y), Vector2(1250, floor_y),
+	]
+	for i: int in props.size():
+		props[i].position = spots[i]
+		add_child(props[i])
+	for at: Vector2 in [Vector2(845, 300), Vector2(1180, 320)]:
+		var lantern: Node2D = SetDressing.make_lantern(120.0)
+		lantern.position = at
+		add_child(lantern)
 
 
 func _refresh_banked() -> void:

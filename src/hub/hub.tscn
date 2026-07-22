@@ -18,8 +18,11 @@ size = Vector2(40, 1080)
 [node name="Hub" type="Node2D"]
 script = ExtResource("1")
 
+; Zoomed in and raised a touch (2026-07-22): at 1.0 the player was a speck in a
+; wide empty diorama. The buildings are clustered to fit this framing.
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(960, 540)
+position = Vector2(960, 560)
+zoom = Vector2(1.3, 1.3)
 
 [node name="Background" type="ColorRect" parent="."]
 offset_left = -1200.0
@@ -63,57 +66,57 @@ offset_right = 1920.0
 offset_bottom = 1080.0
 color = Color(0.22, 0.17, 0.12, 1)
 
-; The training post (80x100 art, bottom on the floor at y=780).
+; Clustered into a tight outpost (2026-07-22): shops on the left, the mine
+; mouth on the right, so you arrive facing the shops and walk toward the dark.
 [node name="TrainingPost" type="AnimatedSprite2D" parent="."]
-position = Vector2(158, 730)
+position = Vector2(520, 730)
 script = ExtResource("8_baked")
 sheet = "training_post"
 
 [node name="TrainingMarker" type="Marker2D" parent="."]
-position = Vector2(158, 780)
+position = Vector2(520, 780)
 
-; 100x120 art on the old rect's footprint (360..460, bottom at 780).
 [node name="VendorStall" type="AnimatedSprite2D" parent="."]
-position = Vector2(410, 720)
+position = Vector2(720, 720)
 script = ExtResource("8_baked")
 sheet = "vendor_stall"
 
 [node name="VendorMarker" type="Marker2D" parent="."]
-position = Vector2(410, 780)
+position = Vector2(720, 780)
 
 ; The smithy: one 110x130 sprite (anvil, forge mouth, 2-frame coal flicker
-; at the BakedSprite default ~0.4s). Bottom on the floor; marker unchanged.
+; at the BakedSprite default ~0.4s). Bottom on the floor.
 [node name="Smithy" type="AnimatedSprite2D" parent="."]
-position = Vector2(755, 715)
+position = Vector2(965, 715)
 script = ExtResource("8_baked")
 sheet = "smithy"
 
 [node name="SmithyMarker" type="Marker2D" parent="."]
-position = Vector2(750, 780)
+position = Vector2(965, 780)
 
 ; The black rect stays BEHIND the art for depth; the sprite's opening is
 ; already pitch dark, this just deepens it.
 [node name="MineMouth" type="ColorRect" parent="."]
-offset_left = 1460.0
+offset_left = 1290.0
 offset_top = 620.0
-offset_right = 1600.0
+offset_right = 1430.0
 offset_bottom = 780.0
 color = Color(0.04, 0.03, 0.02, 1)
 
 ; 140x160 art with the 2-frame warning-lantern flicker.
 [node name="MineMouthArt" type="AnimatedSprite2D" parent="."]
-position = Vector2(1530, 700)
+position = Vector2(1360, 700)
 script = ExtResource("8_baked")
 sheet = "mine_mouth"
 
 [node name="MineMarker" type="Marker2D" parent="."]
-position = Vector2(1530, 780)
+position = Vector2(1360, 780)
 
 [node name="PlayerStart" type="Marker2D" parent="."]
-position = Vector2(960, 780)
+position = Vector2(1150, 780)
 
 [node name="Player" parent="." instance=ExtResource("2")]
-position = Vector2(960, 780)
+position = Vector2(1150, 780)
 
 [node name="HubHud" type="CanvasLayer" parent="."]
 

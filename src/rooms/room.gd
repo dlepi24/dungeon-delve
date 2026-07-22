@@ -62,6 +62,66 @@ func _ready() -> void:
 	_exit_light.position = Vector2(0, -exit_size.y * 0.4)
 	exit_marker.add_child(_exit_light)
 
+	_build_dressing.call_deferred()
+
+
+## Scatter set dressing on the room's floor surfaces so the delve reads as a
+## worked, lived-in mine instead of bare rock. Deferred so the generated Tiles
+## layer is ready. Placement is a per-cell hash (stable across loads, and NOT
+## the seeded Rng — cosmetics must never perturb gameplay streams), skips the
+## entry and exit so nothing clutters the spawn or the beacon, and it is capped.
+@export_group("Set dressing")
+## Rough share of floor cells that get a prop, 0..100. 0 disables.
+@export var dressing_percent: int = 9
+## Hard cap on props per room, so a huge hall does not turn into a junkyard.
+@export var dressing_max: int = 16
+
+func _build_dressing() -> void:
+	if dressing_percent <= 0:
+		return
+	var tiles: TileMapLayer = get_node_or_null(^"Tiles") as TileMapLayer
+	if tiles == null:
+		return
+	var entry_x: float = entry.global_position.x
+	var exit_x: float = exit_marker.global_position.x
+	var placed: int = 0
+	for cell: Vector2i in tiles.get_used_cells():
+		if placed >= dressing_max:
+			break
+		# A standable top: something here, nothing in the Tiles layer above it.
+		if tiles.get_cell_source_id(cell + Vector2i.UP) != -1:
+			continue
+		var h: int = _cell_hash(cell.x, cell.y)
+		if h % 100 >= dressing_percent:
+			continue
+		var top: Vector2 = tiles.map_to_local(cell) + Vector2(0, -16)
+		# Keep the spawn and the exit beacon clear.
+		if absf(top.x - entry_x) < 90.0 or absf(top.x - exit_x) < 90.0:
+			continue
+		var prop: Node2D = _dressing_prop(h)
+		prop.position = top
+		add_child(prop)
+		placed += 1
+
+
+## Pick a prop from the cell hash — mostly crates and rubble, a barrel now and
+## then. Rubble hugs the ground; crates and barrels sit on it.
+func _dressing_prop(h: int) -> Node2D:
+	match (h / 100) % 5:
+		0, 1:
+			return SetDressing.make_crate(40.0 + float(h % 12), 40.0 + float((h / 7) % 12))
+		2:
+			return SetDressing.make_barrel()
+		_:
+			return SetDressing.make_rubble(52.0 + float(h % 30))
+
+
+## Cheap deterministic per-cell hash (matches the generator's discipline).
+func _cell_hash(x: int, y: int) -> int:
+	var n: int = x * 374761393 + y * 668265263 + 2246822519
+	n = (n ^ (n >> 13)) * 1274126177
+	return absi(n ^ (n >> 16))
+
 
 ## Visual only: the beacon breathes.
 func _process(delta: float) -> void:

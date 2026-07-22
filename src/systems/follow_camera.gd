@@ -16,7 +16,11 @@ extends Camera2D
 ## How close the camera sits. 1.0 is the old static framing; higher shows less
 ## of the room at once, so the camera SCROLLS and the world reads bigger —
 ## Dustin's "feel like an actual world" call. His dial.
-@export var zoom_level: float = 1.45
+## Bumped from 1.45 (2026-07-22): the wider zoom left the player small in a lot
+## of dead space. Tighter reads more intimate and Dead-Cells-like. Feel knob —
+## higher = closer but you see less of the room ahead, which matters for
+## telegraph reads, so tune against the combat, not just the framing.
+@export var zoom_level: float = 1.7
 
 ## Bounds of the current room, set by the Delve per room (variable-width rooms
 ## report their own size). The camera clamps inside; an axis where the view is
