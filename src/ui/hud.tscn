@@ -6,16 +6,18 @@
 [ext_resource type="Texture2D" path="res://assets/icons/ore.png" id="4_ore"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_back"]
-bg_color = Color(0.03, 0.025, 0.02, 0.72)
+bg_color = Color(0.055, 0.05, 0.066, 0.9)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.35, 0.28, 0.18, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+border_color = Color(0.62, 0.5, 0.3, 0.85)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.4)
+shadow_size = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_active"]
 bg_color = Color(0.08, 0.07, 0.055, 0.95)
@@ -59,19 +61,20 @@ corner_radius_bottom_left = 4
 layer = 5
 script = ExtResource("1_hud")
 
-; One backdrop panel so the cluster reads as a HUD, not floating debug text.
+; One tight backdrop panel, styled like the pause menu (dark + amber) so the
+; HUD reads as designed UI, not a debug box. Hugs its content.
 [node name="Backdrop" type="Panel" parent="."]
 offset_left = 24.0
 offset_top = 24.0
-offset_right = 356.0
-offset_bottom = 212.0
+offset_right = 300.0
+offset_bottom = 194.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_back")
 
 [node name="HeartIcon" type="TextureRect" parent="."]
-offset_left = 40.0
-offset_top = 34.0
-offset_right = 68.0
-offset_bottom = 62.0
+offset_left = 38.0
+offset_top = 38.0
+offset_right = 60.0
+offset_bottom = 60.0
 texture = ExtResource("3_heart")
 expand_mode = 1
 stretch_mode = 5
@@ -79,56 +82,62 @@ texture_filter = 1
 
 ; HealthBar is a Node2D centred on its position; bar_size is set in hud.gd.
 [node name="Bar" parent="." instance=ExtResource("2_bar")]
-position = Vector2(208, 40)
+position = Vector2(144, 47)
 
+; The number rides ON the bar, centred, with an outline so it reads on any fill
+; colour — cleaner than a second line under the bar.
 [node name="HealthLabel" type="Label" parent="."]
-offset_left = 78.0
-offset_top = 62.0
-offset_right = 338.0
-offset_bottom = 86.0
-theme_override_font_sizes/font_size = 15
-theme_override_colors/font_color = Color(0.85, 0.8, 0.72, 1)
+offset_left = 68.0
+offset_top = 40.0
+offset_right = 220.0
+offset_bottom = 58.0
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
 text = "100 / 100"
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="OreIcon" type="TextureRect" parent="."]
-offset_left = 40.0
-offset_top = 92.0
-offset_right = 66.0
-offset_bottom = 118.0
+offset_left = 38.0
+offset_top = 72.0
+offset_right = 60.0
+offset_bottom = 94.0
 texture = ExtResource("4_ore")
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
 [node name="OreCount" type="Label" parent="."]
-offset_left = 76.0
-offset_top = 92.0
-offset_right = 280.0
-offset_bottom = 118.0
-theme_override_font_sizes/font_size = 20
+offset_left = 68.0
+offset_top = 70.0
+offset_right = 200.0
+offset_bottom = 96.0
+theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1.0, 0.85, 0.35, 1)
 text = "0"
+vertical_alignment = 1
 
 [node name="WeaponSlots" type="Control" parent="."]
-offset_left = 40.0
-offset_top = 130.0
-offset_right = 200.0
-offset_bottom = 210.0
+offset_left = 38.0
+offset_top = 104.0
+offset_right = 198.0
+offset_bottom = 178.0
 
 ; The stowed weapon: smaller, dimmer, tucked behind the active square's
 ; shoulder. Swapping visually trades the two.
 [node name="Secondary" type="Panel" parent="WeaponSlots"]
-offset_left = 70.0
-offset_right = 114.0
-offset_bottom = 44.0
+offset_left = 64.0
+offset_right = 104.0
+offset_bottom = 40.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_second")
 
 [node name="SIcon" type="TextureRect" parent="WeaponSlots/Secondary"]
 offset_left = 6.0
 offset_top = 6.0
-offset_right = 38.0
-offset_bottom = 38.0
+offset_right = 34.0
+offset_bottom = 34.0
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
@@ -136,46 +145,45 @@ modulate = Color(0.7, 0.7, 0.7, 0.85)
 
 ; What is in your hand right now: the big square.
 [node name="Active" type="Panel" parent="WeaponSlots"]
-offset_top = 8.0
-offset_right = 64.0
-offset_bottom = 72.0
+offset_top = 6.0
+offset_right = 58.0
+offset_bottom = 64.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_active")
 
 [node name="AIcon" type="TextureRect" parent="WeaponSlots/Active"]
-offset_left = 8.0
-offset_top = 8.0
-offset_right = 56.0
-offset_bottom = 56.0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 51.0
+offset_bottom = 51.0
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
 [node name="KeyHint" type="Label" parent="WeaponSlots"]
-offset_left = 70.0
-offset_top = 48.0
-offset_right = 160.0
-offset_bottom = 70.0
-theme_override_font_sizes/font_size = 13
+offset_left = 72.0
+offset_top = 44.0
+offset_right = 162.0
+offset_bottom = 64.0
+theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.6, 0.55, 0.45, 1)
 text = "Q swap"
 
-; Beside the weapon square, not below it — fills the panel's empty right side
-; and lets the panel end tight under the loadout instead of a dead strip.
+; Beside the weapon square — the weapon in hand, named.
 [node name="WeaponName" type="Label" parent="."]
-offset_left = 120.0
-offset_top = 148.0
-offset_right = 348.0
-offset_bottom = 174.0
-theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(0.85, 0.79, 0.68, 1)
+offset_left = 110.0
+offset_top = 112.0
+offset_right = 292.0
+offset_bottom = 138.0
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.88, 0.82, 0.7, 1)
 text = "Pickaxe"
 vertical_alignment = 1
 
 [node name="BuffRows" type="VBoxContainer" parent="."]
 offset_left = 40.0
-offset_top = 228.0
+offset_top = 210.0
 offset_right = 220.0
-offset_bottom = 436.0
+offset_bottom = 418.0
 theme_override_constants/separation = 8
 
 ; Reserved for debuffs — empty until a DebuffData exists. See hud.gd.

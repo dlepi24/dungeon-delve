@@ -53,7 +53,8 @@ func _ready() -> void:
 	if player == null:
 		return
 	_bar.hide_when_full = false
-	_bar.bar_size = Vector2(260, 18)
+	# Shorter and squarer than before; the number rides on top of it now.
+	_bar.bar_size = Vector2(152, 15)
 	_bar.set_ratio(1.0)
 
 
