@@ -1,0 +1,71 @@
+[gd_scene load_steps=8 format=3]
+
+; The scripted intro boss — the Foreman. Same collision wiring as a real enemy:
+; body on Enemy(4)/World(1), Hurtbox on Enemy(4) watching PlayerAttack(8), Hitbox
+; on EnemyAttack(16) watching Player(2). Wears the overseer sheet, big, tinted by
+; BodyJuice from the FSM state (tutorial_boss.gd).
+
+[ext_resource type="Script" path="res://src/enemies/tutorial_boss.gd" id="1_boss"]
+[ext_resource type="Script" path="res://src/systems/body_juice.gd" id="2_juice"]
+[ext_resource type="Script" path="res://src/systems/baked_sprite.gd" id="3_baked"]
+[ext_resource type="Script" path="res://src/systems/hitbox.gd" id="4_hitbox"]
+[ext_resource type="Script" path="res://src/systems/hurtbox.gd" id="5_hurtbox"]
+[ext_resource type="PackedScene" path="res://src/ui/health_bar.tscn" id="6_bar"]
+
+[sub_resource type="CapsuleShape2D" id="body"]
+radius = 26.0
+height = 104.0
+
+[sub_resource type="RectangleShape2D" id="swing"]
+size = Vector2(120, 100)
+
+[node name="TutorialBoss" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_boss")
+
+[node name="VisualRoot" type="Node2D" parent="."]
+script = ExtResource("2_juice")
+tint_sprite_with_base_colour = true
+
+[node name="Visual" type="ColorRect" parent="VisualRoot"]
+visible = false
+offset_left = -26.0
+offset_top = -104.0
+offset_right = 26.0
+color = Color(0.55, 0.55, 0.6, 1)
+
+; overseer sheet is 34x52 greyscale; ×2.4 ≈ 82x125, feet on the origin.
+[node name="Sprite" type="AnimatedSprite2D" parent="VisualRoot"]
+texture_filter = 1
+scale = Vector2(2.4, 2.4)
+position = Vector2(0, -62)
+script = ExtResource("3_baked")
+sheet = "overseer"
+fps = 7.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -52)
+shape = SubResource("body")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 8
+script = ExtResource("5_hurtbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -52)
+shape = SubResource("body")
+
+[node name="Hitbox" type="Area2D" parent="."]
+position = Vector2(72, -52)
+collision_layer = 16
+collision_mask = 2
+script = ExtResource("4_hitbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+shape = SubResource("swing")
+
+[node name="HealthBar" parent="." instance=ExtResource("6_bar")]
+position = Vector2(0, -142)
+bar_size = Vector2(120, 8)

@@ -38,7 +38,7 @@ const BACKDROP_PAD: int = 8
 const OUT_DIR: String = "res://src/rooms/delve"
 const TILESET: String = "res://src/rooms/world_tileset.tres"
 
-const LEGEND: String = ".#=PXgbdESCvo"
+const LEGEND: String = ".#=PXgbdESCvohF"
 
 ## The player's jump rises 109 px = 3.4 tiles, so a 3-tile step lands and a
 ## 4-tile step is impossible. Every platform must be within this of a surface
@@ -308,6 +308,10 @@ func _build(id: StringName, rows: Array, tile_set: TileSet) -> void:
 					spawns.append({"kind": "spikes", "at": _world(x, y)})
 				"o":
 					spawns.append({"kind": "anchor", "at": _world(x, y)})
+				"h":
+					spawns.append({"kind": "heart", "at": _world(x, y)})
+				"F":
+					spawns.append({"kind": "hearth", "at": _world(x, y)})
 
 	# Moss takes the lit lip: rock whose cell above is open air. A post-pass,
 	# because "is the air open" is only known once every play tile is down.

@@ -12,6 +12,8 @@ signal closed
 
 var _listening_for: StringName = &""
 var _rows: Dictionary[StringName, Button] = {}
+var _order: Array[Control] = []
+var _nav: MenuNav = MenuNav.new()
 
 @onready var _list: VBoxContainer = $Margin/Rows/List
 @onready var _hint: Label = $Margin/Rows/Hint
@@ -24,6 +26,21 @@ func _ready() -> void:
 	_build_rows()
 	_reset.pressed.connect(_on_reset)
 	_back.pressed.connect(func() -> void: closed.emit())
+	_order = []
+	for action: StringName in Keybinds.REBINDABLE:
+		if _rows.has(action):
+			_order.append(_rows[action])
+	_order.append(_reset)
+	_order.append(_back)
+	MenuNav.disable_builtin_nav(_order)
+
+
+## Not while a rebind capture is live — the next key press is meant to become
+## the new binding, not a menu move (they'd otherwise both fire on the same
+## press, e.g. binding the Up arrow would also step focus up).
+func _process(delta: float) -> void:
+	if visible and _listening_for == &"":
+		_nav.poll(delta, _order)
 
 
 func _build_rows() -> void:

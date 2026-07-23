@@ -19,6 +19,8 @@ signal run_action_taken
 @onready var _sfx: HSlider = $Panel/Margin/Rows/SfxRow/Slider
 @onready var _sfx_value: Label = $Panel/Margin/Rows/SfxRow/Value
 @onready var _fullscreen: CheckButton = $Panel/Margin/Rows/FullscreenRow/Toggle
+@onready var _ui_scale: HSlider = $Panel/Margin/Rows/UiScaleRow/Slider
+@onready var _ui_scale_value: Label = $Panel/Margin/Rows/UiScaleRow/Value
 @onready var _screen_shake: CheckButton = $Panel/Margin/Rows/ScreenShakeRow/Toggle
 @onready var _pause_blur: CheckButton = $Panel/Margin/Rows/PauseBlurRow/Toggle
 @onready var _controls: Button = $Panel/Margin/Rows/Controls
@@ -30,6 +32,9 @@ signal run_action_taken
 @onready var _run_buttons: HBoxContainer = $Panel/Margin/Rows/RunButtons
 @onready var _replay: Button = $Panel/Margin/Rows/RunButtons/Replay
 @onready var _fresh: Button = $Panel/Margin/Rows/RunButtons/Fresh
+
+var _order: Array[Control] = []
+var _nav: MenuNav = MenuNav.new()
 
 
 func _ready() -> void:
@@ -45,6 +50,8 @@ func _ready() -> void:
 	_sfx.value_changed.connect(func(v: float) -> void:
 		Settings.set_sfx_volume(v / 100.0); _sfx_value.text = "%d%%" % roundi(v))
 	_fullscreen.toggled.connect(func(on: bool) -> void: Settings.set_fullscreen(on))
+	_ui_scale.value_changed.connect(func(v: float) -> void:
+		Settings.set_ui_scale(v / 100.0); _ui_scale_value.text = "%d%%" % roundi(v))
 	_screen_shake.toggled.connect(func(on: bool) -> void: Settings.set_screen_shake(on))
 	_pause_blur.toggled.connect(func(on: bool) -> void: Settings.set_pause_blur(on))
 	_replay.pressed.connect(_on_replay)
@@ -84,6 +91,8 @@ func open() -> void:
 	_sfx.set_value_no_signal(Settings.sfx_volume * 100.0)
 	_sfx_value.text = "%d%%" % roundi(Settings.sfx_volume * 100.0)
 	_fullscreen.set_pressed_no_signal(Settings.fullscreen)
+	_ui_scale.set_value_no_signal(Settings.ui_scale * 100.0)
+	_ui_scale_value.text = "%d%%" % roundi(Settings.ui_scale * 100.0)
 	_screen_shake.set_pressed_no_signal(Settings.screen_shake)
 	_pause_blur.set_pressed_no_signal(Settings.pause_blur)
 	# The run tools only exist mid-run; from the title or hub they are noise.
@@ -93,7 +102,25 @@ func open() -> void:
 	_run_buttons.visible = in_run
 	if in_run:
 		_seed_field.text = GameState.seed_text()
+	_rebuild_order()
 	_volume.grab_focus()
+
+
+## Recomputed on every open — the run tools row only exists mid-run, so the
+## wraparound order has to match whatever is actually visible right now.
+func _rebuild_order() -> void:
+	_order = [_master, _volume, _sfx, _fullscreen, _ui_scale, _screen_shake, _pause_blur, _controls]
+	if _run_buttons.visible:
+		_order.append(_replay)
+		_order.append(_fresh)
+	_order.append(_back)
+	MenuNav.disable_builtin_nav(_order)
+
+
+## Not while the keybind sub-screen is open on top of us — it owns its own nav.
+func _process(delta: float) -> void:
+	if visible and not _keybinds.visible:
+		_nav.poll(delta, _order)
 
 
 func _on_volume_changed(value: float) -> void:

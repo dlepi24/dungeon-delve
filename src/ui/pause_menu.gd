@@ -18,12 +18,17 @@ extends CanvasLayer
 @onready var _status: Label = $Panel/Margin/Rows/Status
 @onready var _settings: Control = $SettingsMenu
 
+var _order: Array[Control] = []
+var _nav: MenuNav = MenuNav.new()
+
 
 func _ready() -> void:
 	# The tree is paused when this is up, so it must keep processing.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	_settings.visible = false
+	_order = [_resume, _settings_button, _quit_title]
+	MenuNav.disable_builtin_nav(_order)
 	_settings.closed.connect(_on_settings_closed)
 	_settings.run_action_taken.connect(_on_settings_run_action)
 	_settings_button.pressed.connect(_on_settings)
@@ -39,6 +44,14 @@ func _on_joy_connection(_device: int, connected: bool) -> void:
 	if connected or visible or get_tree().paused:
 		return
 	_open()
+
+
+## Only the pause panel itself, not while Settings is layered on top of it —
+## that sub-menu owns its own nav, and polling both at once would fight over
+## the currently focused control.
+func _process(delta: float) -> void:
+	if visible and _panel.visible:
+		_nav.poll(delta, _order)
 
 
 ## Start (pause) toggles; the gamepad B button (ui_cancel) also backs out of an
@@ -74,6 +87,7 @@ func _on_settings_run_action() -> void:
 
 func _open() -> void:
 	Cursor.menu()
+	Sfx.play_ui(Sfx.UI_PAUSE)
 	# No blur shader in the build yet, so PAUSE BLUR controls the dim weight:
 	# on = the spec's heavy rgba(13,11,9,0.72) stand-in, off = a lighter dim.
 	_dim.color = Color(0.051, 0.043, 0.035, 0.72 if Settings.pause_blur else 0.5)

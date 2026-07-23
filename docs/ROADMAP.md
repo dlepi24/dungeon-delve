@@ -1,6 +1,134 @@
 # Roadmap
 
 ## Status
+- **2026-07-22: ZONES — the mine got strata (Yvette's "levels feel the same" fix).**
+  The run now descends through three named zones — THE UPPER WORKINGS (warm
+  timber, the approved look) → THE HOT VEIN (red grade, rising embers, magma
+  bottom-glow, +brute promotion) → THE DEADLIGHT (cold cyan, hanging spores,
+  slinger/gnat lean) — each a `ZoneData` .tres (`src/rooms/zones/`) carrying
+  grade/tint/motes/music/room-pool/big-pool/spawn-lean. Fixed descent arc,
+  seeded contents; banding is pure arithmetic (entry=Upper, middles spread one
+  per zone, camp+deep=Deadlight) — a naive thirds split silently deleted the
+  Deadlight's combat AND the chasm from every run; now pinned by test. Each
+  centrepiece lives in its home zone (halls/undercroft/chasm). NEW: the CAMP —
+  a no-enemy rest room above the deep (guaranteed heart, campfire warmth in
+  the cold, no debris, zero economy impact — deep still pays depth 4). Zone
+  title cards ("▼ THE HOT VEIN" + tagline) on crossing; descend prompt names
+  the next stratum at a boundary; music binds per zone (drift shuffles within
+  the zone's pool). MineAtmosphere regrades live via `Events.zone_entered`
+  (signal-driven; hub untouched); rooms tint tile layers ONLY (enemy greyscale
+  telegraph contract intact); player lamp stays warm everywhere (warm=yours).
+  Player-visible surface verified by screenshots (tools/zone_shots.tscn — new
+  art-pass rig: walks a seeded run windowed, saves per-zone frames to
+  .zone_shots/, model auto-heals so exposures don't die). All pinned by NEW
+  tests/zone_test.tscn (resources sane, banding pure, full descent arc drives
+  3 zone signals, camp contents) + delve_test extended (band pin, all-three-
+  centrepieces pin, 6-room plan shape). Whole suite green, check green (102
+  scripts). NOTES for Dustin: (1) plan is now 6 rooms (camp added) — old ghost
+  tapes/records predate it, first new run re-baselines; (2) camp heart heal is
+  `camp_heart_heal` on Delve (default 2) — an in-run heal as a PLACE, flag if
+  it fights the hub-heal design; (3) all zone palettes are .tres values —
+  tune in inspector; ember/spore density is in MineAtmosphere._build_motes.
+- **2026-07-22: AUDIO FEEL PASS #2 — melodic music + more SFX.** Dustin: music
+  "still seems the same... slow repetitive thing." Chose SUPERCHARGE THE SYNTH
+  over sourcing real audio (I researched CC0/commercial-OK sources — Kenney,
+  OpenGameArt CC0, Pixabay, itch — and offered "you pick by ear, I wire"; he'd
+  rather I push the generator). Rewrote `gen_music.py` into a real composer:
+  hand-authored MELODIES (a sung lead voice, the big anti-repetition win),
+  VERSE/CHORUS structure (each track = two contrasting sections concatenated, not
+  one 4-chord loop), per-track timbre + more energy (tempos up to 142, busier
+  drums). Tracks are now 27–52s (were 15–27s) and actually go somewhere. SFX
+  added (his picks): enemy attack TELEGRAPH (positional wind-up "tell," pitched by
+  reach — Dead Cells readability), projectile WHOOSH (positional on the thrown
+  rock, flips up on a parry-reflect), low-health HEARTBEAT (seamless loop, on
+  below 30% health via a new `player_health_changed` signal, off on heal/extract/
+  death), and wired the spare `ui_pause` (pause open) + `land_soft` (short drops
+  vs hard thud — `player_landed` now carries fall speed). `doublejump.wav` stays
+  unwired: there is NO double-jump mechanic to attach it to. Also: Sfx is now
+  PROCESS_MODE_ALWAYS so menu select/back ticks sound while the tree is paused.
+  Regenerated, reimported, check green (96 scripts), all 5 combat/loop tests
+  green, boots clean. UNHEARD BY ME — Dustin's ear judges the tunes.
+- **2026-07-22: HUB WELCOME REVERTED to the quiet enriched prompts.** Dustin saw
+  the prominent top-centre guided panel in-game and called it — the overlay fought
+  the art (a bright bar across a moody scene). Pulled the whole guide (panel, beacon,
+  input-lock) back out; restored the first-visit tour as the diegetic hover cards
+  over each building (TRADE / BLACKSMITH / THE MINE + a one-liner), retiring once
+  the player has stood at all three (survives an early descend). Net effect: the
+  onboarding is back to the version before the prior entry. check green (96).
+- **2026-07-22: HUB WELCOME REBUILT — quiet prompts → prominent guided tour.**
+  The first-visit hub explanation was an enriched hover card over each building;
+  Dustin walked right past it and asked "where's the intro?" (fair — too subtle,
+  and it duplicated the shop panel's own blurb). Replaced with a real one-time
+  GUIDED WELCOME (`_start_guide` in hub.gd): a prominent top-centre panel steps
+  Surface → Trade → Blacksmith → Mine with a pulsing amber beacon parked over the
+  building each step points at. Interact advances, Esc/B skips; either retires it
+  (`hub_toured`). Movement stays live so you can walk to each building as it's
+  named, but shops + descend are input-locked until it ends so you can't blow past
+  it. Drove it to completion headless (panel builds, beacon moves, tears down,
+  flag persists); check green (96 scripts). Flipped Dustin's live `hub_toured`
+  back to false so it fires on his next hub entry (stats kept — no New Game
+  needed). Copy lives in string consts for easy tuning.
+- **2026-07-22: AUDIO FEEL PASS #1 (Dustin's playtest notes).** SFX landed well;
+  three tunes. (1) **Armor material was tinny** — it's the layer on the Brute/
+  Overseer, and Dustin liked the concept but not the high ping. Re-voiced from a
+  bright ring (partials to 3.3kHz) to a low-mid iron clang: spectral centroid
+  dropped ~measured from a treble-heavy sound to ~223 Hz, but deliberately NOT
+  all the way to flesh's ~82 Hz (an over-dark first take at 110 Hz collapsed into
+  the flesh sound — backed off). (2) **Pickups "weirdish"** — softened the ore
+  chime: lower base (720 Hz), rounded attack, a tanh glide between the two notes
+  instead of a hard step. (3) **Music variety wasn't landing** — root cause was
+  one synth palette across all moods, so tempo/progression differences blurred.
+  Added STYLE knobs to the generator (lead timbre square/saw/sine, arp on/off,
+  drum density full/kick/sparse, sub-bass) and gave each of the 5 delve moods +
+  hub/title/boss its own voice. All regenerated, reimported, check + enemy/feel
+  green. Still Dustin's ear to judge; centroid math is only a proxy for "heavier".
+- **2026-07-22: ONBOARDING PLAYTEST FIXES + a hit_landed REGRESSION.** Dustin
+  playtested the onboarding. Three things. (1) **REGRESSION FOUND & FIXED:** the
+  audio overhaul widened `hit_landed` from 2→4 args, but four handlers kept the
+  old 2-arg signature — and Godot 4.7 does NOT drop extra args, it throws
+  "expected 2, called with 4" and the handler NEVER fires (verified with a
+  headless repro). So on every hit, `player` hit-flash, `screen_shake`,
+  `follow_camera` camera-punch, AND `tutorial_director._on_hit` were all silently
+  dead — which is why the tutorial never advanced past ATTACK to PARRY. All four
+  widened to accept `(damage, was_riposte, impact, material)`. Boots clean, no
+  more arity errors; enemy/feel tests green. (Lesson for CLAUDE.md later: widening
+  an Events signal is a breaking change — every handler's arity must move with
+  it.) (2) **Intro now AUTO-ADVANCES** on a timer (export `hold_time`) after one
+  press to begin; a press or left-click still jumps ahead, Esc/B skips. (3)
+  **Hub tour no longer dies on first descend** — it retires only once the player
+  has stood at all three stations (vendor + blacksmith + mine), so diving straight
+  back down (the tutorial literally tells you to) no longer eats the trade/smith
+  cards unread. NOTE: Dustin's live save already had `hub_toured=true` (he'd
+  descended once), so he needs NEW GAME to see the tour again.
+- **2026-07-22: AUDIO OVERHAUL (procedural, event-complete).** The M9 audio
+  pass, done early at Dustin's call — but kept PROCEDURAL (recorded/licensed
+  audio stays the eventual drop-in swap). Combat is now LAYERED and
+  weapon+material-aware: `hit_landed(damage, was_riposte, impact, material)`
+  stacks a weapon-class impact (`impact_profile` on WeaponData/Hitbox) over a
+  target material (`material` on EnemyStats) — the Dead Cells trick, 3+6 files
+  not 18. Brute + Overseer tagged `armor`; rest default `flesh`. New
+  `player_attacked` fires the swing whoosh. ~20 silent events now sound (poise
+  break, enemy/player death, all pickups, upgrade, shrine, the axe hazard). Music
+  3→5 delve moods + a title bed + extract/death stings. New: a named audio bus
+  graph (Master ← Music, SFX; UI/Ambience through SFX; reverb on Ambience),
+  pinned by check.gd (now 5 buses); global zero-touch UI sound via focus changes;
+  a mine wind ambient bed; and the deferred shrine hum (positional) — CLOSED.
+  Sliders now scale buses, not per-voice trims. Generators rewritten:
+  `gen_sfx.py` (37 sounds), `gen_music.py` (10 tracks). All tests green, check
+  green, boots clean headless. UNHEARD BY ME — sound quality/mix is Dustin's
+  feel call; spare hooks (`doublejump`, `land_soft`, `ui_pause`) baked for later.
+- **2026-07-22: ONBOARDING BOOKENDS.** Two fixes wrapping the guided tutorial.
+  (1) The hub **Train** post was still routing to the old M2 gym; repointed to
+  `tutorial_run.tscn` (the death-proof guided "First Descent"). Gym kept as an
+  unwired free-play space. (2) New **backstory crawl** (`intro_sequence.tscn` /
+  `IntroSequence`): a skippable 6-card cinematic story frame the title now shows
+  fresh players *before* the mechanics tutorial (it chains into it); copy is an
+  `@export`. Loop is explained via a **first-visit hub tour** — building prompts
+  gain title+one-line explanations of TRADE / BLACKSMITH / THE MINE on the first
+  surface arrival, reverting to terse after the first descend; gated by a new
+  saved `hub_toured` flag. See GDD decision log (same date). Editor-scanned +
+  check.tscn green; intro and hub smoke-boot clean headless. NOT yet playtested
+  in a driven run — Dustin judges feel/pacing of the crawl and tour.
 - **2026-07-22 (art drop round 2 + feel pass).** INSTRUCTIONS.md re-sent the
   already-done Lost Crews/objects/buildings art (sprite .py files verified
   byte-identical — not redone). Genuinely new: (a) HUD health bar v4 —

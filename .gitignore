@@ -25,3 +25,4 @@ Desktop.ini
 # Python tool caches
 __pycache__/
 build/
+.zone_shots/

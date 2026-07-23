@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3]
+
+; Layer 16 = EnemyAttack, mask 2 = the player's hurtbox — same wiring as spikes,
+; so the blade hurts the player and nothing else. The blade CollisionShape is
+; built and swung in code (swinging_axe.gd).
+
+[ext_resource type="Script" path="res://src/systems/hazards/swinging_axe.gd" id="1_axe"]
+
+[node name="SwingingAxe" type="Area2D"]
+collision_layer = 16
+collision_mask = 2
+script = ExtResource("1_axe")

@@ -92,6 +92,15 @@ extends Resource
 ## below tint it, so a new enemy skin is a sheet plus a palette in this file.
 @export var sprite_sheet: String = "grunt"
 
+@export_group("Sound")
+## What this enemy is MADE OF, for combat audio. The Sfx layer plays a matching
+## surface layer under every hit (&"flesh" wet squish, &"armor" ringing clang,
+## &"bone" dry crack, &"stone" hard chip, &"ecto" airy wisp). Content-as-data:
+## a new material is a new .wav named mat_<x>.wav and this field pointing at it.
+## Default flesh; the Brute reads as &"armor", a wraith as &"ecto", and so on —
+## Dustin's per-enemy call in the inspector.
+@export var material: StringName = &"flesh"
+
 @export_group("Readability")
 @export var colour_idle: Color = Color(0.75, 0.4, 0.4)
 @export var colour_recover: Color = Color(0.5, 0.35, 0.35)

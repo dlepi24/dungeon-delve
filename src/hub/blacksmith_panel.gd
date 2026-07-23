@@ -28,6 +28,8 @@ const WEAPON_POOL: Array[String] = [
 @export var hone_cost_per_level: int = 25
 
 var _stock: Array[WeaponData] = []
+var _order: Array[Control] = []
+var _nav: MenuNav = MenuNav.new()
 
 @onready var _list: VBoxContainer = $Panel/Margin/Rows/List
 @onready var _banked: Label = $Panel/Margin/Rows/Banked
@@ -45,10 +47,23 @@ func _ready() -> void:
 	# shop until it stocked what you wanted, which made the reroll meaningless.
 	_roll_stock()
 	_rebuild_rows()
+	_order = []
+	for row: Node in _list.get_children():
+		var button: Button = row.get_meta(&"button") as Button
+		if button != null:
+			_order.append(button)
+	_order.append(_hone_button)
+	_order.append(_close)
+	MenuNav.disable_builtin_nav(_order)
+
+
+func _process(delta: float) -> void:
+	if visible:
+		_nav.poll(delta, _order)
 
 
 func open() -> void:
-	_close.text = "Close  [%s]" % Keybinds.hint_for(&"interact")
+	_close.text = "Close"
 	_refresh()
 	visible = true
 	Cursor.menu()

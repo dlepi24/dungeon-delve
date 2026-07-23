@@ -13,7 +13,7 @@ signal dismissed
 
 @onready var _title: Label = $Panel/Margin/Rows/Title
 @onready var _detail: Label = $Panel/Margin/Rows/Detail
-@onready var _hint: Label = $Panel/Margin/Rows/Hint
+@onready var _hint: KeyHint = $Panel/Margin/Rows/Hint
 
 
 func _ready() -> void:
@@ -36,7 +36,7 @@ func show_result(outcome: StringName, amount: int) -> void:
 			_title.text = "MINE CLEARED"
 			_title.add_theme_color_override(&"font_color", Color(1.0, 0.82, 0.3))
 			_detail.text = "You reached the bottom and out with %d haul (full-clear bonus included)." % amount
-	_hint.text = "[%s] Return to the surface" % Keybinds.hint_for(&"interact")
+	_hint.set_hint(&"interact", "Return to the surface")
 	visible = true
 	get_tree().paused = true
 	Cursor.menu()

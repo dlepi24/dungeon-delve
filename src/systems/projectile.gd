@@ -43,10 +43,22 @@ static func spawn(parent: Node, from: Vector2, direction: Vector2, attack: Enemy
 	return projectile
 
 
+var _whoosh: AudioStreamPlayer2D = null
+
+
 func _ready() -> void:
 	super()
 	body_entered.connect(_on_body_entered)
 	parried.connect(_on_parried)
+	# The rock cutting the air — positional so it tracks across the room. Deferred
+	# so it fires after spawn() has set our real position (set after add_child).
+	_whoosh = AudioStreamPlayer2D.new()
+	_whoosh.stream = preload("res://assets/audio/projectile_whoosh.wav")
+	_whoosh.bus = &"SFX"
+	_whoosh.volume_db = -3.0
+	_whoosh.max_distance = 1000.0
+	add_child(_whoosh)
+	_whoosh.play.call_deferred()
 
 
 func _physics_process(delta: float) -> void:
@@ -90,6 +102,10 @@ func _try_hit(area: Area2D) -> void:
 
 func _on_parried() -> void:
 	_reflected = true
+	# A returned rock is faster and sharper — the whoosh flips up in pitch to sell it.
+	if _whoosh != null:
+		_whoosh.pitch_scale = 1.35
+		_whoosh.play()
 	velocity = -velocity * REFLECT_SPEED_BONUS
 	damage *= REFLECT_DAMAGE_MULT
 	# A returned rock always breaks the thrower's stance — the parry pillar

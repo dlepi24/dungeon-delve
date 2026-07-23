@@ -69,10 +69,21 @@ var _tick: int = 0
 @onready var _health_bar: HealthBar = $HealthBar
 @onready var _ground_probe: RayCast2D = $GroundProbe
 
+## The wind-up TELL, positional so an off-screen swing charging up is audible.
+## Enemy-owned like the shrine hum and the axe whoosh — positional gameplay audio
+## lives on the node that makes it, not on the Sfx bus router.
+var _telegraph_sfx: AudioStreamPlayer2D = null
+
 
 func _ready() -> void:
 	assert(stats != null, "Enemy has no EnemyStats resource assigned.")
 	add_to_group(&"enemies")
+	_telegraph_sfx = AudioStreamPlayer2D.new()
+	_telegraph_sfx.stream = preload("res://assets/audio/telegraph.wav")
+	_telegraph_sfx.bus = &"SFX"
+	_telegraph_sfx.volume_db = -4.0
+	_telegraph_sfx.max_distance = 1100.0
+	add_child(_telegraph_sfx)
 	# Mine heat (the extract streak) toughens everything at spawn time. The
 	# .tres stays the baseline; the multiplier is read once here so a fight
 	# never changes difficulty mid-swing.
@@ -272,6 +283,13 @@ func _enter(next: State) -> void:
 	_state = next
 	_elapsed = 0
 
+	if next == State.TELEGRAPH and _telegraph_sfx != null:
+		# The audible "tell" — pitched a little by attack reach so a big wind-up
+		# reads lower/heavier than a quick jab.
+		var reach: float = _attack.max_range if _attack != null else 60.0
+		_telegraph_sfx.pitch_scale = clampf(1.15 - reach / 900.0, 0.8, 1.15)
+		_telegraph_sfx.play()
+
 	if next == State.ATTACK:
 		# Lock the lunge direction now: a dash that steers mid-flight is
 		# unreadable, and the commitment is what makes it fair to roll.
@@ -425,7 +443,7 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	_health_bar.set_ratio(health / _scaled_max_health)
 	_juice.flash()
 	_juice.punch(Vector2(1.24, 0.8) if hitbox.is_riposte else Vector2(1.12, 0.9))
-	Events.hit_landed.emit(hitbox.damage, hitbox.is_riposte)
+	Events.hit_landed.emit(hitbox.damage, hitbox.is_riposte, hitbox.impact_profile, stats.material)
 
 	# Parented to our parent, not to us: a number or a spark stuck to a corpse
 	# would fade out with it, and the kill is exactly when you want to read them.

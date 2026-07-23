@@ -16,11 +16,22 @@ const DELVE_VARIANTS: Array[String] = [
 	"res://assets/audio/music_delve.wav",
 	"res://assets/audio/music_delve_b.wav",
 	"res://assets/audio/music_delve_c.wav",
+	"res://assets/audio/music_delve_d.wav",
+	"res://assets/audio/music_delve_e.wav",
 ]
 const HUB: String = "res://assets/audio/music_hub.wav"
+## The title bed: calmer and fuller than the hub, so the menu is its own place
+## rather than "the hub, arrived at early".
+const TITLE: String = "res://assets/audio/music_title.wav"
 ## The boss vamp: cut in when a boss engages, cut back out when it dies or you
 ## leave the room.
 const BOSS: String = "res://assets/audio/music_boss.wav"
+
+## One-shot stings, fired over the bed at the two moments a run ENDS. The extract
+## cue is the one unambiguously hopeful sound in the game; the death cue is the
+## punish. Non-looping — a dedicated player fires them and lets them ring out.
+const EXTRACT_STING: AudioStream = preload("res://assets/audio/music_extract.wav")
+const DEATH_STING: AudioStream = preload("res://assets/audio/music_death.wav")
 
 ## Chance to drift to a DIFFERENT delve mood on a room change, so a long run's
 ## soundtrack breathes instead of looping one bed for five rooms.
@@ -34,49 +45,111 @@ var _players: Array[AudioStreamPlayer] = []
 var _active: int = 0
 var _current: StringName = &""
 var _muted: bool = false
-## The player's volume slider, 0..1, applied on top of the tuned bed level.
-## Owned and persisted by the Settings autoload; this just enacts it.
-var _user_volume: float = 1.0
 ## Context attenuation in dB, set per play() call by the scene that owns the
 ## moment (0 title, quieter in the hub, quieter still in the delve).
 var _attenuation: float = 0.0
 ## The delve variant currently underground, so the boss fight can hand back to
 ## the same mood it interrupted.
 var _delve_path: String = ""
+## The current zone's track pool. While it is non-empty, every delve pick —
+## the run-start draw and the room-change drift — comes from HERE, so each
+## stratum keeps its own voice for its whole band. Set by zone_entered,
+## cleared only by the next zone.
+var _zone_tracks: PackedStringArray = PackedStringArray()
 var _boss_active: bool = false
+## The boss node the active vamp belongs to, so it can be matched back on death.
+## Not typed Enemy: the tutorial's TutorialBoss is a separate, non-Enemy class
+## that shares the same boss_engaged/enemy_died signals.
+var _boss_node: Node2D = null
 var _mix_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## A separate player for the one-shot run-end stings, so they ring over the bed's
+## crossfade instead of interrupting it.
+var _sting: AudioStreamPlayer = null
 
 
 func _ready() -> void:
 	_mix_rng.randomize()
-	# Two players so we can crossfade one out while the other comes in.
+	# Two players so we can crossfade one out while the other comes in. On the
+	# Music bus, so the music slider scales the whole score independently of SFX.
 	for i: int in 2:
 		var p: AudioStreamPlayer = AudioStreamPlayer.new()
-		p.bus = &"Master"
+		p.bus = &"Music"
 		p.volume_db = -80.0
 		add_child(p)
 		_players.append(p)
+	_sting = AudioStreamPlayer.new()
+	_sting.bus = &"Music"
+	add_child(_sting)
 	# The mix reacts to the run: bosses cut in their own vamp, and room changes
 	# sometimes drift the delve to another mood. Ambience only — unseeded, and
 	# nothing here ever feeds back into gameplay.
 	Events.boss_engaged.connect(_on_boss_engaged)
 	Events.enemy_died.connect(_on_enemy_died)
 	Events.room_entered.connect(_on_room_entered)
+	Events.zone_entered.connect(_on_zone_entered)
+	# The run-end stings — the emotional punctuation of the loop.
+	Events.run_extracted.connect(_on_run_extracted)
+	Events.run_lost.connect(_on_run_lost)
 
 
-func _on_boss_engaged(_enemy: Node2D) -> void:
+func _on_boss_engaged(enemy: Node2D) -> void:
 	if _boss_active or _current != &"delve":
 		return
 	_boss_active = true
+	_boss_node = enemy
 	_crossfade_to(BOSS)
 
 
 func _on_enemy_died(enemy: Node2D) -> void:
-	var fallen: Enemy = enemy as Enemy
-	if not _boss_active or fallen == null or not fallen.stats.is_boss:
+	if not _boss_active or enemy != _boss_node:
 		return
 	_boss_active = false
+	_boss_node = null
 	_crossfade_to(_delve_path)
+
+
+## Extracted alive: the hopeful lift, played a touch above the bed so it reads as
+## a win over whatever transition is happening.
+func _on_run_extracted(_amount: int) -> void:
+	_play_sting(EXTRACT_STING, 0.0)
+
+
+## Died in the mine: the sinking punish.
+func _on_run_lost(_amount: int) -> void:
+	_play_sting(DEATH_STING, -2.0)
+
+
+func _play_sting(stream: AudioStream, offset_db: float) -> void:
+	if stream == null:
+		return
+	_sting.stream = stream
+	_sting.volume_db = volume_db + _attenuation + offset_db
+	_sting.play()
+
+
+## The mine changed stratum: adopt the zone's track pool. If the current bed
+## already belongs to the new zone, keep playing it — no needless crossfade —
+## otherwise glide to one of the zone's own tracks.
+func _on_zone_entered(zone: ZoneData) -> void:
+	_zone_tracks = zone.music_tracks
+	if _current != &"delve" or _boss_active or _zone_tracks.is_empty():
+		return
+	if _zone_tracks.has(_delve_path):
+		return
+	_delve_path = _zone_tracks[_mix_rng.randi_range(0, _zone_tracks.size() - 1)]
+	_crossfade_to(_delve_path)
+
+
+## The drift pool: the current zone's tracks when a zone owns the run,
+## otherwise the full variant list.
+func _delve_pool() -> Array[String]:
+	var pool: Array[String] = []
+	if _zone_tracks.is_empty():
+		pool.assign(DELVE_VARIANTS)
+	else:
+		for path: String in _zone_tracks:
+			pool.append(path)
+	return pool
 
 
 func _on_room_entered(_index: int, _id: String) -> void:
@@ -85,10 +158,11 @@ func _on_room_entered(_index: int, _id: String) -> void:
 	if _boss_active:
 		# Fled the boss room with the boss alive: the vamp does not follow you.
 		_boss_active = false
+		_boss_node = null
 		_crossfade_to(_delve_path)
 		return
-	if _mix_rng.randf() < room_shuffle_chance and DELVE_VARIANTS.size() > 1:
-		var pool: Array[String] = DELVE_VARIANTS.duplicate()
+	var pool: Array[String] = _delve_pool()
+	if _mix_rng.randf() < room_shuffle_chance and pool.size() > 1:
 		pool.erase(_delve_path)
 		_delve_path = pool[_mix_rng.randi_range(0, pool.size() - 1)]
 		_crossfade_to(_delve_path)
@@ -108,7 +182,14 @@ func play(track: StringName, attenuation_db: float = 0.0) -> void:
 	_current = track
 	_boss_active = false
 	var path: String = HUB
-	if track == &"delve":
+	if track == &"title":
+		path = TITLE
+	elif track == &"delve":
+		# Drop last run's zone pool — this pick is a placeholder for the beat
+		# until zone_entered lands (a frame later) and redirects into the new
+		# run's first stratum. Without the clear, a run could open on the
+		# PREVIOUS run's Deadlight dread.
+		_zone_tracks = PackedStringArray()
 		path = DELVE_VARIANTS[_mix_rng.randi_range(0, DELVE_VARIANTS.size() - 1)]
 		_delve_path = path
 	_crossfade_to(path)
@@ -151,20 +232,14 @@ func set_muted(muted: bool) -> void:
 	_fade(_players[_active], _players[_active].volume_db, _target_db())
 
 
-## Live volume from the settings slider. Applied instantly, not faded — a slider
-## that lags its own drag reads as broken.
-func set_user_volume(value: float) -> void:
-	_user_volume = clampf(value, 0.0, 1.0)
-	if not _players.is_empty():
-		_players[_active].volume_db = _target_db()
-
-
-## The level the active player should sit at: the tuned bed (volume_db) scaled
-## by the user's slider, or silence when muted / slid to zero.
+## The level the active player should sit at: the tuned bed plus the per-context
+## attenuation, or silence when muted. The user's music slider now lives on the
+## Music BUS (Settings drives it), so it no longer folds in here — that keeps the
+## player-level mix (fades, boss cuts, attenuation) cleanly separate from volume.
 func _target_db() -> float:
-	if _muted or _user_volume <= 0.001:
+	if _muted:
 		return -80.0
-	return volume_db + _attenuation + linear_to_db(_user_volume)
+	return volume_db + _attenuation
 
 
 func _fade(player: AudioStreamPlayer, from_db: float, to_db: float) -> void:

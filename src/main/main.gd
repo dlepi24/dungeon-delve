@@ -12,6 +12,10 @@ extends Control
 
 const HUB_SCENE: String = "res://src/hub/hub.tscn"
 const DELVE_SCENE: String = "res://src/rooms/delve_run.tscn"
+## The onboarding entry point: the backstory crawl, which itself chains into the
+## mechanics tutorial. Fresh players start here; the tutorial's finale sets
+## intro_seen, so this whole arc only fires once.
+const INTRO_SCENE: String = "res://src/rooms/intro_sequence.tscn"
 
 @onready var _play: Button = $Menu/Play
 @onready var _daily: Button = $Menu/Daily
@@ -31,15 +35,18 @@ const VERSION: String = "v0.6"
 @onready var _confirm_yes: Button = $Confirm/Margin/Rows/Buttons/Yes
 @onready var _confirm_cancel: Button = $Confirm/Margin/Rows/Buttons/Cancel
 
+var _order: Array[Control] = []
+var _nav: MenuNav = MenuNav.new()
+
 
 func _ready() -> void:
 	Cursor.menu()
-	# Menu ambience. The autoload survives the change into the hub, so the track
-	# carries through without restarting.
-	Music.play(&"hub")
+	# The title has its own calmer, fuller bed now. The autoload survives the
+	# change into the hub, where it crossfades to the hub track.
+	Music.play(&"title")
 	_confirm.visible = false
 	_play.pressed.connect(_on_play)
-	_new_game.pressed.connect(func() -> void: _confirm.visible = true; _confirm_cancel.grab_focus())
+	_new_game.pressed.connect(_on_new_game)
 	_quit.pressed.connect(func() -> void: get_tree().quit())
 	_settings_button.pressed.connect(_on_settings)
 	_settings.closed.connect(_on_settings_closed)
@@ -60,13 +67,29 @@ func _ready() -> void:
 	_settings_button.text = "OPTIONS"
 	_quit.text = "QUIT"
 	_confirm_yes.pressed.connect(_on_wipe_confirmed)
-	_confirm_cancel.pressed.connect(func() -> void: _confirm.visible = false; _play.grab_focus())
+	_confirm_cancel.pressed.connect(_on_confirm_cancel)
+	# Wire the two confirm buttons to each other explicitly. Without this, LEFT
+	# from Cancel ran Godot's geometric focus search and could jump to a background
+	# Menu button instead of Wipe, leaving Wipe reachable only by mouse.
+	_confirm_yes.focus_neighbor_right = _confirm_cancel.get_path()
+	_confirm_yes.focus_neighbor_left = _confirm_cancel.get_path()
+	_confirm_cancel.focus_neighbor_left = _confirm_yes.get_path()
+	_confirm_cancel.focus_neighbor_right = _confirm_yes.get_path()
 	_refresh_controls_line()
 	_refresh_stats_line()
 	_refresh_flavor()
 	# The verbs line follows whichever device is driving.
 	Keybinds.input_device_changed.connect(_refresh_controls_line)
 	_play.grab_focus()
+	_order = [_play, _daily, _records_button, _new_game, _settings_button, _quit]
+	MenuNav.disable_builtin_nav(_order)
+
+
+## Only the main menu column — Records, Settings and the wipe Confirm each hide
+## it and own their own focused control while they are up.
+func _process(delta: float) -> void:
+	if _menu.visible:
+		_nav.poll(delta, _order)
 
 
 ## The verbs, from the LIVE keybinds and the live input device — a static hint
@@ -119,12 +142,38 @@ func _refresh_flavor() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _confirm.visible and event.is_action_pressed(&"ui_cancel"):
 		get_viewport().set_input_as_handled()
-		_confirm.visible = false
-		_play.grab_focus()
+		_close_confirm()
+
+
+## Opening the wipe confirm hides the menu behind it — same as the Records and
+## Settings panels. Beyond looking cleaner, it removes the six menu buttons as
+## competing focus targets, so directional nav stays inside the two confirm
+## buttons. Focus starts on Cancel: the safe choice for a destructive dialog.
+func _on_new_game() -> void:
+	_menu.visible = false
+	_confirm.visible = true
+	_confirm_cancel.grab_focus()
+
+
+func _on_confirm_cancel() -> void:
+	_close_confirm()
+
+
+func _close_confirm() -> void:
+	_confirm.visible = false
+	_menu.visible = true
+	_play.grab_focus()
 
 
 func _on_play() -> void:
-	get_tree().change_scene_to_file.call_deferred(HUB_SCENE)
+	get_tree().change_scene_to_file.call_deferred(_first_destination())
+
+
+## A fresh player (intro not yet seen) gets the story crawl, then the guided
+## mechanics tutorial, before ever reaching the hub; everyone else goes straight
+## to the surface. The crawl hands off to the tutorial on its own.
+func _first_destination() -> String:
+	return HUB_SCENE if GameState.intro_seen else INTRO_SCENE
 
 
 ## Straight down the mine on today's shared seed — no hub stop, no heat, no
@@ -164,4 +213,5 @@ func _on_wipe_confirmed() -> void:
 	GameState.reset_save()
 	_refresh_stats_line()
 	_confirm.visible = false
-	get_tree().change_scene_to_file.call_deferred(HUB_SCENE)
+	# A wiped save has intro_seen = false again, so New Game replays the intro.
+	get_tree().change_scene_to_file.call_deferred(_first_destination())

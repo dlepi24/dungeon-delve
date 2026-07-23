@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=17 format=3]
 
 ; The playable delve. Rooms are loaded and freed by Delve as you walk through
 ; them; only the player, camera and HUD persist across a transition.
@@ -11,12 +11,12 @@
 [ext_resource type="PackedScene" path="res://src/ui/pause_menu.tscn" id="7_pause"]
 [ext_resource type="Script" path="res://src/rooms/run_coordinator.gd" id="20_coord"]
 [ext_resource type="Script" path="res://src/systems/pickup_feedback.gd" id="24_pfb"]
-[ext_resource type="PackedScene" path="res://src/rooms/extract_prompt.tscn" id="21_prompt"]
 [ext_resource type="PackedScene" path="res://src/rooms/result_screen.tscn" id="22_result"]
 [ext_resource type="PackedScene" path="res://src/rooms/door_choice.tscn" id="25_doors"]
 [ext_resource type="Script" path="res://src/ui/transition_fade.gd" id="26_fade"]
 [ext_resource type="Script" path="res://src/systems/mine_atmosphere.gd" id="27_atmo"]
 [ext_resource type="Script" path="res://src/systems/ghost_recorder.gd" id="28_grec"]
+[ext_resource type="Script" path="res://src/ui/zone_title.gd" id="30_zone"]
 [ext_resource type="Script" path="res://src/systems/ghost_runner.gd" id="29_grun"]
 
 [node name="DelveRun" type="Node2D"]
@@ -58,13 +58,16 @@ initial_velocity_min = 4.0
 initial_velocity_max = 14.0
 scale_amount_min = 1.5
 scale_amount_max = 3.0
-color = Color(0.95, 0.88, 0.7, 0.1)
+color = Color(0.88, 0.88, 0.84, 0.09)
 
 [node name="TransitionFade" type="CanvasLayer" parent="."]
 script = ExtResource("26_fade")
 
 [node name="MineAtmosphere" type="Node" parent="."]
 script = ExtResource("27_atmo")
+
+[node name="ZoneTitle" type="CanvasLayer" parent="."]
+script = ExtResource("30_zone")
 
 [node name="GhostRecorder" type="Node" parent="."]
 script = ExtResource("28_grec")
@@ -86,8 +89,6 @@ script = ExtResource("24_pfb")
 [node name="RunCoordinator" type="Node" parent="." node_paths=PackedStringArray("delve")]
 script = ExtResource("20_coord")
 delve = NodePath("../Delve")
-
-[node name="ExtractPrompt" parent="RunCoordinator" instance=ExtResource("21_prompt")]
 
 [node name="ResultScreen" parent="RunCoordinator" instance=ExtResource("22_result")]
 

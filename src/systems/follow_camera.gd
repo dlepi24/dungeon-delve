@@ -42,7 +42,16 @@ func set_room_bounds(size: Vector2) -> void:
 
 
 func _clamp_to_room(goal: Vector2) -> Vector2:
-	var half: Vector2 = get_viewport_rect().size * 0.5 / zoom_level
+	# get_viewport_rect().size is in POST-scale logical units: Settings.ui_scale
+	# (an accessibility zoom, via content_scale_factor) shrinks it — 1920 becomes
+	# 1280 at a 1.5x scale — because that is how Godot makes UI read bigger on
+	# the same window. Uncorrected, that shrunk size loosens this clamp (a
+	# smaller half-extent means more room to roam), so the camera swings much
+	# further than the tuned framing on every jump once any UI scale is on.
+	# Multiplying back by ui_scale cancels exactly that and only that: window
+	# resizes and the ultrawide "expand" behaviour below still come through
+	# untouched, since ui_scale is the only thing dividing this number down.
+	var half: Vector2 = get_viewport_rect().size * Settings.ui_scale * 0.5 / zoom_level
 	if _room_size.x <= half.x * 2.0:
 		goal.x = _room_size.x * 0.5
 	else:
@@ -83,7 +92,7 @@ func add_trauma(amount: float) -> void:
 	_trauma = clampf(_trauma + amount, 0.0, 1.0)
 
 
-func _on_hit_landed(_damage: float, was_riposte: bool) -> void:
+func _on_hit_landed(_damage: float, was_riposte: bool, _impact: StringName, _material: StringName) -> void:
 	add_trauma(trauma_parry if was_riposte else trauma_hit)
 	if was_riposte:
 		punch_zoom(0.05)

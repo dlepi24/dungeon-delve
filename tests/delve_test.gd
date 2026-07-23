@@ -76,9 +76,27 @@ func _test_different_seeds_differ(delve: Delve) -> void:
 func _test_plan_shape(delve: Delve) -> void:
 	print("plan shape")
 	var plan: Array[StringName] = _plan(delve, 12345, 5)
-	_check(plan.size() == 5, "a 5-room delve has 5 rooms (got %d)" % plan.size())
+	_check(plan.size() == 6, "a 5-combat-room delve is 6 rooms with the camp (got %d)" % plan.size())
 	_check(plan[0] == &"entry", "always opens with the gentle room (got %s)" % plan[0])
+	_check(plan[plan.size() - 2] == &"camp", "the rest camp sits above the deep (got %s)" % plan[plan.size() - 2])
 	_check(plan[plan.size() - 1] == &"deep", "always ends deep (got %s)" % plan[plan.size() - 1])
+	# The zone banding is a pure function: entry Upper, middles spread one per
+	# stratum, camp+deep Deadlight. Every zone must hold at least one FIGHT —
+	# the naive thirds split banded no middle as Deadlight, which deleted its
+	# combat (and the chasm) from the game without an error anywhere.
+	var bands: Array[int] = []
+	for i: int in plan.size():
+		bands.append(delve.band_for_index(i, plan.size()))
+	_check(bands == [0, 0, 1, 2, 2, 2], "zones band 0,0,1,2,2,2 over a 6-room plan (got %s)" % [bands])
+	# And therefore every centrepiece can actually occur: across many seeds the
+	# big slot must produce all three zone flagships.
+	var bigs_seen: Dictionary[StringName, bool] = {}
+	for seed_value: int in range(80):
+		for id: StringName in _plan(delve, seed_value):
+			if Delve.BIG_POOL.has(id):
+				bigs_seen[id] = true
+	_check(bigs_seen.size() == Delve.BIG_POOL.size(),
+		"all three centrepieces appear across 80 seeds (saw %s)" % [bigs_seen.keys()])
 
 	var repeats: int = 0
 	for seed_value: int in range(40):
@@ -100,28 +118,34 @@ func _test_other_streams_do_not_disturb_layout(delve: Delve) -> void:
 	for i: int in 100:
 		Rng.stream(&"enemies").randf()
 		Rng.stream(&"loot").randi()
-	# Mirrors options_for_seed's draw pattern (two candidates per depth, one
-	# redraw on a duplicate pair, a branch roll), taking the first candidate —
-	# the default path plan_for_seed returns. Update BOTH if the pattern changes.
+	# Mirrors options_for_seed's draw pattern (two candidates per depth from the
+	# depth's ZONE pool, one redraw on a duplicate pair, a branch roll), taking
+	# the first candidate — the default path plan_for_seed returns. Update BOTH
+	# if the pattern changes. Zone pool lookups are pure (no RNG), so calling
+	# them here cannot disturb the stream being tested.
 	var generator: RandomNumberGenerator = Rng.stream(&"delve")
+	var plan_size: int = delve.plan_size_for(5)
 	var noisy: Array[StringName] = [Delve.FIRST_ROOM]
 	var big_slot: int = generator.randi_range(0, 2)
 	var previous: StringName = Delve.FIRST_ROOM
 	for i: int in 3:
+		var pool: Array[StringName] = delve.middle_pool_at(i + 1, plan_size)
 		if i == big_slot:
-			var big: StringName = Delve.BIG_POOL[generator.randi_range(0, Delve.BIG_POOL.size() - 1)]
+			var bigs: Array[StringName] = delve.big_pool_at(i + 1, plan_size)
+			var big: StringName = bigs[generator.randi_range(0, bigs.size() - 1)]
 			noisy.append(big)
 			previous = big
 			continue
-		var a: StringName = Delve.MIDDLE_POOL[generator.randi_range(0, Delve.MIDDLE_POOL.size() - 1)]
-		if a == previous and Delve.MIDDLE_POOL.size() > 1:
-			a = Delve.MIDDLE_POOL[generator.randi_range(0, Delve.MIDDLE_POOL.size() - 1)]
-		var b: StringName = Delve.MIDDLE_POOL[generator.randi_range(0, Delve.MIDDLE_POOL.size() - 1)]
-		if b == a and Delve.MIDDLE_POOL.size() > 1:
-			b = Delve.MIDDLE_POOL[generator.randi_range(0, Delve.MIDDLE_POOL.size() - 1)]
+		var a: StringName = pool[generator.randi_range(0, pool.size() - 1)]
+		if a == previous and pool.size() > 1:
+			a = pool[generator.randi_range(0, pool.size() - 1)]
+		var b: StringName = pool[generator.randi_range(0, pool.size() - 1)]
+		if b == a and pool.size() > 1:
+			b = pool[generator.randi_range(0, pool.size() - 1)]
 		generator.randf()
 		noisy.append(a)
 		previous = a
+	noisy.append(Delve.CAMP_ROOM)
 	noisy.append(Delve.LAST_ROOM)
 
 	_check(clean == noisy, "the delve stream ignores 200 draws from other streams")
@@ -130,7 +154,7 @@ func _test_other_streams_do_not_disturb_layout(delve: Delve) -> void:
 func _test_every_planned_room_exists(delve: Delve) -> void:
 	print("every room a plan can name is on disk")
 	var missing: PackedStringArray = []
-	var ids: Array[StringName] = [Delve.FIRST_ROOM, Delve.LAST_ROOM]
+	var ids: Array[StringName] = [Delve.FIRST_ROOM, Delve.LAST_ROOM, Delve.CAMP_ROOM]
 	ids.append_array(Delve.MIDDLE_POOL)
 	ids.append_array(Delve.BIG_POOL)
 	for id: StringName in ids:
@@ -143,7 +167,7 @@ func _test_every_planned_room_exists(delve: Delve) -> void:
 ## be a run-ending bug that only shows up by walking into it.
 func _test_rooms_are_walkable() -> void:
 	print("rooms are structurally sane")
-	var ids: Array[StringName] = [Delve.FIRST_ROOM, Delve.LAST_ROOM]
+	var ids: Array[StringName] = [Delve.FIRST_ROOM, Delve.LAST_ROOM, Delve.CAMP_ROOM]
 	ids.append_array(Delve.MIDDLE_POOL)
 	ids.append_array(Delve.BIG_POOL)
 	var problems: PackedStringArray = []

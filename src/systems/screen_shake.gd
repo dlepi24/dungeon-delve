@@ -43,7 +43,7 @@ func add_trauma(amount: float) -> void:
 	_trauma = clampf(_trauma + amount, 0.0, 1.0)
 
 
-func _on_hit_landed(_damage: float, was_riposte: bool) -> void:
+func _on_hit_landed(_damage: float, was_riposte: bool, _impact: StringName, _material: StringName) -> void:
 	add_trauma(trauma_parry if was_riposte else trauma_hit)
 
 

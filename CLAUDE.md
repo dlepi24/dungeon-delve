@@ -154,6 +154,18 @@ Gotchas found in M0/M1, worth not rediscovering:
   menu "opens in the top-left corner, half off-screen". Rule: instancing a
   Control scene under a Control parent? Restate layout_mode + anchors +
   offsets + grow on the instance node, always.
+- **Widening an `Events` signal is a BREAKING change — every handler's arity must
+  move with it.** Godot 4.7 does NOT silently drop extra emitted args: a handler
+  connected with fewer params than the signal emits throws "Error calling from
+  signal ... expected N, called with M" and **never runs** — no crash, the game
+  keeps going, that one reaction is just dead. This shipped: widening
+  `hit_landed(damage, was_riposte)` to add `impact, material` silently killed the
+  hit-flash, screen shake, camera punch and a tutorial gate, all of which still
+  had the 2-arg signature — and the tutorial stopped advancing past ATTACK. When
+  you add a param to a signal, grep every `.connect()` of it and widen each
+  handler in the same change. A headless smoke boot will NOT catch it unless the
+  signal actually fires (a title-only boot never emits combat signals) — drive the
+  signal, or check arity by hand.
 - **Node `_ready` order is a trap for group lookups.** Godot runs `_enter_tree`
   on every node in a scene before it runs any `_ready`, and `_ready` fires
   children-first, siblings in tree order. A node whose `_ready` runs before the

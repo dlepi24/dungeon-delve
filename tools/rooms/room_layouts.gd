@@ -19,6 +19,8 @@ extends Object
 ##      (seeded), so a spot is a possibility, not a promise.
 ##   C  crumbling platform (gives way a beat after you land, re-forms later)
 ##   v  spikes (pit floors: falling in stays survivable, but now it costs)
+##   h  heart pickup (authored heal — the camp's guaranteed rest)
+##   F  hearth (a lit campfire: warm light pool + sparks, visual only)
 ##
 ## Design budget, and it is not advisory — tools/gen_rooms.gd runs a reachability
 ## analysis and refuses to build a room that violates it:
@@ -325,6 +327,33 @@ const CHASM: Array[String] = [
 	"##########################################################"
 ]
 
+## The camp: the rest stop above the deep vein, and the only room in the mine
+## with NOBODY in it. A lost crew stopped here once — the shrine spot brings
+## the helmet pile, the lanterns still hang — and a single heart waits by the
+## altar. Pacing, not combat: after two strata of fights, one quiet room makes
+## the descent into the Deadlight land harder. The delve never rains debris
+## here and it never counts toward depth economy.
+const CAMP: Array[String] = [
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..............................................======......",
+	"..........................................................",
+	"..........................................................",
+	"....................======............======..............",
+	"..........................................................",
+	"...P..........................S..h...F.................X..",
+	"##########################################################",
+]
+
 ## The deep room. The Overseer's arena: the miniboss holds the floor with two
 ## grunts for pressure, and the tiers are your escape valves. The Dart was cut
 ## when the boss moved in — a lunging add plus a charging boss crossed from
@@ -350,10 +379,63 @@ const DEEP: Array[String] = [
 	"##########################################################",
 ]
 
+## The guided intro's traversal room (id "tut_traversal"). Not in any delve pool
+## — the TutorialDirector loads it by a fixed plan. Solid floor throughout: the
+## ROLL lesson is a swinging axe the director hangs over the path (roll THROUGH
+## it on i-frames, on firm ground — not a spike pit you fall into), and the
+## GRAPPLE lesson is the 'o' anchor up to a high exit, with a one-way-platform
+## staircase as the fallback climb.
+const TUT_TRAVERSAL: Array[String] = [
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	".....................................................X....",
+	"..................................................########",
+	"..........................................................",
+	"...............................................o..........",
+	"..............................................======......",
+	"..........................................................",
+	"..........................................................",
+	"..........................................======..........",
+	"..........................................................",
+	"..........................................................",
+	"......................................======..............",
+	"..........................................................",
+	"...P......................................................",
+	"##########################################################",
+]
+
+## The guided intro's boss arena (id "tut_boss"). A wide, flat fighting floor
+## with two flanking ledges to dodge onto; the TutorialDirector spawns the
+## scripted Foreman here and gates the exit until it falls.
+const TUT_BOSS: Array[String] = [
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........................................................",
+	"..........=======........................=======..........",
+	"..........................................................",
+	"...P..................................................X...",
+	"##########################################################",
+]
+
 ## Every layout, with the id each room is known by in the delve.
 static func all() -> Dictionary[StringName, Array]:
 	return {
 		&"entry": ENTRY,
+		&"tut_traversal": TUT_TRAVERSAL,
+		&"tut_boss": TUT_BOSS,
 		&"gap": GAP,
 		&"climb": CLIMB,
 		&"arena": ARENA,
@@ -364,5 +446,6 @@ static func all() -> Dictionary[StringName, Array]:
 		&"halls": HALLS,
 		&"undercroft": UNDERCROFT,
 		&"chasm": CHASM,
+		&"camp": CAMP,
 		&"deep": DEEP,
 	}

@@ -78,6 +78,7 @@ heart_chance = 0.8
 heart_heal = 40
 buff_chance = 0.5
 weapon_chance = 0.5
+material = &"armor"
 sprite_sheet = "overseer"
 colour_idle = Color(0.85, 0.28, 0.18, 1)
 colour_recover = Color(0.55, 0.22, 0.16, 1)

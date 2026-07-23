@@ -26,6 +26,9 @@ enum Kind { HAUL, HEAL, BUFF, WEAPON }
 @export var magnet_range: float = 120.0
 @export var magnet_speed: float = 520.0
 @export var spawn_pop: Vector2 = Vector2(0, -140)
+## Seconds you must hold interact to swap this weapon into your hand. Tuned to
+## clear a panic tap; see HoldInteract.
+@export var take_hold_time: float = 0.24
 
 var _velocity: Vector2 = Vector2.ZERO
 var _player: Player = null
@@ -36,13 +39,22 @@ var _collected: bool = false
 ## art degrades to gray-box.
 var _icon: Node2D = null
 ## The trade offer shown over a weapon when the loadout is full. Built lazily.
-var _offer: Label = null
+## Same WorldPrompt card as the shops and shrines: weapon name, a big Take, and
+## a dim line naming what it drops.
+var _offer: WorldPrompt = null
+## Whether the offer is currently up — the hold check reads this, not the card.
+var _offered: bool = false
+## Swapping the weapon in your hand is a commitment, so it takes a deliberate
+## HOLD, not a tap — a panic jump (which shares the button on the pad) can't
+## trigger it. See HoldInteract.
+var _hold: HoldInteract = HoldInteract.new()
 
 @onready var _visual: ColorRect = $Visual
 var _ground: RayCast2D = null
 
 
 func _ready() -> void:
+	_hold.hold_time = take_hold_time
 	_velocity = spawn_pop + Vector2(randf_range(-80, 80), 0)
 	# Pickups are Areas, not bodies — nothing stops them at the floor except
 	# this probe. The magnet used to hide that (it grabbed them mid-air), but a
@@ -137,7 +149,15 @@ func _physics_process(delta: float) -> void:
 	# The magnet-and-touch flow was silently discarding honed weapons.
 	if kind == Kind.WEAPON and _player.loadout_full():
 		_fall(delta)
-		_update_offer(dist < 110.0)
+		var near: bool = dist < 110.0
+		if _hold.poll(near and not _collected, delta):
+			_collect()
+			return
+		# On the pad, interact and jump share A: eat the hop once the hold is
+		# committed so it stops knocking you off the offer. Keyboard keeps jump live.
+		if _hold.committing and Keybinds.using_gamepad:
+			_player.swallow_jump()
+		_update_offer(near)
 		return
 	_update_offer(false)
 
@@ -152,34 +172,21 @@ func _physics_process(delta: float) -> void:
 
 
 func _update_offer(near: bool) -> void:
+	_offered = near
 	if not near:
 		if _offer != null:
-			_offer.visible = false
+			_offer.hide_prompt()
 		return
 	if _offer == null:
-		_offer = Label.new()
-		_offer.position = Vector2(-200, -96)
-		_offer.size = Vector2(400, 56)
-		_offer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_offer.add_theme_font_size_override(&"font_size", 15)
-		_offer.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.9))
-		_offer.add_theme_constant_override(&"outline_size", 6)
+		_offer = WorldPrompt.new()
+		_offer.position = Vector2(0, -40)
+		_offer.priority = 20
 		add_child(_offer)
 	var dropped: WeaponData = _player.stowed_weapon()
-	_offer.text = "%s\n[%s] Take — drops %s" % [
-		weapon.display_name, Keybinds.hint_for(&"interact"),
-		dropped.display_name if dropped != null else "nothing",
-	]
-	_offer.visible = true
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if _collected or _offer == null or not _offer.visible:
-		return
-	if not event.is_action_pressed(&"interact"):
-		return
-	get_viewport().set_input_as_handled()
-	_collect()
+	var drops: String = dropped.display_name if dropped != null else "nothing"
+	_offer.set_card(weapon.display_name, "drops %s" % drops,
+		[PromptCard.hold_row(&"interact", "Hold to Take", _hold.progress)])
+	_offer.show_prompt()
 
 
 func _collect() -> void:

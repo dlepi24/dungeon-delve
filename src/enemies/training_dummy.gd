@@ -16,6 +16,17 @@ extends CharacterBody2D
 
 enum State { IDLE, TELEGRAPH, SWING, RECOVER, STAGGER }
 
+## Dummy state → grunt-sheet animation. The sheet names the strike "attack"; the
+## dummy calls it SWING. Mapping here is what makes it actually wind up and swing
+## instead of only changing colour, so the parry has real motion to read.
+const _ANIM: Dictionary[State, StringName] = {
+	State.IDLE: &"idle",
+	State.TELEGRAPH: &"telegraph",
+	State.SWING: &"attack",
+	State.RECOVER: &"recover",
+	State.STAGGER: &"stagger",
+}
+
 @export_group("Timing")
 ## Long and obvious on purpose. "Telegraph everything. Readability over surprise."
 ## This is the number to tune when the parry window feels unfair.
@@ -45,6 +56,9 @@ var _elapsed: int = 0
 @onready var _juice: BodyJuice = $VisualRoot
 @onready var _hitbox: Hitbox = $Hitbox
 @onready var _hurtbox: Hurtbox = $Hurtbox
+@onready var _sprite: AnimatedSprite2D = $VisualRoot/Sprite
+
+var _player: Node2D = null
 
 
 func _ready() -> void:
@@ -52,6 +66,13 @@ func _ready() -> void:
 	_hitbox.deactivate()
 	_hitbox.parried.connect(_on_parried)
 	_hurtbox.hurt.connect(_on_hurt)
+	# The strike should snap and the wind-up should read; the base sheet speed is
+	# tuned for slow prop flickers, so give the telling animations their own pace.
+	if _sprite != null and _sprite.sprite_frames != null:
+		var frames: SpriteFrames = _sprite.sprite_frames
+		for anim: StringName in [&"idle", &"telegraph", &"attack"]:
+			if frames.has_animation(anim):
+				frames.set_animation_speed(anim, {&"idle": 3.0, &"telegraph": 6.0, &"attack": 16.0}[anim])
 	_enter(State.IDLE)
 
 
@@ -63,6 +84,7 @@ func _physics_process(delta: float) -> void:
 
 	_elapsed += 1
 	_hitbox.damage = attack_damage
+	_face_player()
 
 	if not is_on_floor():
 		velocity.y += 1800.0 * delta
@@ -98,6 +120,21 @@ func _enter(next: State) -> void:
 		_hitbox.deactivate()
 
 	_juice.set_base_colour(_colour_for(next))
+	if _sprite != null and _sprite.sprite_frames != null:
+		var anim: StringName = _ANIM.get(next, &"idle")
+		if _sprite.sprite_frames.has_animation(anim):
+			_sprite.play(anim)
+
+
+## Turn to face the player so the swing points at them (the hitbox already
+## reaches both sides — this is purely so the animation reads).
+func _face_player() -> void:
+	if _sprite == null:
+		return
+	if _player == null or not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group(&"player") as Node2D
+	if _player != null:
+		_sprite.flip_h = _player.global_position.x < global_position.x
 
 
 func _colour_for(state: State) -> Color:
@@ -123,7 +160,8 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	health = maxf(0.0, health - hitbox.damage)
 	_juice.flash()
 	_juice.punch(Vector2(1.24, 0.8) if hitbox.is_riposte else Vector2(1.12, 0.9))
-	Events.hit_landed.emit(hitbox.damage, hitbox.is_riposte)
+	# A practice dummy is wood: the hollow knock is the training-hall sound.
+	Events.hit_landed.emit(hitbox.damage, hitbox.is_riposte, hitbox.impact_profile, &"wood")
 	# No death at M1 — a dummy you can kill is a dummy you cannot practise on.
 	# M3 owns health, death and hurt states properly.
 	if health <= 0.0:

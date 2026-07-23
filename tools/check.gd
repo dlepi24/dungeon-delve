@@ -36,6 +36,13 @@ const EXPECTED_LAYERS: PackedStringArray = [
 ## file order, not this list's order.
 const EXPECTED_AUTOLOADS: PackedStringArray = ["Events", "GameState", "Hitstop", "Keybinds", "Music", "Rng", "Sfx", "Settings"]
 
+## The audio bus graph (default_bus_layout.tres). Code addresses buses by NAME —
+## Music/Sfx voices, Settings' sliders, the shrine hum, the axe — so a renamed or
+## dropped bus routes sound to the wrong place or silently to Master. Pinned like
+## the collision layers. NOT order-sensitive (names, not indices), but all must
+## exist.
+const EXPECTED_BUSES: PackedStringArray = ["Master", "Music", "SFX", "UI", "Ambience"]
+
 var _failures: PackedStringArray = []
 
 
@@ -81,6 +88,12 @@ func _check_autoloads() -> void:
 	for name: String in EXPECTED_AUTOLOADS:
 		if not ProjectSettings.has_setting("autoload/%s" % name):
 			_fail("Autoload '%s' is not registered." % name)
+
+
+func _check_buses() -> void:
+	for name: String in EXPECTED_BUSES:
+		if AudioServer.get_bus_index(name) < 0:
+			_fail("Audio bus '%s' is missing — check default_bus_layout.tres." % name)
 
 
 func _check_main_scene() -> void:
@@ -148,12 +161,13 @@ func _ready() -> void:
 	_check_layer_constants()
 	_check_physics_tick()
 	_check_autoloads()
+	_check_buses()
 	_check_main_scene()
 	_check_scripts_parse()
 
 	if _failures.is_empty():
-		print("CHECK OK — %d actions, %d layers, %d autoloads, main scene loads." % [
-			EXPECTED_ACTIONS.size(), EXPECTED_LAYERS.size(), EXPECTED_AUTOLOADS.size(),
+		print("CHECK OK — %d actions, %d layers, %d autoloads, %d buses, main scene loads." % [
+			EXPECTED_ACTIONS.size(), EXPECTED_LAYERS.size(), EXPECTED_AUTOLOADS.size(), EXPECTED_BUSES.size(),
 		])
 		get_tree().quit(0)
 		return

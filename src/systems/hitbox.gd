@@ -39,6 +39,12 @@ signal parried
 ## to hit harder on a riposte than on a normal connect.
 var is_riposte: bool = false
 
+## The attacker's weapon SOUND CLASS (&"pick"/&"blade"/&"blunt"), set by the
+## player from the equipped weapon. Travels with the hitbox for the same reason
+## is_riposte does — the defender emits hit_landed but only the attacker knows
+## what swung, so the Sfx layer can stack the right impact over the material.
+var impact_profile: StringName = &"pick"
+
 ## Whether a parry answers this hit. Attacks and projectiles: yes, always —
 ## that is the pillar. Environmental hazards (spikes): no; you cannot deflect
 ## the floor, and a parried spike would deactivate forever. Roll i-frames

@@ -27,7 +27,11 @@ const HUB_SCENE: String = "res://src/hub/hub.tscn"
 var _at_exit: bool = false
 var _ending: bool = false
 
-@onready var _prompt: CanvasLayer = $ExtractPrompt
+# The extract/descend card floats in the WORLD, above the current room's exit
+# door — same WorldPrompt as the shops and shrines. Built in code and parented
+# to the Delve (world space) so it rides the camera and survives room swaps.
+var _prompt: WorldPrompt = null
+
 @onready var _result: CanvasLayer = $ResultScreen
 @onready var _doors: CanvasLayer = $DoorChoice
 
@@ -35,7 +39,12 @@ var _ending: bool = false
 func _ready() -> void:
 	Events.player_died.connect(_on_player_died)
 	Events.delve_completed.connect(_on_delve_completed)
-	_prompt.visible = false
+	_prompt = WorldPrompt.new()
+	# Clear the door beacon's glow before the card starts.
+	_prompt.lift = 30.0
+	# The run-ending choice outranks any other card sharing the screen.
+	_prompt.priority = 30
+	delve.add_child(_prompt)
 	_result.dismissed.connect(_to_hub)
 	_doors.chosen.connect(func(index: int) -> void: delve.descend(index))
 	Cursor.gameplay()
@@ -52,16 +61,35 @@ func _physics_process(_delta: float) -> void:
 	var at: bool = delve.player_at_exit()
 	if at != _at_exit:
 		_at_exit = at
-		_prompt.visible = at
 		if at:
+			_place_prompt_at_exit()
 			_refresh_prompt()
+			_prompt.show_prompt()
+		else:
+			_prompt.hide_prompt()
+
+
+## Park the card above the current room's exit door (the glowing shaft rises
+## exit_size.y above the marker; the card floats just over its top).
+func _place_prompt_at_exit() -> void:
+	var room: Room = delve.current_room()
+	if room == null:
+		return
+	_prompt.global_position = room.exit_marker.global_position - Vector2(0.0, room.exit_size.y)
 
 
 func _refresh_prompt() -> void:
-	var label: Label = _prompt.get_node("Panel/Margin/Label")
-	label.text = "▲ %s  Extract to surface  (bank %d)\n▼ %s  Descend deeper" % [
-		Keybinds.hint_for(&"move_up"), GameState.carried_haul, Keybinds.hint_for(&"move_down"),
-	]
+	# Crossing a stratum should be felt AT the door: name where down leads when
+	# it leads somewhere new. Same-zone descents stay terse.
+	var descend_line: String = "Descend deeper"
+	var here: ZoneData = delve.current_zone()
+	var below: ZoneData = delve.next_zone()
+	if below != null and here != null and below != here:
+		descend_line = "Descend — into %s" % below.display_name
+	_prompt.set_card("", "", [
+		PromptCard.dir_row(true, "Extract to surface — bank %d ore" % GameState.carried_haul),
+		PromptCard.dir_row(false, descend_line),
+	])
 
 
 ## Runtime input, handled here rather than in _physics_process so the press
@@ -100,7 +128,7 @@ func _deliberate(event: InputEvent) -> bool:
 
 func _extract() -> void:
 	_ending = true
-	_prompt.visible = false
+	_prompt.hide_prompt()
 	var banked: int = GameState.carried_haul
 	GameState.extract()
 	_result.show_result(&"extracted", banked)
@@ -110,7 +138,7 @@ func _on_player_died() -> void:
 	if _ending:
 		return
 	_ending = true
-	_prompt.visible = false
+	_prompt.hide_prompt()
 	var lost: int = GameState.carried_haul
 	GameState.lose_run()
 	_result.show_result(&"died", lost)
@@ -122,7 +150,7 @@ func _on_delve_completed() -> void:
 	if _ending:
 		return
 	_ending = true
-	_prompt.visible = false
+	_prompt.hide_prompt()
 	# The full-clear premium lands before the extract banks it.
 	var bonus: int = roundi(float(GameState.carried_haul) * clear_bonus_fraction)
 	if bonus > 0:

@@ -42,6 +42,14 @@ extends Resource
 ## The pixel of `sprite` the glove grips — it sits exactly on the hand anchor.
 @export var grip: Vector2 = Vector2(12, 20)
 
+@export_group("Sound")
+## The weapon's SOUND CLASS — the impact transient the Sfx layer plays on every
+## connect, stacked over the target's material layer. &"pick" is a sharp metallic
+## bite (the base pickaxe), &"blade" a keen slash, &"blunt" a deep haft thud.
+## Content-as-data: a new class is a new impact_<x>.wav and this field. Also
+## picks the swing whoosh (blunt swings sound heavy, pick/blade light).
+@export var impact_profile: StringName = &"pick"
+
 @export_group("Readability")
 @export var swing_colour: Color = Color(0.85, 0.95, 1.0, 0.85)
 ## HUD/shop icon (assets/icons/, baked by tools/gen_icons.py). Null falls back

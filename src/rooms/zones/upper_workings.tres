@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rooms/zones/zone_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"upper"
+display_name = "The Upper Workings"
+tagline = "the timber still holds"
+darkness = Color(0.3, 0.34, 0.44, 1)
+world_tint = Color(1, 0.96, 0.9, 1)
+dust_colour = Color(1, 0.9, 0.72, 1)
+mote_style = &"dust"
+top_shadow = 0.7
+vignette_strength = 0.55
+music_tracks = PackedStringArray("res://assets/audio/music_delve.wav", "res://assets/audio/music_delve_d.wav")
+room_pool = PackedStringArray("gap", "climb", "arena", "corridor")
+big_pool = PackedStringArray("halls")
+swap_chance = 0.45
+grunt_swaps = PackedStringArray("dart", "slinger")
+dart_swaps = PackedStringArray("grunt", "gnat")
+promote_bonus = 0.0

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rooms/zones/zone_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"hot_vein"
+display_name = "The Hot Vein"
+tagline = "the rock remembers fire"
+darkness = Color(0.44, 0.24, 0.16, 1)
+world_tint = Color(1, 0.7, 0.5, 1)
+dust_colour = Color(1, 0.5, 0.2, 1)
+mote_style = &"embers"
+top_shadow = 0.62
+vignette_strength = 0.6
+bottom_glow = 0.34
+bottom_glow_colour = Color(1, 0.42, 0.15, 1)
+music_tracks = PackedStringArray("res://assets/audio/music_delve_c.wav", "res://assets/audio/music_delve.wav")
+room_pool = PackedStringArray("arena", "cavern", "shaft", "gap")
+big_pool = PackedStringArray("undercroft")
+swap_chance = 0.5
+grunt_swaps = PackedStringArray("dart", "slinger")
+dart_swaps = PackedStringArray("grunt", "slinger")
+promote_bonus = 0.1

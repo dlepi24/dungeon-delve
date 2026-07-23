@@ -11,19 +11,39 @@ extends Node2D
 @export var data: ShrineData
 ## How close the player must stand for the offer (and the interact) to be live.
 @export var offer_range: float = 130.0
+## Seconds you must hold interact to accept the bargain. Tuned to clear a panic
+## tap; see HoldInteract.
+@export var accept_hold_time: float = 0.24
 
 var _accepted: bool = false
 var _player: Player = null
 var _light: PointLight2D = null
+## The altar's sacred hum — a positional loop that swells as you approach and
+## dies when the bargain is taken. This is the drone the roadmap deferred for
+## "needs an audio asset"; it now has one (assets/audio/shrine_hum.wav).
+var _hum: AudioStreamPlayer2D = null
 
 ## The pulsing offering light. Baked near-white on the sheet precisely so this
 ## modulate tint (the bargain's colour) reads through it.
 var _glow: BakedSprite = null
 
-@onready var _offer: Label = $Offer
+## The offer card, floating above the altar. Built in code (same WorldPrompt as
+## the shops), so a shrine reads as a shop card: bargain name, its flavour line,
+## and one big Accept — or a greyed "need N ore" when you cannot pay.
+var _offer: WorldPrompt = null
+## Whether the player is currently in range — the hold check reads this rather
+## than the card's fading visibility.
+var _offered: bool = false
+## A bargain can take something from you, so accepting is a deliberate HOLD, not
+## a tap — the panic jump that shares the button can't sign you up for a debuff.
+## See HoldInteract.
+var _hold: HoldInteract = HoldInteract.new()
 
 
 func _ready() -> void:
+	_hold.hold_time = accept_hold_time
+	# Grouped so a director (the tutorial) can find and clear stray altars.
+	add_to_group(&"shrines")
 	# The altar art, feet at y=0 like the old pedestal rect.
 	var altar: BakedSprite = BakedSprite.make("shrine", 1.0, &"altar")
 	altar.centered = false
@@ -47,7 +67,22 @@ func _ready() -> void:
 		add_child(_light)
 		# Offering motes drifting up off the altar, tinted to the bargain.
 		add_child(_altar_dust())
-	_offer.visible = false
+		# And the hum: positional, so walking toward a lit altar brings it up out
+		# of the mine bed. On the Ambience bus (reverbed, scaled by the SFX slider).
+		_hum = AudioStreamPlayer2D.new()
+		_hum.bus = &"Ambience"
+		_hum.stream = _looped_hum()
+		_hum.volume_db = -8.0
+		_hum.max_distance = offer_range * 2.4
+		_hum.attenuation = 1.4
+		_hum.position = Vector2(0, -46)
+		add_child(_hum)
+		_hum.play()
+	# The offer card floats above the altar (art top ≈ y -56).
+	_offer = WorldPrompt.new()
+	_offer.position = Vector2(0, -64)
+	_offer.priority = 20
+	add_child(_offer)
 
 
 ## Slow pulse on the light and glow (visual only) while the offer stands. Stops
@@ -94,7 +129,7 @@ func _radial_light() -> GradientTexture2D:
 	return texture
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if _accepted or data == null:
 		return
 	# Lazy player lookup, per the CLAUDE.md _ready-order discipline.
@@ -103,27 +138,30 @@ func _physics_process(_delta: float) -> void:
 	if _player == null:
 		return
 	var near: bool = global_position.distance_to(_player.global_position) <= offer_range
-	_offer.visible = near
+	_offered = near
+	# You can only hold to accept what you can afford; the gated card can't charge.
+	var affordable: bool = data.ore_cost <= 0 or GameState.carried_haul >= data.ore_cost
+	if _hold.poll(near and affordable, delta):
+		_accept()
+		return
+	# On the pad, interact and jump share A: eat the hop once the hold is committed
+	# so it stops knocking you off the altar. Keyboard keeps jump live.
+	if _hold.committing and _player != null and Keybinds.using_gamepad:
+		_player.swallow_jump()
 	if near:
 		_refresh_offer()
+		_offer.show_prompt()
+	else:
+		_offer.hide_prompt()
 
 
 func _refresh_offer() -> void:
-	var line: String = "%s\n%s\n" % [data.display_name, data.bargain_text]
+	var rows: Array = []
 	if data.ore_cost > 0 and GameState.carried_haul < data.ore_cost:
-		line += "(need %d carried ore)" % data.ore_cost
+		rows = [PromptCard.gated_row("need %d carried ore" % data.ore_cost)]
 	else:
-		line += "[%s] Accept" % Keybinds.hint_for(&"interact")
-	_offer.text = line
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if _accepted or data == null or not _offer.visible:
-		return
-	if not event.is_action_pressed(&"interact"):
-		return
-	get_viewport().set_input_as_handled()
-	_accept()
+		rows = [PromptCard.hold_row(&"interact", "Hold to Accept", _hold.progress)]
+	_offer.set_card(data.display_name, data.bargain_text, rows)
 
 
 func _accept() -> void:
@@ -134,8 +172,24 @@ func _accept() -> void:
 	# A max-health bargain must not leave current health above the new cap.
 	if _player != null:
 		_player.health = minf(_player.health, _player.effective_max_health())
-	_offer.visible = false
+	_offered = false
+	_offer.hide_prompt()
 	# The spent altar keeps a coal of its colour, so you can see what you took.
 	_glow.modulate = Color(data.colour, 0.25)
 	if _light != null:
 		_light.energy = 0.25
+	# The hum dies with the offer — a spent altar is quiet stone.
+	if _hum != null:
+		_hum.stop()
+
+
+## The imported WAV loops only if we force it at runtime (same as Music/Sfx).
+func _looped_hum() -> AudioStream:
+	var base: AudioStreamWAV = load("res://assets/audio/shrine_hum.wav") as AudioStreamWAV
+	if base == null:
+		return null
+	var stream: AudioStreamWAV = base.duplicate() as AudioStreamWAV
+	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	stream.loop_begin = 0
+	stream.loop_end = stream.data.size() / 2
+	return stream

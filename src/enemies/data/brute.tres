@@ -48,6 +48,7 @@ attacks = Array[ExtResource("1_falor")]([SubResource("Resource_edovo"), SubResou
 haul_reward = 8
 heart_chance = 0.3
 heart_heal = 30
+material = &"armor"
 sprite_sheet = "brute"
 colour_idle = Color(0.55, 0.3, 0.5, 1)
 colour_recover = Color(0.4, 0.25, 0.38, 1)

@@ -186,6 +186,14 @@ var deepest_room: int = 0
 var best_haul: int = 0
 ## Enemies killed, ever. Counted here (not per-run) via enemy_died.
 var total_kills: int = 0
+## Whether the player has finished (or skipped) the guided intro, "The First
+## Descent." First-run-gated: false on a fresh save routes the first DESCEND into
+## the tutorial instead of the hub. Wiped by New Game like everything else.
+var intro_seen: bool = false
+## Whether the player has been shown the hub the first time. Gates the one-time
+## surface tour: on the first hub arrival the building prompts explain the whole
+## loop (trade / smith / go deeper), then revert to terse the moment you descend.
+var hub_toured: bool = false
 
 ## How much richer each room deeper is. Room 0 (entry) pays 1x; each step down
 ## adds this. At the default 0.35 the deep room pays ~2.4x, which is the whole
@@ -240,6 +248,7 @@ func add_haul(amount: int) -> void:
 ## Reached the surface alive. Carried haul becomes banked and yours.
 func extract() -> void:
 	banked_haul += carried_haul
+	Events.banked_changed.emit(banked_haul)
 	var extracted: int = carried_haul
 	carried_haul = 0
 	run_active = false
@@ -331,6 +340,7 @@ func spend_banked(amount: int) -> bool:
 	if not can_afford(amount):
 		return false
 	banked_haul -= amount
+	Events.banked_changed.emit(banked_haul)
 	save_game()
 	return true
 
@@ -342,6 +352,7 @@ func buy_upgrade(id: StringName, cost: int) -> bool:
 		return false
 	banked_haul -= cost
 	upgrade_levels[id] = upgrade_level(id) + 1
+	Events.banked_changed.emit(banked_haul)
 	save_game()
 	Events.upgrade_purchased.emit(id, upgrade_levels[id])
 	return true
@@ -369,6 +380,8 @@ func save_game() -> void:
 	config.set_value("stats", "deepest_room", deepest_room)
 	config.set_value("stats", "best_haul", best_haul)
 	config.set_value("stats", "total_kills", total_kills)
+	config.set_value("meta", "intro_seen", intro_seen)
+	config.set_value("meta", "hub_toured", hub_toured)
 	config.save(SAVE_PATH)
 
 
@@ -388,6 +401,8 @@ func load_game() -> void:
 	deepest_room = int(config.get_value("stats", "deepest_room", 0))
 	best_haul = int(config.get_value("stats", "best_haul", 0))
 	total_kills = int(config.get_value("stats", "total_kills", 0))
+	intro_seen = bool(config.get_value("meta", "intro_seen", false))
+	hub_toured = bool(config.get_value("meta", "hub_toured", false))
 
 
 ## Wipe the save. "New game" on the title, and the tests' clean slate.
@@ -403,6 +418,8 @@ func reset_save() -> void:
 	total_kills = 0
 	mine_heat = 0
 	daily_played = ""
+	intro_seen = false
+	hub_toured = false
 	active_modifiers.clear()
 	DirAccess.remove_absolute(SAVE_PATH)
 	DirAccess.remove_absolute(HISTORY_PATH)

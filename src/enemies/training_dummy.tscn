@@ -1,14 +1,19 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 ; Body   : on Enemy, collides with World.
 ; Hurtbox: on Enemy, watches PlayerAttack.
 ; Hitbox : on EnemyAttack, watches Player. Wide enough to reach a player standing
 ;          in melee range on either side, so parry can be practised from both.
+;
+; Wears a real greyscale enemy sheet (grunt), tinted by BodyJuice from the dummy's
+; state colours — the exact enemy telegraph contract, so it reads as a dumb
+; stationary Lost Crew, not a gray box.
 
 [ext_resource type="Script" path="res://src/enemies/training_dummy.gd" id="1_dummy"]
 [ext_resource type="Script" path="res://src/systems/hitbox.gd" id="2_hitbox"]
 [ext_resource type="Script" path="res://src/systems/hurtbox.gd" id="3_hurtbox"]
 [ext_resource type="Script" path="res://src/systems/body_juice.gd" id="4_juice"]
+[ext_resource type="Script" path="res://src/systems/baked_sprite.gd" id="5_baked"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_dummy"]
 radius = 16.0
@@ -24,12 +29,26 @@ script = ExtResource("1_dummy")
 
 [node name="VisualRoot" type="Node2D" parent="."]
 script = ExtResource("4_juice")
+tint_sprite_with_base_colour = true
 
+; Still BodyJuice's flash/tint driver, now invisible — the greyscale sprite
+; inherits its squash, stretch and colour, same as a real enemy.
 [node name="Visual" type="ColorRect" parent="VisualRoot"]
+visible = false
 offset_left = -16.0
 offset_top = -64.0
 offset_right = 16.0
 color = Color(0.62, 0.62, 0.66, 1)
+
+; grunt sheet is 18x32 greyscale; ×2 = 36x64 with feet on the origin, matching
+; the capsule. Plays its idle loop; the telegraph is the BodyJuice tint.
+[node name="Sprite" type="AnimatedSprite2D" parent="VisualRoot"]
+texture_filter = 1
+scale = Vector2(2, 2)
+position = Vector2(0, -32)
+script = ExtResource("5_baked")
+sheet = "grunt"
+fps = 9.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -32)

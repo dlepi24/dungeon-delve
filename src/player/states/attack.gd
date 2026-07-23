@@ -35,6 +35,9 @@ func enter() -> void:
 	player.attack_hitbox.is_riposte = was_riposte
 	player.consume_riposte()
 
+	# Announce the swing itself so the whoosh fires on the wind-up, hit or miss.
+	Events.player_attacked.emit(player.weapon_impact_profile())
+
 
 func exit() -> void:
 	player.attack_hitbox.deactivate()

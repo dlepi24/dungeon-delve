@@ -217,6 +217,9 @@ var _tick: int = 0
 var _last_grounded_tick: int = -10000
 var _riposte_until_tick: int = -10000
 var _buffer: InputBuffer
+## Set for one tick by swallow_jump() so a press that also triggers something
+## else — the hub's shop share A with jump — opens the shop without hopping.
+var _swallow_jump: bool = false
 
 var _jump_velocity: float = 0.0
 var _jump_gravity: float = 0.0
@@ -225,6 +228,8 @@ var _fall_gravity: float = 0.0
 var health: float = 0.0
 
 var _was_on_floor: bool = true
+## Peak downward speed of the current fall, for the landing sound's soft/hard pick.
+var _fall_speed: float = 0.0
 var _spawn_position: Vector2 = Vector2.ZERO
 var _dead: bool = false
 var _death_handoff_tick: int = 0
@@ -264,6 +269,13 @@ func _physics_process(delta: float) -> void:
 	# Poll the buffer even while frozen, so a press during hitstop is remembered
 	# rather than eaten. Everything else stops dead.
 	_buffer.poll(_tick)
+	# Interact and jump share A on a pad. When the hub opens a shop off that press
+	# it asks us to drop the jump the same poll just recorded, so you engage a
+	# storefront without a hop. Runs AFTER poll (input is handled before physics),
+	# so it eats the press whether it was buffered this tick or last.
+	if _swallow_jump:
+		_buffer.consume(&"jump")
+		_swallow_jump = false
 	if Hitstop.is_frozen():
 		return
 
@@ -313,6 +325,7 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	var taken: float = hitbox.damage * incoming_multiplier()
 	health = maxf(0.0, health - taken)
 	Events.player_hurt.emit(taken)
+	Events.player_health_changed.emit(health, effective_max_health())
 	# Show the damage you actually took, over your own head — this is how armor
 	# becomes visible. Without a number, a 6% reduction is invisible and reads as
 	# "armor does nothing".
@@ -333,6 +346,7 @@ func heal(amount: float) -> void:
 	_juice.flash()
 	if health > before:
 		Events.player_healed.emit(health - before)
+		Events.player_health_changed.emit(health, effective_max_health())
 
 
 ## Base health plus whatever the persistent max-health upgrade adds, scaled by
@@ -539,6 +553,10 @@ func weapon_hitbox_size() -> Vector2:
 	return equipped_weapon.hitbox_size if equipped_weapon != null else base_hitbox_size
 func weapon_swing_colour() -> Color:
 	return equipped_weapon.swing_colour if equipped_weapon != null else Color(0.85, 0.95, 1.0, 0.85)
+## Sound class of what's in hand. The base pickaxe is a &"pick"; a found weapon
+## brings its own. Set on the hitbox at equip so every connect carries it.
+func weapon_impact_profile() -> StringName:
+	return equipped_weapon.impact_profile if equipped_weapon != null else &"pick"
 
 func _w_startup() -> int:
 	return equipped_weapon.startup_ms if equipped_weapon != null else attack_startup_ms
@@ -568,6 +586,9 @@ func reset_attack_hitbox() -> void:
 ## Spear really does reach further than a Dagger.
 func _resize_attack_hitbox() -> void:
 	var size: Vector2 = weapon_hitbox_size()
+	# The sound class is a per-weapon constant, so it rides the hitbox from equip
+	# rather than being re-set every swing (unlike damage, which the riposte scales).
+	attack_hitbox.impact_profile = weapon_impact_profile()
 	var shape: RectangleShape2D = attack_hitbox.get_node("CollisionShape2D").shape as RectangleShape2D
 	if shape != null:
 		shape.size = size
@@ -654,6 +675,8 @@ func reset_for_new_run() -> void:
 	_dead = false
 	_death_handoff_tick = 0
 	health = effective_max_health()
+	# Full again — makes sure the low-health heartbeat is silenced on a fresh run.
+	Events.player_health_changed.emit(health, effective_max_health())
 	invulnerable = false
 	velocity = Vector2.ZERO
 	consume_riposte()
@@ -691,7 +714,7 @@ func teleport_to(destination: Vector2) -> void:
 
 
 ## We landed a hit on something.
-func _on_hit_landed(_damage: float, was_riposte: bool) -> void:
+func _on_hit_landed(_damage: float, was_riposte: bool, _impact: StringName, _material: StringName) -> void:
 	Hitstop.request(hitstop_parry_frames if was_riposte else hitstop_hit_frames)
 	_juice.punch(attack_punch)
 	if was_riposte:
@@ -713,10 +736,15 @@ func _on_parry_succeeded() -> void:
 ## _process — the request is a fact, the animation is a visual.
 func _update_landing_juice() -> void:
 	var on_floor: bool = is_on_floor()
+	# Track the peak downward speed while airborne (y is down in Godot 2D), so the
+	# landing carries how HARD the touchdown was — a hop scuffs, a plummet thuds.
+	if not on_floor:
+		_fall_speed = maxf(_fall_speed, velocity.y)
 	if on_floor and not _was_on_floor:
 		_juice.punch(land_squash)
 		_dust(10, 75.0)
-		Events.player_landed.emit()
+		Events.player_landed.emit(_fall_speed)
+		_fall_speed = 0.0
 	elif not on_floor and _was_on_floor and velocity.y < 0.0:
 		_juice.punch(jump_stretch)
 	_was_on_floor = on_floor
@@ -882,6 +910,15 @@ func try_consume_jump() -> bool:
 	velocity.y = _jump_velocity
 	Events.player_jumped.emit()
 	return true
+
+
+## Drop the pending jump press this tick. Called when a shared A press does an
+## interact instead of a hop: the hub when opening a storefront, and a delve
+## weapon offer / shrine while a hold is committing (pad only). A plain tap in a
+## run never calls it, so jump stays fully live everywhere else.
+func swallow_jump() -> void:
+	_swallow_jump = true
+	_buffer.consume(&"jump")
 
 
 func try_jump_cut() -> void:

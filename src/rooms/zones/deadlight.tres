@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rooms/zones/zone_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"deadlight"
+display_name = "The Deadlight"
+tagline = "something down here glows without burning"
+darkness = Color(0.2, 0.29, 0.36, 1)
+world_tint = Color(0.68, 0.84, 0.9, 1)
+dust_colour = Color(0.55, 0.95, 0.85, 1)
+mote_style = &"spores"
+top_shadow = 0.8
+vignette_strength = 0.66
+bottom_glow = 0.15
+bottom_glow_colour = Color(0.35, 0.9, 0.8, 1)
+music_tracks = PackedStringArray("res://assets/audio/music_delve_e.wav", "res://assets/audio/music_delve_b.wav")
+room_pool = PackedStringArray("cavern", "shaft", "gallery", "climb")
+big_pool = PackedStringArray("chasm")
+swap_chance = 0.6
+grunt_swaps = PackedStringArray("slinger", "gnat")
+dart_swaps = PackedStringArray("gnat", "slinger")
+promote_bonus = 0.04

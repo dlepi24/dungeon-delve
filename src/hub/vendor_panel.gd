@@ -11,6 +11,8 @@ extends CanvasLayer
 @onready var _close: Button = $Panel/Margin/Rows/Close
 
 var _rows: Dictionary[StringName, Button] = {}
+var _order: Array[Control] = []
+var _nav: MenuNav = MenuNav.new()
 
 
 func _ready() -> void:
@@ -18,6 +20,16 @@ func _ready() -> void:
 	_close.pressed.connect(close)
 	for upgrade: UpgradeData in stock:
 		_add_row(upgrade)
+	_order = []
+	for upgrade: UpgradeData in stock:
+		_order.append(_rows[upgrade.id])
+	_order.append(_close)
+	MenuNav.disable_builtin_nav(_order)
+
+
+func _process(delta: float) -> void:
+	if visible:
+		_nav.poll(delta, _order)
 
 
 func _add_row(upgrade: UpgradeData) -> void:
@@ -39,7 +51,7 @@ func _add_row(upgrade: UpgradeData) -> void:
 func open() -> void:
 	visible = true
 	Cursor.menu()
-	_close.text = "Close  [%s]" % Keybinds.hint_for(&"interact")
+	_close.text = "Close"
 	_refresh()
 	_focus_first()
 

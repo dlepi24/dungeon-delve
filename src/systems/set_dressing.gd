@@ -91,6 +91,52 @@ static func make_lantern(drop: float = 70.0) -> Node2D:
 	return n
 
 
+## A camp hearth: a stone ring around a low bed of embers, a small standing
+## flame, rising sparks, and a REAL warm light pool big enough to hold back a
+## cold zone's grade. The rest camp's centrepiece — the one warm hearth in the
+## Deadlight is the whole story beat, so the light does the heavy lifting.
+static func make_campfire() -> Node2D:
+	var n: Node2D = Node2D.new()
+	# Stone ring: low lumps flanking the fire bed.
+	_rect(n, Vector2(-30, -10), Vector2(12, 10), ROCK_BODY)
+	_rect(n, Vector2(-30, -10), Vector2(12, 4), ROCK_LIT)
+	_rect(n, Vector2(18, -10), Vector2(12, 10), ROCK_BODY)
+	_rect(n, Vector2(18, -10), Vector2(12, 4), ROCK_LIT)
+	# Charred log ends poking from the bed.
+	_rect(n, Vector2(-20, -7), Vector2(40, 7), Color(0.16, 0.09, 0.06))
+	# Ember bed and a real standing flame, layered hot-to-white going up.
+	_rect(n, Vector2(-16, -9), Vector2(32, 7), Color(0.5, 0.14, 0.04))
+	_rect(n, Vector2(-12, -13), Vector2(24, 7), Color(0.95, 0.38, 0.08))
+	_rect(n, Vector2(-8, -22), Vector2(16, 12), Color(1.0, 0.6, 0.16))
+	_rect(n, Vector2(-4, -30), Vector2(9, 10), Color(1.0, 0.82, 0.36))
+	_rect(n, Vector2(-2, -35), Vector2(5, 6), Color(1.0, 0.94, 0.62))
+	# Rising sparks. Cosmetic, so the particle system's own randomness is fine.
+	var sparks: CPUParticles2D = CPUParticles2D.new()
+	sparks.amount = 14
+	sparks.lifetime = 1.8
+	sparks.preprocess = 1.8
+	sparks.position = Vector2(0, -22)
+	sparks.direction = Vector2(0, -1)
+	sparks.spread = 24.0
+	sparks.gravity = Vector2(0, -22)
+	sparks.initial_velocity_min = 20.0
+	sparks.initial_velocity_max = 52.0
+	sparks.scale_amount_min = 1.4
+	sparks.scale_amount_max = 2.8
+	sparks.color = Color(1.0, 0.62, 0.2, 0.8)
+	n.add_child(sparks)
+	# The pool: a hearth, not a bulb. Strong enough to hold a warm island
+	# against the Deadlight's cold grade — that contrast IS the camp.
+	var light: PointLight2D = PointLight2D.new()
+	light.texture = _glow()
+	light.color = Color(1.0, 0.68, 0.34)
+	light.energy = 3.0
+	light.texture_scale = 6.0
+	light.position = Vector2(0, -20)
+	n.add_child(light)
+	return n
+
+
 ## A bare hanging chain from the ceiling, ending in a hook or an ore hook-lump.
 ## No light — it is silhouette depth for the upper dead air. `drop` is length.
 static func make_chain(drop: float = 90.0) -> Node2D:

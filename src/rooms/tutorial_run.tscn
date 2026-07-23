@@ -1,0 +1,79 @@
+[gd_scene load_steps=11 format=3]
+
+; The guided intro, "The First Descent." Mirrors delve_run, but a TutorialDirector
+; drives the flow instead of RunCoordinator (no extract/descend fork until the
+; finale), and the Delve does NOT auto-start — the director calls start_plan with
+; the authored tutorial path. Ghost recording, door choice and the result screen
+; are intentionally absent; the intro is not a ranked run.
+
+[ext_resource type="Script" path="res://src/rooms/delve.gd" id="1_delve"]
+[ext_resource type="PackedScene" path="res://src/player/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://src/systems/follow_camera.gd" id="3_cam"]
+[ext_resource type="PackedScene" path="res://src/ui/debug_overlay.tscn" id="4_overlay"]
+[ext_resource type="PackedScene" path="res://src/ui/hud.tscn" id="5_hud"]
+[ext_resource type="PackedScene" path="res://src/ui/pause_menu.tscn" id="7_pause"]
+[ext_resource type="Script" path="res://src/systems/pickup_feedback.gd" id="24_pfb"]
+[ext_resource type="Script" path="res://src/ui/transition_fade.gd" id="26_fade"]
+[ext_resource type="Script" path="res://src/systems/mine_atmosphere.gd" id="27_atmo"]
+[ext_resource type="Script" path="res://src/rooms/tutorial_director.gd" id="30_dir"]
+
+[node name="TutorialRun" type="Node2D"]
+
+[node name="Background" type="CanvasLayer" parent="."]
+layer = -10
+
+[node name="Rect" type="ColorRect" parent="Background"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.055, 0.042, 0.035, 1)
+
+[node name="Delve" type="Node2D" parent="." node_paths=PackedStringArray("camera")]
+script = ExtResource("1_delve")
+auto_start = false
+camera = NodePath("../Camera2D")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(200, 500)
+
+[node name="Camera2D" type="Camera2D" parent="." node_paths=PackedStringArray("target")]
+position = Vector2(960, 340)
+script = ExtResource("3_cam")
+target = NodePath("../Player")
+
+[node name="Dust" type="CPUParticles2D" parent="Camera2D"]
+amount = 36
+lifetime = 7.0
+preprocess = 7.0
+local_coords = true
+emission_shape = 3
+emission_rect_extents = Vector2(1400, 360)
+direction = Vector2(-1, 0)
+spread = 35.0
+gravity = Vector2(0, 1)
+initial_velocity_min = 4.0
+initial_velocity_max = 14.0
+scale_amount_min = 1.5
+scale_amount_max = 3.0
+color = Color(0.95, 0.88, 0.7, 0.1)
+
+[node name="TransitionFade" type="CanvasLayer" parent="."]
+script = ExtResource("26_fade")
+
+[node name="MineAtmosphere" type="Node" parent="."]
+script = ExtResource("27_atmo")
+
+[node name="DebugOverlay" parent="." instance=ExtResource("4_overlay") node_paths=PackedStringArray("player")]
+player = NodePath("../Player")
+
+[node name="Hud" parent="." instance=ExtResource("5_hud") node_paths=PackedStringArray("player")]
+player = NodePath("../Player")
+
+[node name="PickupFeedback" type="Node" parent="."]
+script = ExtResource("24_pfb")
+
+[node name="PauseMenu" parent="." instance=ExtResource("7_pause")]
+
+[node name="TutorialDirector" type="Node" parent="." node_paths=PackedStringArray("delve")]
+script = ExtResource("30_dir")
+delve = NodePath("../Delve")

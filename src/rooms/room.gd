@@ -291,6 +291,20 @@ func _glow_texture() -> GradientTexture2D:
 	return texture
 
 
+## Push the current zone's temperature into the rock itself. Tile layers ONLY:
+## enemies are children of this room too, and tinting them would fight the
+## greyscale telegraph-tint contract (BodyJuice owns enemy colour, full stop).
+## The backdrop takes the tint slightly darker so the far wall stays behind
+## the play surface instead of merging with it.
+func apply_zone_tint(tint: Color) -> void:
+	var tiles: TileMapLayer = get_node_or_null(^"Tiles") as TileMapLayer
+	if tiles != null:
+		tiles.modulate = tint
+	var backdrop: TileMapLayer = get_node_or_null(^"Backdrop") as TileMapLayer
+	if backdrop != null:
+		backdrop.modulate = tint.darkened(0.12)
+
+
 ## Lazy, not resolved in _ready — see the note in enemy.gd. A null player here
 ## means the exit never triggers and the run silently cannot progress.
 func _get_player() -> Player:

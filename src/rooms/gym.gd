@@ -13,8 +13,9 @@ const PAUSE_MENU: String = "res://src/ui/pause_menu.tscn"
 @export var exit_x: float = 120.0
 
 var _player: Player = null
+var _at_exit: bool = false
 
-@onready var _prompt: Label = _build_prompt()
+@onready var _prompt: WorldPrompt = _build_prompt()
 
 
 func _ready() -> void:
@@ -29,28 +30,26 @@ func _physics_process(_delta: float) -> void:
 		_player = get_tree().get_first_node_in_group(&"player") as Player
 	if _player == null:
 		return
-	if _player.global_position.x <= exit_x:
-		_prompt.text = "[%s] Return to the surface" % Keybinds.hint_for(&"interact")
+	_at_exit = _player.global_position.x <= exit_x
+	if _at_exit:
+		_prompt.show_prompt()
 	else:
-		_prompt.text = ""
+		_prompt.hide_prompt()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _prompt.text.is_empty() or not event.is_action_pressed(&"interact"):
+	if not _at_exit or not event.is_action_pressed(&"interact"):
 		return
 	get_viewport().set_input_as_handled()
 	get_tree().change_scene_to_file.call_deferred(HUB_SCENE)
 
 
-func _build_prompt() -> Label:
-	var layer: CanvasLayer = CanvasLayer.new()
-	add_child(layer)
-	var label: Label = Label.new()
-	label.position = Vector2(660, 620)
-	label.size = Vector2(600, 40)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	layer.add_child(label)
-	return label
+func _build_prompt() -> WorldPrompt:
+	var prompt: WorldPrompt = WorldPrompt.new()
+	prompt.position = Vector2(exit_x, 640)
+	prompt.set_action(&"interact", "Return to the surface")
+	add_child(prompt)
+	return prompt
 
 
 func _build_signs() -> void:

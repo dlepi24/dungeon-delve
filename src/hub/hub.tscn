@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://src/hub/hub.gd" id="1"]
 [ext_resource type="Script" path="res://src/systems/baked_sprite.gd" id="8_baked"]
@@ -8,12 +8,50 @@
 [ext_resource type="Script" path="res://src/systems/pickup_feedback.gd" id="5"]
 [ext_resource type="PackedScene" path="res://src/hub/blacksmith_panel.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://src/ui/pause_menu.tscn" id="7"]
+[ext_resource type="Texture2D" path="res://assets/icons/ore.png" id="10_ore"]
 
 [sub_resource type="RectangleShape2D" id="floor"]
 size = Vector2(1840, 80)
 
 [sub_resource type="RectangleShape2D" id="wall"]
 size = Vector2(40, 1080)
+
+; The banked-haul card wears the same voice as the delve HUD: dark plate, amber
+; timber border, soft drop shadow.
+[sub_resource type="StyleBoxFlat" id="banked_card"]
+content_margin_left = 16.0
+content_margin_top = 11.0
+content_margin_right = 18.0
+content_margin_bottom = 11.0
+bg_color = Color(0.055, 0.05, 0.066, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.62, 0.5, 0.3, 0.85)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.4)
+shadow_size = 6
+
+; Mine-heat pill: the HUD's red-alert language, so the streak reads as stakes.
+[sub_resource type="StyleBoxFlat" id="heat_pill"]
+content_margin_left = 9.0
+content_margin_top = 3.0
+content_margin_right = 9.0
+content_margin_bottom = 3.0
+bg_color = Color(0.12, 0.035, 0.02, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.4, 0.2, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
 [node name="Hub" type="Node2D"]
 script = ExtResource("1")
@@ -25,6 +63,7 @@ position = Vector2(960, 560)
 zoom = Vector2(1.3, 1.3)
 
 [node name="Background" type="ColorRect" parent="."]
+z_index = -100
 offset_left = -1200.0
 offset_right = 3120.0
 offset_bottom = 1080.0
@@ -120,27 +159,46 @@ position = Vector2(1150, 780)
 
 [node name="HubHud" type="CanvasLayer" parent="."]
 
-[node name="Banked" type="Label" parent="HubHud"]
-offset_left = 40.0
-offset_top = 36.0
-offset_right = 500.0
-offset_bottom = 66.0
-text = "Banked haul: 0"
+; The banked readout as a proper HUD card (top-left), matching the delve's:
+; ore icon + banked number, with the mine-heat pill appearing beneath only when
+; a streak is live. Authored nodes (not an instanced Control), so restating
+; layout_mode/anchors is unnecessary — the container sizes to its content.
+[node name="BankedCard" type="PanelContainer" parent="HubHud"]
+offset_left = 30.0
+offset_top = 28.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("banked_card")
 
-[node name="Prompt" type="Label" parent="HubHud"]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = 120.0
-offset_right = 200.0
-offset_bottom = 150.0
-grow_horizontal = 2
-grow_vertical = 2
-text = ""
-horizontal_alignment = 1
+[node name="Margin" type="MarginContainer" parent="HubHud/BankedCard"]
+
+[node name="Rows" type="VBoxContainer" parent="HubHud/BankedCard/Margin"]
+theme_override_constants/separation = 8
+
+[node name="Banked" type="HBoxContainer" parent="HubHud/BankedCard/Margin/Rows"]
+theme_override_constants/separation = 10
+
+[node name="Ore" type="TextureRect" parent="HubHud/BankedCard/Margin/Rows/Banked"]
+custom_minimum_size = Vector2(26, 26)
+texture = ExtResource("10_ore")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Value" type="Label" parent="HubHud/BankedCard/Margin/Rows/Banked"]
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 0.9, 0.72, 1)
+text = "0"
+vertical_alignment = 1
+
+[node name="Heat" type="PanelContainer" parent="HubHud/BankedCard/Margin/Rows"]
+visible = false
+theme_override_styles/panel = SubResource("heat_pill")
+
+[node name="HeatMargin" type="MarginContainer" parent="HubHud/BankedCard/Margin/Rows/Heat"]
+
+[node name="HeatLabel" type="Label" parent="HubHud/BankedCard/Margin/Rows/Heat/HeatMargin"]
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 0.62, 0.42, 1)
+text = "MINE HEAT  1"
 
 [node name="VendorPanel" parent="." instance=ExtResource("4")]
 
@@ -149,12 +207,20 @@ horizontal_alignment = 1
 ; The surface is warm and safe, so the grade is warm and only lightly dimmed,
 ; the headroom sinks less than the mine's, and the same helmet lamp rides the
 ; player. Same system as the delve, tuned bright.
+; The surface is already a lit, warm room, so the helmet lamp is nearly off up
+; here — a faint glow, not a personal floodlight. On the bright grade any real
+; additive light clips the player to white and eats his detail, so both the
+; travel pool and the key light are dialled right down (delve keeps the defaults).
 [node name="MineAtmosphere" type="Node" parent="."]
 script = ExtResource("9_atmo")
 darkness = Color(0.72, 0.64, 0.55, 1)
-top_shadow = 0.5
-dust_amount = 20
-haze_amount = 6
+lantern_energy = 0.45
+lantern_scale = 3.2
+key_energy = 0.28
+key_scale = 1.4
+top_shadow = 0.35
+dust_amount = 10
+haze_amount = 3
 vignette_strength = 0.42
 
 [node name="PickupFeedback" type="Node" parent="."]

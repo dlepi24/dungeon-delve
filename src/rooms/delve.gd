@@ -15,18 +15,37 @@ extends Node2D
 
 const ROOM_DIR: String = "res://src/rooms/delve"
 
-## First and last rooms are fixed; the middle is drawn from this pool. "entry" is
-## deliberately gentle and "deep" is the biggest fight, so a run has a shape
-## rather than being uniform noise.
+## First and last rooms are fixed; the middle is drawn from the current ZONE's
+## pool. "entry" is deliberately gentle and "deep" is the biggest fight, so a
+## run has a shape rather than being uniform noise.
 const FIRST_ROOM: StringName = &"entry"
 const LAST_ROOM: StringName = &"deep"
+## The rest stop: a lit camp with no enemies, inserted before the deep room so
+## the run breathes once before the boss. A pacing beat, not a combat room —
+## it never counts toward depth economy and the mine never rains debris on it.
+const CAMP_ROOM: StringName = &"camp"
+## Union of every zone's room_pool, kept for tests and as the fallback if a
+## zone resource fails to load. Zones narrow this per depth band.
 const MIDDLE_POOL: Array[StringName] = [
 	&"gap", &"climb", &"arena", &"corridor", &"cavern", &"shaft", &"gallery",
 ]
 ## Double-wide centrepiece rooms. Every run gets EXACTLY ONE, at a seeded
 ## depth — in the general pool they appeared one run in three, which read as
-## never. Kept out of MIDDLE_POOL so a run cannot draw two.
+## never. Kept out of MIDDLE_POOL so a run cannot draw two. Which centrepiece
+## appears follows the ZONE the big slot lands in (halls are Upper timber,
+## the undercroft is the Vein's covered lane, the chasm plunges into the
+## Deadlight) — so the seeded slot position also decides the room's identity.
 const BIG_POOL: Array[StringName] = [&"halls", &"undercroft", &"chasm"]
+
+## The mine's strata, shallowest first. The descent arc is FIXED (you always
+## fall from timber into fire into the cold glow — that is the journey); which
+## rooms fill each band stays seeded. Banding is a pure function of plan index,
+## so zones cost the daily seed nothing.
+const ZONE_PATHS: Array[String] = [
+	"res://src/rooms/zones/upper_workings.tres",
+	"res://src/rooms/zones/hot_vein.tres",
+	"res://src/rooms/zones/deadlight.tres",
+]
 
 ## One scene for every enemy: there are no enemy subclasses any more, only data.
 const ENEMY_SCENE: String = "res://src/enemies/enemy.tscn"
@@ -64,11 +83,16 @@ const ENEMY_STATS: Dictionary[String, String] = {
 ## What an authored marker may become instead (seeded draw): each kind's
 ## alternates share its weight class, so a room's difficulty budget holds while
 ## the ANSWER it demands varies — a slinger post makes you approach, a gnat
-## makes the high ground contested.
+## makes the high ground contested. The FALLBACK table; zones carry their own
+## lean (the Deadlight trades toward slingers and gnats, so its fights feel
+## like its fiction: ranged things glowing in the dark).
 const SIDEWAYS: Dictionary[String, Array] = {
 	"grunt": ["dart", "slinger"],
 	"dart": ["grunt", "gnat"],
 }
+## What the camp's guaranteed heart restores. The one in-run heal that is a
+## PLACE rather than a drop: the rest stop before the deep is worth reaching.
+@export var camp_heart_heal: int = 2
 
 ## Total rooms in a delve, including entry and deep.
 @export var room_count: int = 5
@@ -88,6 +112,7 @@ const SIDEWAYS: Dictionary[String, Array] = {
 ## choice — a hint, not a name, so the choice is informed but not spoiled.
 const HINTS: Dictionary[StringName, String] = {
 	&"entry": "the mine mouth",
+	&"camp": "lantern light, and quiet",
 	&"gap": "a broken floor",
 	&"climb": "a long climb",
 	&"arena": "an open fighting floor",
@@ -108,6 +133,90 @@ var _options: Array[Array] = []
 var _index: int = -1
 var _room: Room = null
 var _player: Player = null
+## Loaded ZoneData resources, shallowest first. Lazy — headless tests build
+## Delves by the hundred and most never need the zone scenes.
+var _zones: Array[ZoneData] = []
+## Which zone band the run is currently in, so _advance only announces a zone
+## when the band actually CHANGES. -1 = not started.
+var _zone_band: int = -1
+## The guided tutorial locks the whole plan to the Upper Workings: a first
+## descent stays shallow, and the scripted set-piece must not inherit the
+## Deadlight's grade. -1 = band normally by depth.
+var _fixed_band: int = -1
+
+
+func zones() -> Array[ZoneData]:
+	if _zones.is_empty():
+		for path: String in ZONE_PATHS:
+			var zone: ZoneData = load(path) as ZoneData
+			if zone != null:
+				_zones.append(zone)
+	return _zones
+
+
+## Which zone band a plan index falls in. Pure arithmetic — no RNG, no state —
+## so the daily seed pays nothing for zones and tests can call it freely.
+##
+## The entry is always the Upper Workings; the camp and the deep are always
+## the Deadlight (the rest stop is IN the cold — its hanging lanterns against
+## the spore-light is the point); the combat middles spread evenly across all
+## three strata. A naive thirds-of-the-plan split banded every middle 0 or 1,
+## which quietly deleted the Deadlight's combat rooms AND the chasm (its
+## centrepiece) from every run — the kind of variety loss nobody errors on.
+func band_for_index(index: int, plan_size: int) -> int:
+	if _fixed_band >= 0:
+		return _fixed_band
+	var last: int = ZONE_PATHS.size() - 1
+	if index <= 0 or plan_size <= 1:
+		return 0
+	# The tail: deep, and the camp above it when the plan carries one.
+	var tail: int = 2 if plan_size >= 6 else 1
+	if index >= plan_size - tail:
+		return last
+	var middles: int = plan_size - 1 - tail
+	if middles <= 0:
+		return last
+	return clampi((index - 1) * ZONE_PATHS.size() / middles, 0, last)
+
+
+## The ZoneData governing a plan index. Null only if the zone resources are
+## missing, in which case everything falls back to the flat pools.
+func zone_for_index(index: int, plan_size: int) -> ZoneData:
+	var all_zones: Array[ZoneData] = zones()
+	if all_zones.is_empty():
+		return null
+	return all_zones[clampi(band_for_index(index, plan_size), 0, all_zones.size() - 1)]
+
+
+## The middle-room pool a given plan index draws from: the zone's pool, or the
+## flat fallback. Public so the delve test's stream-alignment replica can
+## mirror the draw pattern exactly.
+func middle_pool_at(index: int, plan_size: int) -> Array[StringName]:
+	var zone: ZoneData = zone_for_index(index, plan_size)
+	if zone == null or zone.room_pool.is_empty():
+		return MIDDLE_POOL
+	var pool: Array[StringName] = []
+	for id: String in zone.room_pool:
+		pool.append(StringName(id))
+	return pool
+
+
+## The centrepiece pool for a given plan index — the zone's, or the flat one.
+func big_pool_at(index: int, plan_size: int) -> Array[StringName]:
+	var zone: ZoneData = zone_for_index(index, plan_size)
+	if zone == null or zone.big_pool.is_empty():
+		return BIG_POOL
+	var pool: Array[StringName] = []
+	for id: String in zone.big_pool:
+		pool.append(StringName(id))
+	return pool
+
+
+## Total plan length for a requested combat-room count: the camp adds one when
+## the run is long enough to deserve a rest (a 3-room delve has no room for
+## pacing beats).
+func plan_size_for(count: int) -> int:
+	return count + 1 if count >= 4 else count
 
 
 ## Pure function of the seed: no scene loading, no side effects, so tests can
@@ -115,34 +224,45 @@ var _player: Player = null
 ## distinct candidates (one redraw, not a loop — a variable number of draws
 ## would make the sequence depend on what came before); the player chooses at
 ## the exit, which multiplies run shapes without new content.
+##
+## The plan descends through the zone bands: each depth draws from ITS zone's
+## pool, the one big room comes from the zone its seeded slot lands in, and the
+## camp sits just above the deep room — the breath before the bottom.
 func options_for_seed(seed_value: int, count: int) -> Array[Array]:
 	Rng.set_seed(seed_value)
 	var generator: RandomNumberGenerator = Rng.stream(&"delve")
 
+	var plan_size: int = plan_size_for(count)
 	var options: Array[Array] = [[FIRST_ROOM]]
 	var middles: int = maxi(0, count - 2)
 	# One middle depth per run is the big-room centrepiece, seeded like all else.
 	var big_slot: int = generator.randi_range(0, maxi(0, middles - 1))
 	var previous: StringName = FIRST_ROOM
 	for i: int in middles:
-		if i == big_slot and not BIG_POOL.is_empty():
+		var depth_index: int = i + 1
+		if i == big_slot:
 			# The centrepiece never branches: the run's one guaranteed big room
-			# should not be dodgeable behind the other door.
-			var big: StringName = BIG_POOL[generator.randi_range(0, BIG_POOL.size() - 1)]
+			# should not be dodgeable behind the other door. Its identity follows
+			# the zone the slot landed in.
+			var bigs: Array[StringName] = big_pool_at(depth_index, plan_size)
+			var big: StringName = bigs[generator.randi_range(0, bigs.size() - 1)]
 			options.append([big])
 			previous = big
 			continue
 		# One redraw against repeats, one against a duplicate pair, then the
 		# branch roll. Single redraws, never loops — see the original note.
-		var a: StringName = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
-		if a == previous and MIDDLE_POOL.size() > 1:
-			a = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
-		var b: StringName = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
-		if b == a and MIDDLE_POOL.size() > 1:
-			b = MIDDLE_POOL[generator.randi_range(0, MIDDLE_POOL.size() - 1)]
+		var pool: Array[StringName] = middle_pool_at(depth_index, plan_size)
+		var a: StringName = pool[generator.randi_range(0, pool.size() - 1)]
+		if a == previous and pool.size() > 1:
+			a = pool[generator.randi_range(0, pool.size() - 1)]
+		var b: StringName = pool[generator.randi_range(0, pool.size() - 1)]
+		if b == a and pool.size() > 1:
+			b = pool[generator.randi_range(0, pool.size() - 1)]
 		var branches: bool = generator.randf() < branch_chance
 		options.append([a, b] if branches and b != a else [a])
 		previous = a
+	if plan_size > count:
+		options.append([CAMP_ROOM])
 	if count >= 2:
 		options.append([LAST_ROOM])
 	return options
@@ -170,6 +290,8 @@ func current_room() -> Room:
 
 
 func start(seed_value: int) -> void:
+	_fixed_band = -1
+	_zone_band = -1
 	_options = options_for_seed(seed_value, room_count)
 	_plan = []
 	for opts: Array in _options:
@@ -178,6 +300,28 @@ func start(seed_value: int) -> void:
 	GameState.begin_run(seed_value, _plan)
 	# A restart must be a clean slate, or you carry your last run's health and
 	# riposte into the new one and the comparison is worthless.
+	var player: Player = _get_player()
+	if player != null:
+		player.reset_for_new_run()
+	_advance()
+
+
+## Start a FIXED, curated plan rather than one drawn from a seed — the guided
+## tutorial's path. Still seeds the Rng streams and sets up run state through
+## begin_run, so every reused system (rooms, enemies, shrines) behaves exactly
+## as in a real delve; only the sequence is authored instead of rolled. The
+## caller (TutorialDirector) sets pending_mode = &"tutorial" first, so this never
+## touches the daily/ranked path.
+func start_plan(plan: Array[StringName], seed_value: int = 0) -> void:
+	# The guided first descent stays in the Upper Workings — see _fixed_band.
+	_fixed_band = 0
+	_zone_band = -1
+	_options = []
+	for id: StringName in plan:
+		_options.append([id])
+	_plan = plan.duplicate()
+	_index = -1
+	GameState.begin_run(seed_value, _plan)
 	var player: Player = _get_player()
 	if player != null:
 		player.reset_for_new_run()
@@ -251,10 +395,47 @@ func _advance() -> void:
 		return
 	# Depth is run state and the Delve is the thing that knows it. This write used
 	# to live in the dev HUD, which meant deleting a HUD could silently break the
-	# depth-pays-more economy.
-	GameState.depth = _index
+	# depth-pays-more economy. The camp is a pause, not a descent: it never
+	# counts, so the deep room pays the same whether or not a rest sat above it.
+	GameState.depth = _combat_depth(_index)
 	_load_room(_plan[_index])
+	# Announce the zone BEFORE the room, so the atmosphere/music regrade is
+	# already in flight when listeners react to the room itself.
+	var band: int = band_for_index(_index, _plan.size())
+	if band != _zone_band:
+		_zone_band = band
+		var zone: ZoneData = zone_for_index(_index, _plan.size())
+		if zone != null:
+			Events.zone_entered.emit(zone)
 	Events.room_entered.emit(_index, String(_plan[_index]))
+
+
+## How many combat rooms precede this index — the economy's idea of depth,
+## which skips rest stops.
+func _combat_depth(index: int) -> int:
+	var depth: int = 0
+	for j: int in index:
+		if _plan[j] != CAMP_ROOM:
+			depth += 1
+	return depth
+
+
+## The zone the run is currently standing in, for anything outside the Delve
+## (the coordinator's descend prompt, the HUD) that wants to name it.
+func current_zone() -> ZoneData:
+	if _index < 0 or _plan.is_empty():
+		return null
+	return zone_for_index(_index, _plan.size())
+
+
+## The zone one room deeper, or null at the bottom. The descend prompt names it
+## when it differs from the current one — crossing a stratum should be felt at
+## the door, not discovered after it.
+func next_zone() -> ZoneData:
+	var next: int = _index + 1
+	if next >= _plan.size() or _plan.is_empty():
+		return null
+	return zone_for_index(next, _plan.size())
 
 
 ## True once the player is standing at the current room's exit, so the coordinator
@@ -278,10 +459,19 @@ func _load_room(id: StringName) -> void:
 	if camera != null:
 		camera.set_room_bounds(_room.room_size)
 
+	# The zone colours the rock itself (tile layers only — enemies keep their
+	# greyscale telegraph-tint contract; the CanvasModulate handles the rest).
+	var zone: ZoneData = zone_for_index(_index, _plan.size())
+	if zone != null:
+		_room.apply_zone_tint(zone.world_tint)
+
 	_spawn_enemies(_room)
 	_spawn_debris(_room)
-	# The very first run of a save gets its verbs taught in the world.
-	if id == FIRST_ROOM and GameState.total_runs == 0:
+	# The very first run of a save gets its verbs taught in the world — UNLESS
+	# this is the guided intro, which teaches them itself (and superseded these
+	# signs per the 2026-07-22 GDD decision). Kept as a backstop for any real
+	# first delve that somehow skipped the intro.
+	if id == FIRST_ROOM and GameState.total_runs == 0 and GameState.run_mode != &"tutorial":
 		_room.add_child(TeachingSigns.new())
 	var player: Player = _get_player()
 	if player != null:
@@ -297,6 +487,21 @@ func _spawn_enemies(room: Room) -> void:
 	for point: Dictionary in room.spawn_points():
 		if point["kind"] == "shrine":
 			_maybe_place_shrine(room, point["position"], rng)
+			continue
+		if point["kind"] == "hearth":
+			# The camp's fire: pure warmth against the zone's cold grade.
+			var fire: Node2D = SetDressing.make_campfire()
+			fire.position = point["position"]
+			room.add_child(fire)
+			continue
+		if point["kind"] == "heart":
+			# The camp's guaranteed heal — authored, not dropped, so it takes no
+			# draw from the seeded stream and every runner finds the same rest.
+			var heart: Pickup = (load("res://src/systems/pickup.tscn") as PackedScene).instantiate() as Pickup
+			heart.kind = Pickup.Kind.HEAL
+			heart.amount = camp_heart_heal
+			heart.global_position = point["position"] + Vector2(0, -8)
+			room.add_child(heart)
 			continue
 		if HAZARD_SCENES.has(point["kind"]):
 			var hazard: Node2D = (load(HAZARD_SCENES[point["kind"]]) as PackedScene).instantiate() as Node2D
@@ -318,7 +523,11 @@ func _spawn_enemies(room: Room) -> void:
 ## and heat scale the count, so the same seed rains differently at different
 ## heat — deliberate, the same as heat's spawn promotions: heat IS difficulty.
 func _spawn_debris(room: Room) -> void:
-	var count: int = maxi(0, _index - 1) * debris_base_per_depth + GameState.heat_level()
+	# The camp is the one roof in the mine that holds: a rest stop that rains
+	# rocks on you is not a rest stop.
+	if _index >= 0 and _index < _plan.size() and _plan[_index] == CAMP_ROOM:
+		return
+	var count: int = maxi(0, GameState.depth - 1) * debris_base_per_depth + GameState.heat_level()
 	if count <= 0:
 		return
 	var rng: RandomNumberGenerator = Rng.stream(&"hazards")
@@ -373,17 +582,36 @@ func _maybe_place_shrine(room: Room, at: Vector2, rng: RandomNumberGenerator) ->
 func _vary_kind(kind: String, rng: RandomNumberGenerator) -> String:
 	if kind == "overseer" or _index <= 0:
 		return kind
-	# Sideways variety: an authored post may hold any same-weight alternate.
-	# Both draws ALWAYS happen so the stream stays aligned across rooms.
-	var swap: bool = rng.randf() < 0.45
+	# Sideways variety: an authored post may hold any same-weight alternate —
+	# the CURRENT ZONE's alternates, so the Deadlight's posts lean toward
+	# slingers and gnats while the Upper Workings stay classic. Both draws
+	# ALWAYS happen so the stream stays aligned across rooms, and the zone only
+	# changes what a draw MEANS, never how many draws occur.
+	var zone: ZoneData = zone_for_index(_index, _plan.size())
+	var swap_chance: float = zone.swap_chance if zone != null else 0.45
+	var swap: bool = rng.randf() < swap_chance
 	var pick: int = rng.randi_range(0, 255)
-	if swap and SIDEWAYS.has(kind):
-		var alts: Array = SIDEWAYS[kind]
-		kind = alts[pick % alts.size()]
+	if swap:
+		var alts: Array = _sideways_for(kind, zone)
+		if not alts.is_empty():
+			kind = alts[pick % alts.size()]
 	# Depth promotion: the mine grows meaner as it pays better — meaner still
-	# under a curse bargain (Overseer's Whisper) or a hot extract streak.
-	var promote: float = 0.08 * float(_index) + GameState.modifier_promote_bonus() + GameState.heat_promote_bonus()
+	# under a curse bargain (Overseer's Whisper), a hot extract streak, or the
+	# Hot Vein's heavier garrison (its promote_bonus).
+	var promote: float = 0.08 * float(GameState.depth) \
+		+ GameState.modifier_promote_bonus() + GameState.heat_promote_bonus() \
+		+ (zone.promote_bonus if zone != null else 0.0)
 	if kind != "brute" and rng.randf() < promote:
 		kind = "brute"
 	return kind
+
+
+## The swap table for a marker kind: the zone's, or the flat fallback.
+func _sideways_for(kind: String, zone: ZoneData) -> Array:
+	if zone != null:
+		if kind == "grunt" and not zone.grunt_swaps.is_empty():
+			return Array(zone.grunt_swaps)
+		if kind == "dart" and not zone.dart_swaps.is_empty():
+			return Array(zone.dart_swaps)
+	return SIDEWAYS.get(kind, [])
 

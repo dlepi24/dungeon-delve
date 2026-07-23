@@ -36,6 +36,14 @@ const ART_ANGLE: float = 90.0
 const ATTACK_WIND_FRAME: int = 0
 const ATTACK_CONTACT_FRAME: int = 3
 
+@export_group("Pogo pose")
+## Where the planted pick sits relative to the feet during a pogo, how hard it
+## springs, and its angle (180 = straight down). Tuned by eye — it should read as
+## a haft the Delver hops on, not a mid-air poke.
+@export var pogo_offset: Vector2 = Vector2(0, 4)
+@export var pogo_bob: float = 2.0
+@export var pogo_angle: float = 180.0
+
 @export_group("Arc smear")
 ## The amber sweep between the wind and contact angles, spawned on the contact
 ## frame. Engine-drawn, so it fits any weapon's length and speed for free.
@@ -72,6 +80,23 @@ func _process(_delta: float) -> void:
 	if tex == null:
 		visible = false
 		return
+
+	# POGO: there's no pogo body pose, so drive the weapon ourselves — plant the
+	# pick straight down beneath the feet with a small spring bob, so it reads as
+	# the Delver hopping on the haft rather than an invisible mid-air poke. Done
+	# BEFORE the hand-anchor path so a "holstered" air pose can't hide it.
+	if player.get_state_name() == &"Pogo":
+		texture = tex
+		offset = -grip
+		var pfacing: float = float(player.facing)
+		var bob: float = sin(float(Time.get_ticks_msec()) * 0.03) * pogo_bob
+		position = Vector2(pogo_offset.x * pfacing, pogo_offset.y + bob)
+		rotation_degrees = pogo_angle  # shaft-up art rotated to point straight down
+		scale = Vector2(pfacing, 1.0)
+		modulate = body.modulate
+		visible = true
+		return
+
 	var entry: Dictionary = _anchor_entry(body.frame)
 	if entry.is_empty() or not bool(entry.get("show", true)):
 		visible = false

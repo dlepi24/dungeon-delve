@@ -16,8 +16,13 @@ extends Node
 signal parry_succeeded
 
 ## Any attack connected. `was_riposte` marks the parry payoff so M2 can give it
-## heavier hitstop than a normal 3-frame hit.
-signal hit_landed(damage: float, was_riposte: bool)
+## heavier hitstop than a normal 3-frame hit. `impact` is the weapon class that
+## swung (&"pick"/&"blade"/&"blunt") and `material` is what it hit
+## (&"flesh"/&"armor"/&"bone"/&"stone"/&"wood"/&"ecto"). The Sfx layer plays the
+## two as separate stacked one-shots — the Dead Cells trick — so a Maul on Armour
+## sounds nothing like a Dagger on Flesh. Listeners that don't care (camera,
+## shake) simply bind the first two args; Godot drops the rest.
+signal hit_landed(damage: float, was_riposte: bool, impact: StringName, material: StringName)
 
 ## The player took a hit and entered hitstun.
 signal player_hurt(damage: float)
@@ -25,8 +30,20 @@ signal player_hurt(damage: float)
 ## Movement beats. These exist because Sfx listens to them — the player should
 ## not have to know audio exists in order to make a sound.
 signal player_jumped
-signal player_landed
+## Touchdown, carrying the peak fall speed of the drop just ended (px/s) so the
+## Sfx layer can pick a soft scuff for a short hop vs a hard thud for a real fall.
+signal player_landed(fall_speed: float)
 signal player_rolled
+
+## The player's health changed — current and max, so a listener can act on the
+## RATIO without polling. The Sfx layer runs the low-health heartbeat off this;
+## fired on damage, healing, and respawn (where it restores to full and stops it).
+signal player_health_changed(current: float, max_value: float)
+
+## A swing STARTED (independent of whether it connects). Carries the weapon sound
+## class so the Sfx layer plays the matching whoosh — a whiff you can hear is a
+## whiff you can learn spacing from, and heavy swings should cut the air heavier.
+signal player_attacked(impact: StringName)
 
 ## An enemy's poise gave out mid-attack and it was knocked off balance.
 signal poise_broken(enemy: Node2D)
@@ -46,8 +63,12 @@ signal player_died
 ## does not need to know how a run is assembled.
 signal run_restart_requested(seed_value: int)
 
-## Carried haul changed this run. The HUD listens.
+## Carried haul changed this run. The delve HUD polls carried_haul directly, so
+## this is spare capacity for anything that wants the change without polling.
 signal haul_changed(carried: int)
+## Banked (meta) haul changed — earned by extracting, spent at the shops. The hub
+## card listens so it stays live no matter which path moved the number.
+signal banked_changed(banked: int)
 ## Extracted alive: this much haul was banked.
 signal run_extracted(amount: int)
 ## Died in the mine: this much carried haul was lost.
@@ -74,6 +95,11 @@ signal shrine_accepted(shrine: ShrineData)
 
 ## A run began, from this seed. The seed is shareable and reproduces the delve.
 signal run_started(seed_value: int)
+## The run crossed into a new stratum of the mine. Fired by the Delve when the
+## depth band changes (including the first room). MineAtmosphere regrades the
+## world, Music swaps to the zone's tracks, and the zone title card announces
+## it — none of them need a reference to the Delve.
+signal zone_entered(zone: ZoneData)
 ## The player entered room `index` of the plan.
 signal room_entered(index: int, room_id: String)
 ## The last living enemy in the current room fell. The payoff beat: loose loot
