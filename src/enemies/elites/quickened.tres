@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EliteModifierData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/elite_modifier_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"quickened"
+display_name = "Quickened"
+health_mult = 0.85
+damage_mult = 1.0
+speed_mult = 1.4
+poise_mult = 0.85
+haul_bonus = 1
+tint_colour = Color(1, 0.97, 0.55, 1)
+tint_strength = 0.4

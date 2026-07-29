@@ -41,11 +41,23 @@ const BIG_POOL: Array[StringName] = [&"halls", &"undercroft", &"chasm"]
 ## fall from timber into fire into the cold glow — that is the journey); which
 ## rooms fill each band stays seeded. Banding is a pure function of plan index,
 ## so zones cost the daily seed nothing.
-const ZONE_PATHS: Array[String] = [
+const DEFAULT_ZONE_PATHS: Array[String] = [
 	"res://src/rooms/zones/upper_workings.tres",
 	"res://src/rooms/zones/hot_vein.tres",
 	"res://src/rooms/zones/deadlight.tres",
 ]
+## THE HOLLOW BELOW (2026-07-23 decision log): a single-zone chain below the
+## ordinary mine, reached through the Threshold rather than the mine's normal
+## descent. One zone, so band_for_index/zone_for_index need no special-casing
+## — with zone_paths.size() == 1 every room bands to index 0 automatically.
+const HOLLOW_ZONE_PATHS: Array[String] = ["res://src/rooms/zones/hollow_below.tres"]
+## Mutable per-run: start() swaps this to HOLLOW_ZONE_PATHS when the hub sent
+## us to the Hollow Below, and back to DEFAULT_ZONE_PATHS for an ordinary
+## descent — this same Delve node is reused for both, not a parallel scene.
+@export var zone_paths: Array[String] = DEFAULT_ZONE_PATHS
+## Room count for a Hollow Below run — shorter than the ordinary five: a
+## tight, harder coda below the Threshold, not a second full mine.
+@export var hollow_room_count: int = 4
 
 ## One scene for every enemy: there are no enemy subclasses any more, only data.
 const ENEMY_SCENE: String = "res://src/enemies/enemy.tscn"
@@ -78,7 +90,24 @@ const ENEMY_STATS: Dictionary[String, String] = {
 	"overseer": "res://src/enemies/data/overseer.tres",
 	"slinger": "res://src/enemies/data/slinger.tres",
 	"gnat": "res://src/enemies/data/gnat.tres",
+	"drowned": "res://src/enemies/data/drowned.tres",
+	"drifter": "res://src/enemies/data/drifter.tres",
 }
+
+## THE VEIN (2026-07-23 decision log): elite prefixes, rolled onto a spawn
+## once the live heat streak has passed GameState.heat_vein_threshold. A
+## resource path each, same discipline as ENEMY_STATS.
+const ELITE_MODIFIERS: Dictionary[String, String] = {
+	"quickened": "res://src/enemies/elites/quickened.tres",
+	"armored": "res://src/enemies/elites/armored.tres",
+	"volatile": "res://src/enemies/elites/volatile.tres",
+	"vampiric": "res://src/enemies/elites/vampiric.tres",
+}
+const ELITE_KEYS: Array[String] = ["quickened", "armored", "volatile", "vampiric"]
+## Chance per point of heat past the Vein threshold, clamped — a spike, not
+## the default. Tune to taste once Dustin has actually seen one land.
+@export_range(0.0, 1.0) var elite_chance_per_heat: float = 0.03
+@export_range(0.0, 1.0) var elite_chance_cap: float = 0.35
 
 ## What an authored marker may become instead (seeded draw): each kind's
 ## alternates share its weight class, so a room's difficulty budget holds while
@@ -147,7 +176,7 @@ var _fixed_band: int = -1
 
 func zones() -> Array[ZoneData]:
 	if _zones.is_empty():
-		for path: String in ZONE_PATHS:
+		for path: String in zone_paths:
 			var zone: ZoneData = load(path) as ZoneData
 			if zone != null:
 				_zones.append(zone)
@@ -166,7 +195,7 @@ func zones() -> Array[ZoneData]:
 func band_for_index(index: int, plan_size: int) -> int:
 	if _fixed_band >= 0:
 		return _fixed_band
-	var last: int = ZONE_PATHS.size() - 1
+	var last: int = zone_paths.size() - 1
 	if index <= 0 or plan_size <= 1:
 		return 0
 	# The tail: deep, and the camp above it when the plan carries one.
@@ -176,7 +205,7 @@ func band_for_index(index: int, plan_size: int) -> int:
 	var middles: int = plan_size - 1 - tail
 	if middles <= 0:
 		return last
-	return clampi((index - 1) * ZONE_PATHS.size() / middles, 0, last)
+	return clampi((index - 1) * zone_paths.size() / middles, 0, last)
 
 
 ## The ZoneData governing a plan index. Null only if the zone resources are
@@ -292,7 +321,18 @@ func current_room() -> Room:
 func start(seed_value: int) -> void:
 	_fixed_band = -1
 	_zone_band = -1
-	_options = options_for_seed(seed_value, room_count)
+	# THE HOLLOW BELOW reuses this same node rather than a parallel scene — the
+	# hub sets pending_mode BEFORE the scene change, so it is still readable
+	# here even though begin_run() below is what actually consumes it into
+	# run_mode. Reset back to the ordinary chain either way, since a Delve is
+	# stateless between runs and the last run's mode must not leak forward.
+	if GameState.pending_mode == &"hollow":
+		zone_paths = HOLLOW_ZONE_PATHS
+		_options = options_for_seed(seed_value, hollow_room_count)
+	else:
+		zone_paths = DEFAULT_ZONE_PATHS
+		_options = options_for_seed(seed_value, room_count)
+	_zones.clear()
 	_plan = []
 	for opts: Array in _options:
 		_plan.append(opts[0])
@@ -398,6 +438,12 @@ func _advance() -> void:
 	# depth-pays-more economy. The camp is a pause, not a descent: it never
 	# counts, so the deep room pays the same whether or not a rest sat above it.
 	GameState.depth = _combat_depth(_index)
+	# Same write-it-so-nothing-else-has-to-know pattern as depth above — the
+	# Hollow Below's ore premium (ZoneData.ore_bonus) needs to be live before
+	# _load_room spawns this room's enemies, since haul drops read it at kill
+	# time, not at zone-entry time.
+	var current_zone: ZoneData = zone_for_index(_index, _plan.size())
+	GameState.zone_ore_bonus = current_zone.ore_bonus if current_zone != null else 0.0
 	_load_room(_plan[_index])
 	# Announce the zone BEFORE the room, so the atmosphere/music regrade is
 	# already in flight when listeners react to the room itself.
@@ -467,6 +513,7 @@ func _load_room(id: StringName) -> void:
 
 	_spawn_enemies(_room)
 	_spawn_debris(_room)
+	_spawn_tide(_room, zone)
 	# The very first run of a save gets its verbs taught in the world — UNLESS
 	# this is the guided intro, which teaches them itself (and superseded these
 	# signs per the 2026-07-22 GDD decision). Kept as a backstop for any real
@@ -515,6 +562,7 @@ func _spawn_enemies(room: Room) -> void:
 		var packed: PackedScene = load(ENEMY_SCENE) as PackedScene
 		var enemy: Enemy = packed.instantiate() as Enemy
 		enemy.stats = load(ENEMY_STATS[kind]) as EnemyStats
+		enemy.elite = _roll_elite(kind, rng)
 		enemy.global_position = point["position"]
 		room.add_child(enemy)
 
@@ -540,6 +588,39 @@ func _spawn_debris(room: Room) -> void:
 			"x": rng.randf_range(80.0, size.x - 80.0),
 		})
 	room.add_child(rain)
+
+
+## THE HOLLOW BELOW's signature hazard: a full-width TideSurge in every combat
+## room of a zone that opts in (ZoneData.has_tide). No seeded draw needed — it
+## is always there or never there, unlike debris's per-room roll.
+func _spawn_tide(room: Room, zone: ZoneData) -> void:
+	if zone == null or not zone.has_tide:
+		return
+	if _index >= 0 and _index < _plan.size() and _plan[_index] == CAMP_ROOM:
+		return
+	var size: Vector2 = room.room_size if room.room_size != Vector2.ZERO else Vector2(1920, 640)
+	var tide: TideSurge = TideSurge.new()
+	tide.width = size.x
+	tide.global_position = room.global_position + Vector2(size.x * 0.5, size.y)
+	room.add_child(tide)
+
+
+## Elite roll for THE VEIN: always draws from the stream, whether or not it
+## triggers, so the spawn sequence's shape is identical run to run — the same
+## discipline as the shrine's lit/pick draws always happening.
+func _roll_elite(kind: String, rng: RandomNumberGenerator) -> EliteModifierData:
+	var roll: float = rng.randf()
+	var pick: int = rng.randi_range(0, 255)
+	if kind == "overseer" or _index <= 0:
+		return null
+	var over: int = GameState.mine_heat - GameState.heat_vein_threshold
+	if over <= 0:
+		return null
+	var chance: float = minf(elite_chance_cap, elite_chance_per_heat * float(over))
+	if roll >= chance:
+		return null
+	var chosen: String = ELITE_KEYS[pick % ELITE_KEYS.size()]
+	return load(ELITE_MODIFIERS[chosen]) as EliteModifierData
 
 
 ## The clear check: when a death leaves no living enemy standing in the current
@@ -580,7 +661,17 @@ func _maybe_place_shrine(room: Room, at: Vector2, rng: RandomNumberGenerator) ->
 ## Overseer are never varied — the gentle first room and the boss are promises,
 ## not suggestions.
 func _vary_kind(kind: String, rng: RandomNumberGenerator) -> String:
-	if kind == "overseer" or _index <= 0:
+	if kind == "overseer":
+		# The boss is a promise everywhere — EXCEPT a zone that explicitly wants
+		# a different encounter in its deep room. THE HOLLOW BELOW sets this:
+		# you already beat Varok to reach here, and refighting him at the
+		# bottom would break the Threshold's "never has to happen twice"
+		# promise. No rng draw either way, so the stream stays aligned.
+		var boss_zone: ZoneData = zone_for_index(_index, _plan.size())
+		if boss_zone != null and boss_zone.boss_swap != &"":
+			return String(boss_zone.boss_swap)
+		return kind
+	if _index <= 0:
 		return kind
 	# Sideways variety: an authored post may hold any same-weight alternate —
 	# the CURRENT ZONE's alternates, so the Deadlight's posts lean toward

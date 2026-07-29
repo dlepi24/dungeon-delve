@@ -48,11 +48,20 @@ const ATTACK_CONTACT_FRAME: int = 3
 ## The amber sweep between the wind and contact angles, spawned on the contact
 ## frame. Engine-drawn, so it fits any weapon's length and speed for free.
 ## Brightened (art-director review): a swing should read as a bright arc.
+## Default/fallback only — an active keystone (GameState.KEYSTONE_COLOURS)
+## overrides this per swing, see _spawn_smear(). Never touches the player
+## body; see the note on KEYSTONE_COLOURS for why.
 @export var smear_colour: Color = Color(1.0, 0.88, 0.55, 0.78)
 ## Seconds the smear lives (spec: ~2 visual frames).
 @export var smear_life: float = 0.07
 ## Sweep radius when the weapon has no sprite to measure (the baked pick).
 @export var smear_radius: float = 18.0
+## THE STARTING CLASS LAYER (2026-07-23): how strongly the weapon's own
+## idle sprite leans toward the active keystone's colour, layered on top of
+## body.modulate the same way it's already ridden for the flash — so the
+## identity is visible outside of combat too, not just mid-swing. Modest on
+## purpose; the weapon should still read as itself.
+@export_range(0.0, 1.0) var keystone_tint_strength: float = 0.3
 
 var _last_attack_frame: int = -1
 
@@ -93,7 +102,7 @@ func _process(_delta: float) -> void:
 		position = Vector2(pogo_offset.x * pfacing, pogo_offset.y + bob)
 		rotation_degrees = pogo_angle  # shaft-up art rotated to point straight down
 		scale = Vector2(pfacing, 1.0)
-		modulate = body.modulate
+		modulate = _tinted_modulate()
 		visible = true
 		return
 
@@ -112,7 +121,7 @@ func _process(_delta: float) -> void:
 	scale = Vector2(facing, 1.0)
 	# BodyJuice drives the hit flash by modulating the body sprite directly, so
 	# riding its modulate is what keeps the weapon flashing in sync with it.
-	modulate = body.modulate
+	modulate = _tinted_modulate()
 	visible = true
 
 
@@ -147,6 +156,19 @@ func _watch_for_contact() -> void:
 		_spawn_smear()
 
 
+## body.modulate ranges WHITE (1,1,1,1) to overbright (2.2,2.2,2.2,1) as
+## BodyJuice's hit-flash plays — never a base tint, since the player is
+## explicitly never base-tinted. Lerping toward the keystone colour AT that
+## already-computed brightness keeps the flash reading correctly (a flash
+## still gets brighter, just through a slightly tinted lens) without needing
+## to reach into BodyJuice's private flash state to reconstruct it.
+func _tinted_modulate() -> Color:
+	if GameState.active_keystone == &"":
+		return body.modulate
+	var tint: Color = GameState.KEYSTONE_COLOURS.get(GameState.active_keystone, Color.WHITE)
+	return body.modulate.lerp(tint, keystone_tint_strength)
+
+
 func _spawn_smear() -> void:
 	var contact: Dictionary = _anchor_entry(ATTACK_CONTACT_FRAME)
 	var wind: Dictionary = _anchor_entry(ATTACK_WIND_FRAME)
@@ -168,7 +190,7 @@ func _spawn_smear() -> void:
 		# Manifest angle space: 0 = +x, 90 = up; screen y points down.
 		points.append(Vector2(cos(a), -sin(a)) * radius)
 	fan.polygon = points
-	fan.color = smear_colour
+	fan.color = GameState.KEYSTONE_COLOURS.get(GameState.active_keystone, smear_colour)
 
 	var facing: float = float(player.facing)
 	fan.position = _hand_position(contact, facing)

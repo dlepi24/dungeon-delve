@@ -31,6 +31,7 @@ var _stock: Array[WeaponData] = []
 var _order: Array[Control] = []
 var _nav: MenuNav = MenuNav.new()
 
+@onready var _panel: PanelContainer = $Panel
 @onready var _list: VBoxContainer = $Panel/Margin/Rows/List
 @onready var _banked: Label = $Panel/Margin/Rows/Banked
 @onready var _hone_label: Label = $Panel/Margin/Rows/HoneRow/HoneLabel
@@ -55,6 +56,8 @@ func _ready() -> void:
 	_order.append(_hone_button)
 	_order.append(_close)
 	MenuNav.disable_builtin_nav(_order)
+	UiScaler.apply(_panel, Settings.ui_scale, Vector2(0.5, 0.5))
+	Settings.ui_scale_changed.connect(func(s: float) -> void: UiScaler.apply(_panel, s, Vector2(0.5, 0.5)))
 
 
 func _process(delta: float) -> void:

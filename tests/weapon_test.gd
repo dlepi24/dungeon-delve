@@ -75,6 +75,32 @@ func _ready() -> void:
 	GameState.upgrade_levels[&"damage"] = 3
 	_ck(p.attack_speed_multiplier() > 1.0, "the permanent weapon-speed upgrade survives a new run")
 
+	# THE KEYSTONE SYSTEM (2026-07-23): Tunnel Rat's stat grants two effects off
+	# one upgrade level — move speed (via move_speed_multiplier, the same
+	# pattern damage/armor already use) and roll i-frames (a separate
+	# per-level constant, since one UpgradeData can only carry one number).
+	GameState.reset_save()
+	var base_move_mult := p.move_speed_multiplier()
+	var base_iframes := p.effective_roll_iframe_duration_ms()
+	GameState.upgrade_levels[&"mobility"] = 5
+	_ck(p.move_speed_multiplier() > base_move_mult, "mobility levels raise move speed")
+	_ck(p.effective_roll_iframe_duration_ms() > base_iframes, "mobility levels extend roll i-frames")
+	_ck(p.effective_roll_iframe_duration_ms() <= p.roll_duration_ms - p.roll_iframe_start_ms,
+		"extended i-frames never run past the roll itself, however high the level")
+
+	# THE STARTING CLASS LAYER (2026-07-23): the weapon, never the player body,
+	# carries the visual identity — see WeaponSprite._tinted_modulate()'s own
+	# comment for why (the player is explicitly never base-tinted).
+	GameState.reset_save()
+	var weapon_sprite: Sprite2D = p.get_node("VisualRoot/WeaponSprite") as Sprite2D
+	var neutral_tint: Color = weapon_sprite.call("_tinted_modulate")
+	GameState.active_keystone = &"powderhand"
+	var powderhand_tint: Color = weapon_sprite.call("_tinted_modulate")
+	_ck(not powderhand_tint.is_equal_approx(neutral_tint),
+		"an active keystone visibly tints the weapon, unlike the player body")
+	_ck(powderhand_tint.is_equal_approx(neutral_tint.lerp(GameState.KEYSTONE_COLOURS[&"powderhand"], weapon_sprite.keystone_tint_strength)),
+		"the tint blends toward the keystone's own colour at keystone_tint_strength")
+	GameState.reset_save()
 	GameState.reset_save()
 	p.queue_free()
 	if _fail == 0:

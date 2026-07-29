@@ -29,6 +29,8 @@ func _ready() -> void:
 	_settings.visible = false
 	_order = [_resume, _settings_button, _quit_title]
 	MenuNav.disable_builtin_nav(_order)
+	UiScaler.apply(_panel, Settings.ui_scale, Vector2(0.5, 0.5))
+	Settings.ui_scale_changed.connect(func(s: float) -> void: UiScaler.apply(_panel, s, Vector2(0.5, 0.5)))
 	_settings.closed.connect(_on_settings_closed)
 	_settings.run_action_taken.connect(_on_settings_run_action)
 	_settings_button.pressed.connect(_on_settings)

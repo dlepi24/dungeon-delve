@@ -1,33 +1,14 @@
-[gd_resource type="AudioBusLayout" format=3]
-
-; Audio bus graph. Named buses, never raw indices in code — same discipline as
-; the collision layers.
-;
-;   Master
-;   ├── Music        the score (beds, boss vamp, stings)
-;   └── SFX          everything else, and the trunk the rest route through
-;       ├── UI       menu ticks — dry, sits under gameplay
-;       └── Ambience mine wind + shrine hum — the only WET bus (reverb below)
-;
-; UI and Ambience SEND to SFX, not Master, so the SFX volume slider scales all
-; three at once and only the Ambience bus carries reverb — combat and UI stay
-; dry and punchy. Settings drives Master/Music/SFX bus volume from the sliders.
+[gd_resource type="AudioBusLayout" format=3 uid="uid://cku5h1ygcmy1t"]
 
 [sub_resource type="AudioEffectReverb" id="AudioEffectReverb_mine"]
+predelay_msec = 90.0
 room_size = 0.75
 damping = 0.6
 spread = 0.7
 dry = 0.75
 wet = 0.35
-predelay_msec = 90.0
 
 [resource]
-bus/0/name = &"Master"
-bus/0/solo = false
-bus/0/mute = false
-bus/0/bypass_fx = false
-bus/0/volume_db = 0.0
-bus/0/send = &"Master"
 bus/1/name = &"Music"
 bus/1/solo = false
 bus/1/mute = false

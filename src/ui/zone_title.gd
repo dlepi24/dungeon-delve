@@ -71,6 +71,8 @@ func _ready() -> void:
 	_root.add_child(_tagline_label)
 
 	Events.zone_entered.connect(_on_zone_entered)
+	UiScaler.apply(_root, Settings.ui_scale, Vector2(0.5, 0.0))
+	Settings.ui_scale_changed.connect(func(s: float) -> void: UiScaler.apply(_root, s, Vector2(0.5, 0.0)))
 
 
 func _rule() -> ColorRect:

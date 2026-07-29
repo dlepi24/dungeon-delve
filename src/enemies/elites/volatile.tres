@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EliteModifierData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/elite_modifier_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"volatile"
+display_name = "Volatile"
+health_mult = 0.9
+damage_mult = 1.45
+speed_mult = 1.05
+poise_mult = 0.85
+haul_bonus = 2
+tint_colour = Color(1, 0.4, 0.18, 1)
+tint_strength = 0.42

@@ -135,15 +135,72 @@ func _check_reachability(id: StringName, rows: Array) -> bool:
 			_errors.append("%s: platform at row %d cols %d-%d cannot be reached (no standable run within %d rows and %d cols below)" % [id, run.x, run.y, run.z, MAX_STEP_ROWS, REACH_COLS])
 			ok = false
 
+	# Grounded glyphs: entry/exit (always checked) plus every spawn kind that
+	# is meant to stand on something (enemies, the boss, shrines). Deliberately
+	# excludes 'o' (the timber anchor floats by design — that is the whole
+	# point of a grapple point) and 'C'/'v'/'h'/'F' (hazards and fixtures with
+	# their own established placement patterns already shipped and playtested;
+	# widening this set to them risks flagging existing hand-drawn rooms for
+	# behaviour that was never actually a bug). Added 2026-07-23 after a
+	# session of hand-placed chunk content that only ever got proven by eye,
+	# never by the tool — the same story "no death pits" told before
+	# _check_escapable existed.
+	const GROUNDED: String = "XPgbdES"
 	for y: int in rows.size():
 		var row: String = rows[y]
 		for x: int in row.length():
-			if row[x] != "X" and row[x] != "P":
+			if not GROUNDED.contains(row[x]):
 				continue
 			if y + 1 >= rows.size():
 				continue
 			if not _is_surface(rows, x, y + 1):
 				_errors.append("%s: the %s marker at row %d col %d has nothing beneath it" % [id, row[x], y, x])
+				ok = false
+	return ok
+
+
+## The check above proves every platform can be reached jumping UP from the
+## floor. It never checks the reverse: that a spike-lined gap can be climbed
+## back OUT of once you've fallen in. Every hand-drawn room today is safe there
+## by author discipline alone (GAP's own comment: "you land a tile down and
+## jump straight out" — a promise, not a machine check, kept safe so far only
+## because every floor gap is shallow and bounded by the auto-added border).
+## Composed rooms are exactly the case that breaks an unchecked promise like
+## that — nobody eyeballs every generated seam — so this closes the gap for
+## anything built from here on, chunk or whole room alike.
+##
+## For every spike span, find where a fall actually lands (scanning straight
+## down; past the authored grid means the auto-added border, always safe —
+## it borders the floor directly). If it lands on an authored run, that run
+## must itself be a member of the reachable set already computed above: reach
+## is built by chaining "within jump budget of an already-reachable run," and
+## that same chain, walked backward from the landing spot, IS the escape route.
+func _check_escapable(id: StringName, rows: Array) -> bool:
+	var reach: Dictionary[Vector3i, bool] = _reachable_runs(rows)
+	var runs: Array[Vector3i] = _runs(rows)
+	var width: int = (rows[0] as String).length()
+	var ok: bool = true
+	for y: int in rows.size():
+		var row: String = rows[y]
+		var x: int = 0
+		while x < width:
+			if row[x] != "v":
+				x += 1
+				continue
+			var start: int = x
+			while x < width and row[x] == "v":
+				x += 1
+			var land_y: int = y + 1
+			while land_y < rows.size() and not _is_surface(rows, start, land_y):
+				land_y += 1
+			var escapable: bool = land_y >= rows.size()  # past the grid = the border, always safe
+			if not escapable:
+				for run: Vector3i in runs:
+					if run.x == land_y and run.y <= start and start <= run.z:
+						escapable = reach.get(run, false)
+						break
+			if not escapable:
+				_errors.append("%s: spike span at row %d cols %d-%d falls somewhere with no reachable way back up" % [id, y, start, x - 1])
 				ok = false
 	return ok
 
@@ -393,6 +450,32 @@ func _ready() -> void:
 
 	var layouts: Dictionary[StringName, Array] = RoomLayouts.all()
 
+	# Composite big rooms (2026-07-23 pilot, "let's start there and see"):
+	# room_chunks.gd's fragments get stitched into bigger rooms by
+	# room_stitcher.gd, then dropped straight into the SAME validate-then-build
+	# loop as every hand-drawn layout below — no separate code path, so the
+	# reachability check that already exists is the only one that ever runs.
+	var chunk_entries: Dictionary[StringName, Array] = {}
+	var chunk_middles: Dictionary[StringName, Array] = {}
+	var chunk_exits: Dictionary[StringName, Array] = {}
+	for id: StringName in RoomChunks.all():
+		var chunk: Dictionary = RoomChunks.all()[id]
+		match chunk["role"]:
+			RoomChunks.Role.ENTRY:
+				chunk_entries[id] = chunk["rows"]
+			RoomChunks.Role.MIDDLE:
+				chunk_middles[id] = chunk["rows"]
+			RoomChunks.Role.EXIT:
+				chunk_exits[id] = chunk["rows"]
+	# TWO middles is the default now, not one: entry + 1 middle + exit reads as
+	# barely bigger than an ordinary room (a real early mistake here — see the
+	# 2026-07-23 GDD entry). Entry + 2 middles + exit lands solidly past
+	# HALLS/UNDERCROFT (116-120 cols) at this library's chunk sizes. 1 stays
+	# available too, for a lighter composite where that reads better.
+	var composites: Dictionary[StringName, Array] = RoomStitcher.enumerate(chunk_entries, chunk_middles, chunk_exits, [1, 2])
+	print("  %d hand-drawn + %d composite = %d total" % [layouts.size(), composites.size(), layouts.size() + composites.size()])
+	layouts.merge(composites)
+
 	print("validating %d layouts:" % layouts.size())
 	var all_ok: bool = true
 	for id: StringName in layouts:
@@ -400,6 +483,8 @@ func _ready() -> void:
 		if not _validate(id, layouts[id]):
 			all_ok = false
 		elif not _check_reachability(id, layouts[id]):
+			all_ok = false
+		elif not _check_escapable(id, layouts[id]):
 			all_ok = false
 	if not all_ok:
 		for e: String in _errors:

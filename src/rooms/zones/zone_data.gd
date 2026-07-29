@@ -64,3 +64,29 @@ extends Resource
 ## Extra brute-promotion chance on top of the depth curve — the Hot Vein's
 ## heavier garrison is this number.
 @export var promote_bonus: float = 0.0
+
+@export_group("Economy")
+## Flat ore multiplier bonus for this zone, folded into
+## GameState.depth_haul_multiplier() alongside depth and heat. 0 for the
+## three surface zones (their reward already comes from depth/heat like
+## always). Added 2026-07-23: the Hollow Below is shorter than an ordinary
+## delve (4 rooms, not 5) so it was quietly paying LESS total haul than a
+## normal run despite costing more to reach — per-kill and per-depth/heat
+## math were both fine, there just wasn't a reward for the zone itself being
+## the harder, more exclusive place. This is that reward.
+@export var ore_bonus: float = 0.0
+
+@export_group("Hazards")
+## THE HOLLOW BELOW's signature hazard (2026-07-23 decision log): the water
+## table rises and falls on a schedule in every combat room of a zone that
+## sets this — the inverse of the upper mine's ceiling debris, danger rising
+## to meet you instead of falling on you. See TideSurge.
+@export var has_tide: bool = false
+
+@export_group("Boss")
+## Overrides the deep room's authored "overseer" marker with this enemy kind
+## instead, for a zone whose finale should NOT be Varok again. Empty (the
+## default) means every zone gets the real Overseer, as authored. A stopgap
+## until a proper deeper miniboss exists — see the GDD's open Threshold-boss
+## question — not a real boss (no is_boss health bar, no fanfare).
+@export var boss_swap: StringName = &""

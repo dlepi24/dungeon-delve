@@ -61,6 +61,12 @@ var _boss_active: bool = false
 ## Not typed Enemy: the tutorial's TutorialBoss is a separate, non-Enemy class
 ## that shares the same boss_engaged/enemy_died signals.
 var _boss_node: Node2D = null
+## One in-flight tween per player, parallel to _players. _fade() kills whatever
+## is here before starting a new one, so two crossfades landing close together
+## (a zone drift right as a boss engages, say) can never fight over the same
+## player's volume — that fight is what made the boss vamp play "behind" the
+## delve bed instead of replacing it.
+var _tweens: Array[Tween] = [null, null]
 var _mix_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 ## A separate player for the one-shot run-end stings, so they ring over the bed's
 ## crossfade instead of interrupting it.
@@ -97,7 +103,7 @@ func _on_boss_engaged(enemy: Node2D) -> void:
 		return
 	_boss_active = true
 	_boss_node = enemy
-	_crossfade_to(BOSS)
+	_crossfade_to(_resolve_target())
 
 
 func _on_enemy_died(enemy: Node2D) -> void:
@@ -105,7 +111,7 @@ func _on_enemy_died(enemy: Node2D) -> void:
 		return
 	_boss_active = false
 	_boss_node = null
-	_crossfade_to(_delve_path)
+	_crossfade_to(_resolve_target())
 
 
 ## Extracted alive: the hopeful lift, played a touch above the bed so it reads as
@@ -137,7 +143,7 @@ func _on_zone_entered(zone: ZoneData) -> void:
 	if _zone_tracks.has(_delve_path):
 		return
 	_delve_path = _zone_tracks[_mix_rng.randi_range(0, _zone_tracks.size() - 1)]
-	_crossfade_to(_delve_path)
+	_crossfade_to(_resolve_target())
 
 
 ## The drift pool: the current zone's tracks when a zone owns the run,
@@ -159,13 +165,49 @@ func _on_room_entered(_index: int, _id: String) -> void:
 		# Fled the boss room with the boss alive: the vamp does not follow you.
 		_boss_active = false
 		_boss_node = null
-		_crossfade_to(_delve_path)
+		_crossfade_to(_resolve_target())
 		return
 	var pool: Array[String] = _delve_pool()
 	if _mix_rng.randf() < room_shuffle_chance and pool.size() > 1:
 		pool.erase(_delve_path)
 		_delve_path = pool[_mix_rng.randi_range(0, pool.size() - 1)]
-		_crossfade_to(_delve_path)
+		_crossfade_to(_resolve_target())
+
+
+## The single source of truth for "what should be sounding right now", given
+## _current/_boss_active/_boss_node/_delve_path. Every transition — play(), the
+## boss cuts, the zone/room drift — ends by crossfading to THIS, instead of each
+## call site deciding its own target path.
+## Seam for later: a combat-intensity/stem system would widen this to return a
+## set of layers instead of one path, and _crossfade_to/_fade would widen to N
+## players — not needed yet, so not built yet.
+func _resolve_target() -> String:
+	match _current:
+		&"title":
+			return TITLE
+		&"delve":
+			return _boss_theme() if _boss_active else _delve_path
+		_:
+			return HUB
+
+
+## The active boss's theme override, or the generic vamp if it has none. Ducks
+## across Enemy (stats.boss_theme) and TutorialBoss (boss_theme directly) via
+## Object.get() rather than a static cast — the tutorial boss is not an Enemy,
+## and a cast silently failing is exactly the bug that broke the boss-music
+## revert earlier this session.
+func _boss_theme() -> String:
+	if _boss_node == null:
+		return BOSS
+	var direct: Variant = _boss_node.get(&"boss_theme")
+	if direct is String and not (direct as String).is_empty():
+		return direct as String
+	var stats: Variant = _boss_node.get(&"stats")
+	if stats is EnemyStats:
+		var theme: String = (stats as EnemyStats).boss_theme
+		if not theme.is_empty():
+			return theme
+	return BOSS
 
 
 ## Play a named track, looping, at a per-context attenuation below the tuned
@@ -177,22 +219,18 @@ func play(track: StringName, attenuation_db: float = 0.0) -> void:
 	_attenuation = attenuation_db
 	if track == _current:
 		if not _players.is_empty():
-			_fade(_players[_active], _players[_active].volume_db, _target_db())
+			_fade(_active, _players[_active].volume_db, _target_db())
 		return
 	_current = track
 	_boss_active = false
-	var path: String = HUB
-	if track == &"title":
-		path = TITLE
-	elif track == &"delve":
+	if track == &"delve":
 		# Drop last run's zone pool — this pick is a placeholder for the beat
 		# until zone_entered lands (a frame later) and redirects into the new
 		# run's first stratum. Without the clear, a run could open on the
 		# PREVIOUS run's Deadlight dread.
 		_zone_tracks = PackedStringArray()
-		path = DELVE_VARIANTS[_mix_rng.randi_range(0, DELVE_VARIANTS.size() - 1)]
-		_delve_path = path
-	_crossfade_to(path)
+		_delve_path = DELVE_VARIANTS[_mix_rng.randi_range(0, DELVE_VARIANTS.size() - 1)]
+	_crossfade_to(_resolve_target())
 
 
 ## The actual player swap. Everything that changes what is playing goes
@@ -202,14 +240,16 @@ func _crossfade_to(path: String) -> void:
 	if stream == null:
 		return
 
-	var incoming: AudioStreamPlayer = _players[1 - _active]
-	var outgoing: AudioStreamPlayer = _players[_active]
-	_active = 1 - _active
+	var incoming_index: int = 1 - _active
+	var outgoing_index: int = _active
+	var incoming: AudioStreamPlayer = _players[incoming_index]
+	var outgoing: AudioStreamPlayer = _players[outgoing_index]
+	_active = incoming_index
 
 	incoming.stream = stream
 	incoming.play()
-	_fade(incoming, -80.0, _target_db())
-	_fade(outgoing, outgoing.volume_db, -80.0)
+	_fade(incoming_index, -80.0, _target_db())
+	_fade(outgoing_index, outgoing.volume_db, -80.0)
 
 
 ## Load a WAV and force it to loop. Imported WAVs default to no loop; setting it
@@ -229,7 +269,7 @@ func _looped(path: String) -> AudioStreamWAV:
 
 func set_muted(muted: bool) -> void:
 	_muted = muted
-	_fade(_players[_active], _players[_active].volume_db, _target_db())
+	_fade(_active, _players[_active].volume_db, _target_db())
 
 
 ## The level the active player should sit at: the tuned bed plus the per-context
@@ -242,9 +282,20 @@ func _target_db() -> float:
 	return volume_db + _attenuation
 
 
-func _fade(player: AudioStreamPlayer, from_db: float, to_db: float) -> void:
+## Fades player `index`'s volume, killing whatever tween is already in flight on
+## it first. That kill is what makes overlapping crossfades safe: without it, a
+## player recruited as "incoming" for a new transition while still fading out
+## from the last one ends up with two tweens fighting over its volume_db — which
+## is exactly how a boss cut could end up audible behind the bed it should have
+## replaced.
+func _fade(index: int, from_db: float, to_db: float) -> void:
+	var player: AudioStreamPlayer = _players[index]
+	var prior: Tween = _tweens[index]
+	if prior != null and prior.is_valid():
+		prior.kill()
 	player.volume_db = from_db
 	var tween: Tween = create_tween()
+	_tweens[index] = tween
 	tween.tween_property(player, "volume_db", to_db, fade_time)
 	if to_db <= -79.0:
 		tween.tween_callback(player.stop)

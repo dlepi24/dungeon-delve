@@ -18,17 +18,18 @@ const PICKAXE_ICON: Texture2D = preload("res://assets/icons/pickaxe.png")
 
 @export var player: Player
 
-@onready var _bar: HealthBar = $Bar
-@onready var _health_label: Label = $HealthLabel
-@onready var _ore_count: Label = $OreCount
-@onready var _ore_icon: TextureRect = $OreIcon
-@onready var _active_icon: TextureRect = $WeaponSlots/Active/AIcon
-@onready var _secondary: Panel = $WeaponSlots/Secondary
-@onready var _secondary_icon: TextureRect = $WeaponSlots/Secondary/SIcon
-@onready var _key_hint: Label = $WeaponSlots/KeyHint
-@onready var _weapon_name: Label = $WeaponName
-@onready var _buff_rows: VBoxContainer = $BuffRows
-@onready var _debuff_rows: VBoxContainer = $DebuffRows
+@onready var _top_left: Control = $TopLeft
+@onready var _bar: HealthBar = $TopLeft/Bar
+@onready var _health_label: Label = $TopLeft/HealthLabel
+@onready var _ore_count: Label = $TopLeft/OreCount
+@onready var _ore_icon: TextureRect = $TopLeft/OreIcon
+@onready var _active_icon: TextureRect = $TopLeft/WeaponSlots/Active/AIcon
+@onready var _secondary: Panel = $TopLeft/WeaponSlots/Secondary
+@onready var _secondary_icon: TextureRect = $TopLeft/WeaponSlots/Secondary/SIcon
+@onready var _key_hint: Label = $TopLeft/WeaponSlots/KeyHint
+@onready var _weapon_name: Label = $TopLeft/WeaponName
+@onready var _buff_rows: VBoxContainer = $TopLeft/BuffRows
+@onready var _debuff_rows: VBoxContainer = $TopLeft/DebuffRows
 @onready var _top_right: VBoxContainer = $TopRight
 @onready var _daily_chip: PanelContainer = $TopRight/DailyChip
 @onready var _pips: HBoxContainer = $TopRight/RoomChip/RoomM/RoomRow/Pips
@@ -50,6 +51,10 @@ const BOSS_FILL_WIDTH: float = 794.0
 
 func _ready() -> void:
 	Events.boss_engaged.connect(_on_boss_engaged)
+	_apply_ui_scale(Settings.ui_scale)
+	# The HUD outlives the settings menu that changed this — it never closes
+	# and reopens the way a menu does, so it needs the live push.
+	Settings.ui_scale_changed.connect(_apply_ui_scale)
 	if player == null:
 		return
 	_bar.hide_when_full = false
@@ -94,6 +99,14 @@ func _process(_delta: float) -> void:
 			banes.append({"name": shrine.bane_text, "colour": Color(0.95, 0.35, 0.3), "fraction": 1.0})
 	_reconcile_rows(_buff_rows, boons)
 	_reconcile_rows(_debuff_rows, banes)
+
+
+## Three independent groups, each scaled around the corner/edge it hugs —
+## see UiScaler. Never touches the world or the camera.
+func _apply_ui_scale(scale: float) -> void:
+	UiScaler.apply(_top_left, scale, Vector2(0.0, 0.0))
+	UiScaler.apply(_top_right, scale, Vector2(1.0, 0.0))
+	UiScaler.apply(_boss_bar, scale, Vector2(0.5, 1.0))
 
 
 func _on_boss_engaged(enemy: Node2D) -> void:

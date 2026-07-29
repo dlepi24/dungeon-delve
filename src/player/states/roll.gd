@@ -28,7 +28,7 @@ func physics_update(delta: float) -> StringName:
 	player.roll_progress = float(_elapsed_ticks) / maxf(1.0, float(player.ms_to_ticks(player.roll_duration_ms)))
 
 	var iframe_start: int = player.ms_to_ticks(player.roll_iframe_start_ms)
-	var iframe_end: int = iframe_start + player.ms_to_ticks(player.roll_iframe_duration_ms)
+	var iframe_end: int = iframe_start + player.ms_to_ticks(player.effective_roll_iframe_duration_ms())
 	player.invulnerable = _elapsed_ticks > iframe_start and _elapsed_ticks <= iframe_end
 
 	# Gravity still applies so rolling off a ledge falls, and roll speed overrides

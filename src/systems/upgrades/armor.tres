@@ -11,3 +11,5 @@ per_level = 0.06
 max_level = 5
 base_cost = 50
 cost_step = 45
+keystone_id = &"ironback"
+extended_max_level = 10

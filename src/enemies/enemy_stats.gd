@@ -66,6 +66,10 @@ extends Resource
 ## (Events.boss_engaged -> the HUD). Content rule holds — a miniboss is still
 ## just a .tres with this flipped on.
 @export var is_boss: bool = false
+## Optional per-enemy theme override, a res:// path like ZoneData.music_tracks.
+## Empty means "use the generic BOSS vamp" — every current .tres is unset, so
+## this changes nothing until a boss opts in.
+@export var boss_theme: String = ""
 
 @export_group("Death")
 ## Haul this enemy drops when killed. The Brute is worth more than the Dart, so

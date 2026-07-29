@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EliteModifierData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/elite_modifier_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"vampiric"
+display_name = "Vampiric"
+health_mult = 1.2
+damage_mult = 1.1
+speed_mult = 1.0
+poise_mult = 1.0
+regen_per_second = 3.0
+haul_bonus = 3
+tint_colour = Color(0.62, 0.22, 0.72, 1)
+tint_strength = 0.4

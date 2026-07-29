@@ -10,8 +10,21 @@ extends Resource
 
 ## What each level adds to the stat. The player reads level * amount at spawn.
 @export var per_level: float = 20.0
-## Cap, so an upgrade cannot be bought forever.
+## Baseline cap, available to everyone regardless of build path. So an
+## upgrade cannot be bought forever with no keystone chosen.
 @export var max_level: int = 5
+
+@export_group("Keystone")
+## THE KEYSTONE SYSTEM (2026-07-23 decision log): nothing here is ever
+## locked — every upgrade stays purchasable up to `max_level` no matter what
+## path you've picked (Dustin's call: "no lock, just a bias"). Picking the
+## matching keystone lets THIS stat keep going past baseline, up to
+## `extended_max_level`. Empty keystone_id (the default) means this upgrade
+## has no deeper tier at all.
+@export var keystone_id: StringName = &""
+## Cap when `keystone_id` is the player's active keystone. Ignored (falls
+## back to `max_level`) otherwise.
+@export var extended_max_level: int = 0
 
 @export_group("Cost")
 ## First level's cost in banked haul.
@@ -27,3 +40,11 @@ func cost_for_level(level: int) -> int:
 
 func value_at_level(level: int) -> float:
 	return per_level * float(level)
+
+
+## The cap this upgrade is actually bound by right now: extended if the
+## player's active keystone matches this upgrade's, baseline otherwise.
+func effective_max_level(active_keystone: StringName) -> int:
+	if keystone_id != &"" and keystone_id == active_keystone and extended_max_level > 0:
+		return extended_max_level
+	return max_level

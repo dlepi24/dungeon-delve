@@ -168,6 +168,19 @@ func find_hook_anchor() -> Node2D:
 ## Permanent armor upgrade. Reduces incoming damage. Capped below 100% by the
 ## resource's max_level, so armor can never make you invincible.
 @export var armor_upgrade: UpgradeData
+## THE KEYSTONE SYSTEM (2026-07-23): Tunnel Rat's stat. Move speed reads
+## per-level from this resource like every other upgrade; roll i-frames read
+## from `mobility_iframe_per_level_ms` below instead, since one UpgradeData
+## can only carry one per_level number and this stat grants two effects.
+@export var mobility_upgrade: UpgradeData
+## Roll i-frame extension per level, ms. Budgeted against the roll's OWN
+## timing, not guessed: iframes start at roll_iframe_start_ms (75) and the
+## roll ends at roll_duration_ms (350), leaving 275ms of room; base duration
+## is 200ms, so there is 75ms of room to extend into. 10 levels (the
+## keystone-extended cap) * 7ms = 70ms, safely inside that with room to
+## spare even if these get retuned later — effective_roll_iframe_duration_ms()
+## clamps regardless, so a bad retune can't push iframes past the roll itself.
+@export var mobility_iframe_per_level_ms: int = 7
 ## Attack-speed granted by the DAMAGE upgrade, per level. This is the fix for
 ## "the weapon upgrade does more damage but feels the same": a Honed Pick also
 ## swings faster, so upgrading it changes the feel of combat, not just the number
@@ -373,9 +386,23 @@ func incoming_multiplier() -> float:
 	return maxf(0.05, (1.0 - _upgrade_value(armor_upgrade)) * buffed * GameState.modifier_product(&"incoming_mult"))
 
 
-## Move-speed multiplier from active buffs and shrine bargains. 1.0 with none.
+## Move-speed multiplier: the Mobility keystone upgrade, times active buffs,
+## times shrine bargains. 1.0 with none of the above.
 func move_speed_multiplier() -> float:
-	return _buff_product(&"move_mult") * GameState.modifier_product(&"move_mult")
+	return (1.0 + _upgrade_value(mobility_upgrade)) * _buff_product(&"move_mult") \
+		* GameState.modifier_product(&"move_mult")
+
+
+## Roll i-frame duration, extended per Mobility level, hard-clamped to never
+## exceed the room actually available between when i-frames start and when
+## the roll itself ends — see the mobility_iframe_per_level_ms export for the
+## budget this is meant to fit inside; the clamp is what makes a bad retune
+## survivable rather than a state where the roll ends before invulnerability
+## does.
+func effective_roll_iframe_duration_ms() -> int:
+	var bonus: int = GameState.upgrade_level(mobility_upgrade.id) * mobility_iframe_per_level_ms if mobility_upgrade != null else 0
+	var room: int = maxi(0, roll_duration_ms - roll_iframe_start_ms)
+	return mini(roll_iframe_duration_ms + bonus, room)
 
 
 ## Attack-speed multiplier: the weapon upgrade's per-level bonus, times buffs,

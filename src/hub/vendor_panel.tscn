@@ -4,6 +4,7 @@
 [ext_resource type="Resource" path="res://src/systems/upgrades/max_health.tres" id="2"]
 [ext_resource type="Resource" path="res://src/systems/upgrades/damage.tres" id="3"]
 [ext_resource type="Resource" path="res://src/systems/upgrades/armor.tres" id="4"]
+[ext_resource type="Resource" path="res://src/systems/upgrades/mobility.tres" id="5"]
 
 [sub_resource type="StyleBoxFlat" id="sb"]
 bg_color = Color(0.08, 0.065, 0.052, 0.98)
@@ -22,7 +23,7 @@ shadow_size = 10
 [node name="VendorPanel" type="CanvasLayer"]
 layer = 5
 script = ExtResource("1")
-stock = Array[Resource]([ExtResource("2"), ExtResource("3"), ExtResource("4")])
+stock = Array[Resource]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])
 
 [node name="Panel" type="PanelContainer" parent="."]
 anchors_preset = 8
@@ -30,10 +31,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -280.0
-offset_top = -160.0
-offset_right = 280.0
-offset_bottom = 160.0
+offset_left = -300.0
+offset_top = -220.0
+offset_right = 300.0
+offset_bottom = 220.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("sb")
@@ -58,6 +59,22 @@ horizontal_alignment = 1
 layout_mode = 2
 text = "Banked haul: 0"
 horizontal_alignment = 1
+
+; THE KEYSTONE SYSTEM (2026-07-23): populated in code, same pattern as List
+; below — a status line plus one button per path, built by
+; _build_keystone_row() rather than hand-authored here.
+[node name="KeystoneStatus" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Keystones" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="Sep" type="HSeparator" parent="Panel/Margin/Rows"]
+layout_mode = 2
 
 [node name="List" type="VBoxContainer" parent="Panel/Margin/Rows"]
 layout_mode = 2

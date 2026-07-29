@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EliteModifierData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/elite_modifier_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"armored"
+display_name = "Armored"
+health_mult = 1.7
+damage_mult = 1.0
+speed_mult = 0.9
+poise_mult = 1.6
+haul_bonus = 2
+tint_colour = Color(0.62, 0.68, 0.78, 1)
+tint_strength = 0.4

@@ -35,6 +35,10 @@ const WEAPON_POOL: Array[String] = [
 ]
 
 @export var stats: EnemyStats
+## Optional elite prefix (THE VEIN, 2026-07-23 decision log). Null on almost
+## every enemy — set by the Delve at spawn time, before add_child, same
+## pattern as `stats`. A numeric spin on the base kind, not a new sprite.
+@export var elite: EliteModifierData = null
 
 var health: float = 0.0
 
@@ -84,10 +88,12 @@ func _ready() -> void:
 	_telegraph_sfx.volume_db = -4.0
 	_telegraph_sfx.max_distance = 1100.0
 	add_child(_telegraph_sfx)
-	# Mine heat (the extract streak) toughens everything at spawn time. The
-	# .tres stays the baseline; the multiplier is read once here so a fight
+	# Mine heat (the extract streak) and depth (this run's descent) both
+	# toughen spawns; an elite prefix stacks a third multiplier on top. The
+	# .tres stays the baseline; every multiplier is read once here so a fight
 	# never changes difficulty mid-swing.
-	_scaled_max_health = stats.max_health * GameState.heat_health_multiplier()
+	_scaled_max_health = stats.max_health * GameState.heat_health_multiplier() \
+		* GameState.depth_health_multiplier() * _elite_health_mult()
 	health = _scaled_max_health
 	_apply_stats_to_body()
 	_hitbox.deactivate()
@@ -130,6 +136,14 @@ func _physics_process(delta: float) -> void:
 
 	if not is_on_floor() and not stats.can_fly:
 		velocity.y += GRAVITY * delta
+
+	# Vampiric elite: sustains itself outside of a hit reaction, so the tell is
+	# behavioural rather than another visual layer — it just refuses to stay
+	# worn down the way a normal enemy would.
+	if elite != null and elite.regen_per_second > 0.0 and _state != State.DEAD \
+			and _state != State.HURT and _state != State.STAGGER and health < _scaled_max_health:
+		health = minf(_scaled_max_health, health + elite.regen_per_second * delta)
+		_health_bar.set_ratio(health / _scaled_max_health)
 
 	match _state:
 		State.IDLE:
@@ -254,11 +268,12 @@ func _roughly_level_with_player() -> bool:
 
 func _begin_attack(attack: EnemyAttackData) -> void:
 	_attack = attack
-	_poise = attack.poise
+	_poise = attack.poise * _elite_poise_mult()
 	var rect: RectangleShape2D = RectangleShape2D.new()
 	rect.size = attack.hitbox_size
 	_hitbox_shape.shape = rect
-	_hitbox.damage = attack.damage * GameState.heat_damage_multiplier()
+	_hitbox.damage = attack.damage * GameState.heat_damage_multiplier() \
+		* GameState.depth_damage_multiplier() * _elite_damage_mult()
 	var swing: ColorRect = _hitbox.visual as ColorRect
 	if swing != null:
 		swing.size = attack.hitbox_size
@@ -310,7 +325,13 @@ func _enter(next: State) -> void:
 	if next == State.DEAD:
 		_on_death()
 
-	_juice.set_base_colour(_colour_for(next))
+	# An elite's signature hue pushes through the normal telegraph tint rather
+	# than replacing it — wind-up still reads yellow, a swing still reads red,
+	# per the "telegraph everything" pillar. See EliteModifierData.
+	var base_colour: Color = _colour_for(next)
+	if elite != null:
+		base_colour = base_colour.lerp(elite.tint_colour, elite.tint_strength)
+	_juice.set_base_colour(base_colour)
 
 
 func _colour_for(state: State) -> Color:
@@ -348,7 +369,8 @@ func _chase(delta: float) -> void:
 	# Stop closing once in range of the longest attack, so they do not shove into
 	# you and swing from inside your body.
 	if _player_distance() > stats.preferred_range():
-		velocity.x = move_toward(velocity.x, float(_facing) * stats.move_speed, stats.acceleration * delta)
+		var speed: float = stats.move_speed * (elite.speed_mult if elite != null else 1.0)
+		velocity.x = move_toward(velocity.x, float(_facing) * speed, stats.acceleration * delta)
 	else:
 		_decelerate(delta)
 	_try_jump()
@@ -412,6 +434,18 @@ func get_state_name() -> String:
 ## This enemy's real, heat-scaled maximum. The boss bar divides by this.
 func max_health_value() -> float:
 	return _scaled_max_health
+
+
+func _elite_health_mult() -> float:
+	return elite.health_mult if elite != null else 1.0
+
+
+func _elite_damage_mult() -> float:
+	return elite.damage_mult if elite != null else 1.0
+
+
+func _elite_poise_mult() -> float:
+	return elite.poise_mult if elite != null else 1.0
 
 
 func get_attack_name() -> String:
@@ -544,8 +578,9 @@ func _drop_haul() -> void:
 	var origin: Vector2 = global_position + Vector2(0, -stats.body_size.y * 0.5)
 	# Each ore unit is worth more the deeper you are — the incentive to push on.
 	var per_unit: int = maxi(1, roundi(GameState.depth_haul_multiplier()))
+	var reward: int = stats.haul_reward + (elite.haul_bonus if elite != null else 0)
 
-	for i: int in stats.haul_reward:
+	for i: int in reward:
 		# Roughly one in five nuggets is a big chunk worth several.
 		var big: bool = rng.randf() < 0.2
 		var nugget: Pickup = scene.instantiate() as Pickup

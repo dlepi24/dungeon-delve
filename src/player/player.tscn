@@ -24,6 +24,7 @@
 [ext_resource type="Resource" path="res://src/systems/upgrades/max_health.tres" id="14_hp"]
 [ext_resource type="Resource" path="res://src/systems/upgrades/damage.tres" id="15_dmg"]
 [ext_resource type="Resource" path="res://src/systems/upgrades/armor.tres" id="16_arm"]
+[ext_resource type="Resource" path="res://src/systems/upgrades/mobility.tres" id="19_mob"]
 [ext_resource type="Script" path="res://src/player/weapon_sprite.gd" id="17_weapon"]
 [ext_resource type="Texture2D" path="res://assets/sprites/weapons.png" id="18_weaponsheet"]
 
@@ -47,6 +48,7 @@ script = ExtResource("1_player")
 max_health_upgrade = ExtResource("14_hp")
 damage_upgrade = ExtResource("15_dmg")
 armor_upgrade = ExtResource("16_arm")
+mobility_upgrade = ExtResource("19_mob")
 
 ; VisualRoot sits between the body and the rect because it is the node that gets
 ; scaled and spun. Its origin is the player's feet, so a squash flattens

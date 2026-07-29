@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="EnemyStats" load_steps=3 format=3]
+
+; THE DRIFTER (2026-07-23, THE HOLLOW BELOW): what is left of a miner who
+; never stopped moving — it just floats now, bobbing in the flood, flinging
+; glowing water at anything that comes close. Reuses the Slinger's
+; silhouette with the Gnat's hover kit (can_fly): a full-body floater rather
+; than a flyer, cheap because both are already plain data on EnemyStats.
+
+[ext_resource type="Script" path="res://src/enemies/enemy_attack_data.gd" id="1_atk"]
+[ext_resource type="Script" path="res://src/enemies/enemy_stats.gd" id="2_stats"]
+
+[sub_resource type="Resource" id="Resource_spit"]
+script = ExtResource("1_atk")
+display_name = "spit"
+min_range = 140.0
+max_range = 640.0
+weight = 2.0
+telegraph_ms = 640
+active_ms = 140
+recover_ms = 780
+damage = 11.0
+projectile_speed = 400.0
+poise = 30.0
+colour_telegraph = Color(1, 0.85, 0.3, 1)
+colour_attack = Color(1, 0.4, 0.3, 1)
+hitbox_size = Vector2(38, 38)
+hitbox_offset = Vector2(28, -30)
+
+[sub_resource type="Resource" id="Resource_flail"]
+script = ExtResource("1_atk")
+display_name = "flail"
+max_range = 90.0
+telegraph_ms = 400
+active_ms = 100
+recover_ms = 480
+damage = 7.0
+poise = 16.0
+colour_telegraph = Color(0.95, 0.75, 0.4, 1)
+colour_attack = Color(0.95, 0.3, 0.35, 1)
+hitbox_size = Vector2(56, 46)
+hitbox_offset = Vector2(34, -28)
+
+[resource]
+script = ExtResource("2_stats")
+display_name = "The Drifter"
+max_health = 40.0
+knockback = 200.0
+move_speed = 66.0
+acceleration = 480.0
+aggro_range = 760.0
+idle_ms = 480
+stagger_ms = 880
+can_jump = false
+can_fly = true
+hover_offset = Vector2(190, -110)
+attacks = Array[ExtResource("1_atk")]([SubResource("Resource_spit"), SubResource("Resource_flail")])
+haul_reward = 3
+heart_chance = 0.1
+material = &"ecto"
+sprite_sheet = "slinger"
+colour_idle = Color(0.4, 0.55, 0.62, 1)
+colour_recover = Color(0.32, 0.42, 0.48, 1)
+body_size = Vector2(30, 56)

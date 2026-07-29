@@ -42,16 +42,7 @@ func set_room_bounds(size: Vector2) -> void:
 
 
 func _clamp_to_room(goal: Vector2) -> Vector2:
-	# get_viewport_rect().size is in POST-scale logical units: Settings.ui_scale
-	# (an accessibility zoom, via content_scale_factor) shrinks it — 1920 becomes
-	# 1280 at a 1.5x scale — because that is how Godot makes UI read bigger on
-	# the same window. Uncorrected, that shrunk size loosens this clamp (a
-	# smaller half-extent means more room to roam), so the camera swings much
-	# further than the tuned framing on every jump once any UI scale is on.
-	# Multiplying back by ui_scale cancels exactly that and only that: window
-	# resizes and the ultrawide "expand" behaviour below still come through
-	# untouched, since ui_scale is the only thing dividing this number down.
-	var half: Vector2 = get_viewport_rect().size * Settings.ui_scale * 0.5 / zoom_level
+	var half: Vector2 = get_viewport_rect().size * 0.5 / zoom_level
 	if _room_size.x <= half.x * 2.0:
 		goal.x = _room_size.x * 0.5
 	else:

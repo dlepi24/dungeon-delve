@@ -33,6 +33,8 @@ func _ready() -> void:
 	_order.append(_reset)
 	_order.append(_back)
 	MenuNav.disable_builtin_nav(_order)
+	UiScaler.apply(self, Settings.ui_scale, Vector2(0.5, 0.5))
+	Settings.ui_scale_changed.connect(func(s: float) -> void: UiScaler.apply(self, s, Vector2(0.5, 0.5)))
 
 
 ## Not while a rebind capture is live — the next key press is meant to become

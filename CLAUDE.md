@@ -196,3 +196,18 @@ Gotchas found in M0/M1, worth not rediscovering:
   for unrelated reasons. Held state (`is_action_pressed`, `get_axis`) is fine, so
   simulated movement works. For one-shot verbs, drive `InputBuffer.press()`
   directly — see the note in `src/systems/input_buffer.gd`.
+- **Re-running `gen_music.py`/`gen_sfx.py` does NOT make the game hear the new
+  audio.** Both write straight over the existing `.wav` at the same path, but
+  Godot only re-imports a changed asset when something explicitly triggers a
+  filesystem scan — plain `godot --path .` (no editor) just plays whatever is
+  already sitting in `.godot/imported/`, however old. This shipped: a full
+  session of "richer music" changes was regenerated, checked, and handed over
+  as done, and every one of those checks was silently exercising the OLD
+  baked audio, because the import cache was still ~17 hours stale. Symptom was
+  confusing rather than obviously broken — it read as old and new music both
+  present. Same fix as the class-name/new-asset gotcha above: run
+  `godot --headless --editor --quit` after regenerating ANY audio (or other
+  imported asset) and before believing a listen test. Also fully restart any
+  already-running Play instance afterward — `load()` reuses an in-memory
+  resource cache per process, so a session that loaded the old file before the
+  reimport keeps playing it until it's relaunched.

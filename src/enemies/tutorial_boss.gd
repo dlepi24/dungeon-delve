@@ -40,6 +40,11 @@ const _ANIM: Dictionary[State, StringName] = {
 @export var move_speed: float = 68.0
 @export var attack_range: float = 158.0
 
+@export_group("Music")
+## Optional theme override, a res:// path like ZoneData.music_tracks. Empty
+## means "use the generic BOSS vamp".
+@export var boss_theme: String = ""
+
 @export_group("Readability")
 @export var colour_idle: Color = Color(0.55, 0.55, 0.6)
 @export var colour_telegraph: Color = Color(0.95, 0.78, 0.25)

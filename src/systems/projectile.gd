@@ -36,7 +36,7 @@ static func spawn(parent: Node, from: Vector2, direction: Vector2, attack: Enemy
 	projectile.global_position = from
 	projectile._rock.region_rect.position.x = 12.0 * float(variant % 2)
 	projectile.velocity = direction.normalized() * attack.projectile_speed
-	projectile.damage = attack.damage * GameState.heat_damage_multiplier()
+	projectile.damage = attack.damage * GameState.heat_damage_multiplier() * GameState.depth_damage_multiplier()
 	# Projectiles never chip poise on the way OUT; the reflected return does.
 	projectile.poise_damage = 0.0
 	projectile.activate()

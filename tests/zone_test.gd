@@ -32,6 +32,7 @@ func _ready() -> void:
 	_test_zone_resources(delve)
 	_test_banding_is_pure(delve)
 	await _test_the_descent_arc()
+	await _test_zone_pool_rooms_are_walkable(delve)
 	_report()
 
 
@@ -63,6 +64,58 @@ func _test_zone_resources(delve: Delve) -> void:
 			if not ResourceLoader.exists(path):
 				broken.append("%s: music path missing '%s'" % [zone.id, path])
 	_check(broken.is_empty(), "every pool entry and track exists (%s)" % [", ".join(broken) if broken.size() > 0 else "ok"])
+
+
+## _test_zone_resources above only proves a pool's room ids exist ON DISK —
+## not that they're actually walkable. delve_test.gd's own walkability check
+## only ever looks at Delve.MIDDLE_POOL/BIG_POOL, the hardcoded fallback
+## constants, never the LIVE per-zone pools a ZoneData resource actually
+## carries. That gap mattered less back when every zone pool just repeated
+## the same handful of flagship room names — it matters now that composite
+## ids (tools/rooms/room_stitcher.gd) are landing in zone pools directly, one
+## bake-time-only validation away from a room nobody in the test suite ever
+## actually walks. Same checks as delve_test.gd's _test_rooms_are_walkable,
+## run over the union of every zone's room_pool + big_pool instead.
+func _test_zone_pool_rooms_are_walkable(delve: Delve) -> void:
+	print("every zone-pool room is structurally sane")
+	var ids: Array[StringName] = []
+	for zone: ZoneData in delve.zones():
+		for id: String in zone.room_pool:
+			if not ids.has(StringName(id)):
+				ids.append(StringName(id))
+		for id: String in zone.big_pool:
+			if not ids.has(StringName(id)):
+				ids.append(StringName(id))
+
+	var problems: PackedStringArray = []
+	for id: StringName in ids:
+		var packed: PackedScene = load("%s/%s.tscn" % [Delve.ROOM_DIR, id]) as PackedScene
+		if packed == null:
+			problems.append("%s: will not load" % id)
+			continue
+		var room: Room = packed.instantiate() as Room
+		add_child(room)
+		await get_tree().physics_frame
+
+		var tiles: TileMapLayer = room.get_node("Tiles")
+		if room.entry_position() == Vector2.ZERO:
+			problems.append("%s: no entry marker" % id)
+		if room.exit_position() == Vector2.ZERO:
+			problems.append("%s: no exit marker" % id)
+		if room.entry_position().distance_to(room.exit_position()) < 200.0:
+			problems.append("%s: entry and exit are on top of each other" % id)
+		for label: String in ["entry", "exit"]:
+			var at: Vector2 = room.entry_position() if label == "entry" else room.exit_position()
+			for height: int in [16, 48]:
+				var cell: Vector2i = tiles.local_to_map(tiles.to_local(at - Vector2(0, float(height))))
+				if tiles.get_cell_source_id(cell) != -1:
+					problems.append("%s: %s marker is embedded in a tile at +%d" % [id, label, height])
+			var below: Vector2i = tiles.local_to_map(tiles.to_local(at + Vector2(0, 8.0)))
+			if tiles.get_cell_source_id(below) == -1:
+				problems.append("%s: nothing solid under the %s marker" % [id, label])
+		room.queue_free()
+		await get_tree().physics_frame
+	_check(problems.is_empty(), "every zone-pool room is walkable (%s)" % [", ".join(problems) if problems.size() > 0 else "ok, %d rooms" % ids.size()])
 
 
 ## Banding must be pure arithmetic: no RNG, no state, same answer every call.

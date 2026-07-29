@@ -40,6 +40,7 @@ func _ready() -> void:
 	_test_every_planned_room_exists(delve)
 	await _test_rooms_are_walkable()
 	await _test_the_run_is_actually_playable()
+	await _test_the_hollow_below_run()
 	_report()
 
 
@@ -262,6 +263,57 @@ func _test_the_run_is_actually_playable() -> void:
 	_check(delve.current_index() > before, "choosing descend advances the delve")
 	run.queue_free()
 	await get_tree().physics_frame
+
+
+## THE HOLLOW BELOW (2026-07-23): the same Delve node, sent down the shorter
+## single-zone chain instead of the usual three when the hub set pending_mode
+## to &"hollow" before the scene change. Pins the swap actually lands rather
+## than silently falling back to the ordinary mine.
+func _test_the_hollow_below_run() -> void:
+	print("the Hollow Below: pending_mode swaps the zone chain and room count")
+	GameState.pending_mode = &"hollow"
+	var run: Node2D = (load("res://src/rooms/delve_run.tscn") as PackedScene).instantiate() as Node2D
+	add_child(run)
+	for i: int in 4:
+		await get_tree().physics_frame
+
+	var delve: Delve = run.get_node("Delve")
+	var zone: ZoneData = delve.current_zone()
+	_check(zone != null and zone.id == &"hollow_below", "the run started in the Hollow Below, not the ordinary mine")
+	_check(delve.get_plan().size() == delve.plan_size_for(delve.hollow_room_count),
+		"plan length matches hollow_room_count, not the ordinary room_count")
+
+	var room: Room = delve.current_room()
+	if room != null:
+		var enemies: Array[Enemy] = []
+		for child: Node in room.get_children():
+			if child is Enemy:
+				enemies.append(child as Enemy)
+		var unknown_stats: bool = false
+		for enemy: Enemy in enemies:
+			if enemy.stats == null:
+				unknown_stats = true
+		_check(not unknown_stats, "every spawned enemy resolved real stats (the drowned/drifter swap-in didn't 404)")
+
+	# Walk all the way to the deep room and confirm it is NOT a Varok rematch —
+	# the Threshold's whole promise is that beating him never has to happen
+	# twice. boss_swap is what stops the deep room's authored "overseer"
+	# marker from spawning him again down here.
+	while delve.next_options().size() > 0:
+		delve.descend()
+		await get_tree().physics_frame
+	var deep_room: Room = delve.current_room()
+	var refought_overseer: bool = false
+	if deep_room != null:
+		for child: Node in deep_room.get_children():
+			if child is Enemy and (child as Enemy).stats != null and (child as Enemy).stats.is_boss:
+				refought_overseer = true
+	_check(not refought_overseer, "the Hollow Below's deep room does not refight Varok")
+
+	run.queue_free()
+	await get_tree().physics_frame
+	GameState.pending_mode = &"free"
+	GameState.reset_save()
 
 
 func _report() -> void:
