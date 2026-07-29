@@ -30,6 +30,9 @@ const _POINTS: Array[Dictionary] = [
 	{"id": &"blacksmith", "label": "Blacksmith", "anchor": Vector2(965, 642)},
 	{"id": &"mine", "label": "Descend into the mine", "anchor": Vector2(1360, 610)},
 ]
+## THE HOLLOW BELOW's entrance, world point the prompt floats above. Matches
+## the mine's own anchor pattern (art centre x, y just above the mouth art).
+const _HOLLOW_ANCHOR: Vector2 = Vector2(1650, 610)
 
 var _point_prompts: Dictionary[StringName, WorldPrompt] = {}
 
@@ -52,24 +55,16 @@ const _TOUR_STATIONS: Array[StringName] = [&"vendor", &"blacksmith", &"mine"]
 ## small outpost is one lap, so a curious player completes it in a single visit.
 var _tour_seen: Dictionary[StringName, bool] = {}
 
-# Earth and timber palette for the pit-head shell, tuned to the warm hub grade
-# and the set-dressing wood so the built structure reads as one place.
-const _ROCK: Color = Color(0.13, 0.1, 0.072)
-const _ROCK_DARK: Color = Color(0.08, 0.06, 0.045)
-const _EARTH: Color = Color(0.155, 0.115, 0.08)
-const _EARTH_DARK: Color = Color(0.095, 0.07, 0.048)
-const _WOOD: Color = Color(0.32, 0.22, 0.13)
-const _WOOD_LIT: Color = Color(0.47, 0.34, 0.2)
-const _WOOD_DARK: Color = Color(0.18, 0.12, 0.07)
-const _STONE: Color = Color(0.2, 0.16, 0.12)
-const _STONE_LIT: Color = Color(0.29, 0.23, 0.16)
-
 @onready var _vendor_marker: Marker2D = $VendorMarker
 @onready var _training_marker: Marker2D = $TrainingMarker
 @onready var _smithy_marker: Marker2D = $SmithyMarker
 @onready var _mine_marker: Marker2D = $MineMarker
+@onready var _hollow_marker: Marker2D = $HollowMarker
+@onready var _hollow_mouth: ColorRect = $HollowMouth
+@onready var _hollow_mouth_art: AnimatedSprite2D = $HollowMouthArt
 @onready var _vendor_panel: CanvasLayer = $VendorPanel
 @onready var _blacksmith_panel: CanvasLayer = $BlacksmithPanel
+@onready var _banked_card: PanelContainer = $HubHud/BankedCard
 @onready var _banked_value: Label = $HubHud/BankedCard/Margin/Rows/Banked/Value
 @onready var _heat_pill: PanelContainer = $HubHud/BankedCard/Margin/Rows/Heat
 @onready var _heat_label: Label = $HubHud/BankedCard/Margin/Rows/Heat/HeatMargin/HeatLabel
@@ -85,7 +80,12 @@ func _ready() -> void:
 		_player.global_position = $PlayerStart.global_position
 	_vendor_panel.visible = false
 	_blacksmith_panel.visible = false
-	_build_environment()
+	# THE HOLLOW BELOW's entrance is invisible until earned — the whole point is
+	# that it appears where there was solid rock before, the moment you meet the
+	# gate. Nothing to build here; the art already exists in the scene, just hidden.
+	var unlocked: bool = GameState.threshold_open()
+	_hollow_mouth.visible = unlocked
+	_hollow_mouth_art.visible = unlocked
 	_build_prompts()
 	_build_dressing()
 	Cursor.gameplay()
@@ -95,6 +95,8 @@ func _ready() -> void:
 	# blacksmith purchase. spend_banked used to change the number silently, so the
 	# card went stale after buying a weapon; banked_changed closes that gap.
 	Events.banked_changed.connect(func(_banked: int) -> void: _refresh_banked())
+	UiScaler.apply(_banked_card, Settings.ui_scale, Vector2(0.0, 0.0))
+	Settings.ui_scale_changed.connect(func(s: float) -> void: UiScaler.apply(_banked_card, s, Vector2(0.0, 0.0)))
 
 
 ## One floating prompt per interaction point, parked above its building. They
@@ -104,7 +106,12 @@ func _build_prompts() -> void:
 	# On the first surface visit the prompts do double duty as a quiet tour of the
 	# loop; every later visit gets the terse originals.
 	var tour: bool = not GameState.hub_toured
-	for point: Dictionary in _POINTS:
+	# THE THRESHOLD: a 5th point, appended only once earned — _POINTS stays the
+	# fixed 4 so nothing else that iterates it needs to know this one exists.
+	var points: Array[Dictionary] = _POINTS.duplicate()
+	if GameState.threshold_open():
+		points.append({"id": &"hollow", "label": "Enter the Hollow Below", "anchor": _HOLLOW_ANCHOR})
+	for point: Dictionary in points:
 		var prompt: WorldPrompt = WorldPrompt.new()
 		add_child(prompt)
 		prompt.position = point["anchor"]
@@ -117,59 +124,21 @@ func _build_prompts() -> void:
 			var mine_sub: String = _MINE_TOUR if tour else ""
 			var mine_title: String = "THE MINE" if tour else ""
 			prompt.set_card(mine_title, mine_sub, [PromptCard.dir_row(false, label)])
+		elif id == &"hollow":
+			# THE THRESHOLD (2026-07-23, revised): a SEPARATE opening rather than a
+			# second option buried at the ordinary mine mouth — Dustin's own read
+			# after playing it: "maybe we have different mine entrances... we've
+			# unlocked a new mine." Always carries its title; unlike the vendor/
+			# smith tour cards this one never goes terse, since you only ever stand
+			# here occasionally, after specifically earning it.
+			prompt.set_card("THE HOLLOW BELOW", "A way down that wasn't there before.",
+				[PromptCard.dir_row(false, label)])
 		elif tour and _TOUR.has(id):
 			var t: Dictionary = _TOUR[id]
 			prompt.set_card(t["title"], t["sub"], [PromptCard.action_row(&"interact", label)])
 		else:
 			prompt.set_action(&"interact", label)
 		_point_prompts[id] = prompt
-
-
-## The pit-head shell: a timbered rock ceiling above the outpost and a solid
-## earth foundation below the walk line, plus a stone wall the mine mouth is set
-## into. Without it the lit outpost is a thin strip floating in black dead space,
-## top and bottom. Pure ColorRects on a single node dropped BEHIND the props
-## (z −50, in front of the flat Background), so it costs nothing and needs no art.
-func _build_environment() -> void:
-	var env: Node2D = Node2D.new()
-	env.z_index = -50
-	add_child(env)
-	# Cover well past the visible frame so an ultrawide monitor never sees an edge.
-	var x0: float = -400.0
-	var w: float = 2720.0
-
-	# --- Ceiling: rock roof, a shadowed underside, and a timber beam the hanging
-	# lanterns read as hanging FROM. Posts drop off the beam to frame the width.
-	_env_rect(env, Vector2(x0, -120), Vector2(w, 360), _ROCK)
-	_env_rect(env, Vector2(x0, 232), Vector2(w, 14), _ROCK_DARK)
-	_env_rect(env, Vector2(120, 244), Vector2(1680, 24), _WOOD_DARK)
-	_env_rect(env, Vector2(120, 244), Vector2(1680, 6), _WOOD_LIT)
-	for px: float in [180.0, 720.0, 1260.0, 1740.0]:
-		_env_rect(env, Vector2(px, 268), Vector2(16, 64), _WOOD_DARK)
-		_env_rect(env, Vector2(px, 268), Vector2(4, 64), _WOOD)
-
-	# --- Ground: earth below the floor slab, a shadow seam right under it, and a
-	# couple of strata lines so it reads as depth, not a flat black void.
-	_env_rect(env, Vector2(x0, 860), Vector2(w, 460), _EARTH)
-	_env_rect(env, Vector2(x0, 860), Vector2(w, 10), _EARTH_DARK)
-	_env_rect(env, Vector2(x0, 980), Vector2(w, 4), _EARTH_DARK)
-	_env_rect(env, Vector2(x0, 1080), Vector2(w, 4), _EARTH_DARK)
-
-	# --- Mine portal set into a stone wall, so the dark mouth reads as a doorway
-	# in a rock face rather than a black cutout in the void. Sized to frame the
-	# 140×160 entrance art (centred 1360,700) with stone showing on every side.
-	_env_rect(env, Vector2(1222, 548), Vector2(276, 316), _STONE)
-	_env_rect(env, Vector2(1222, 548), Vector2(276, 8), _STONE_LIT)
-	_env_rect(env, Vector2(1222, 548), Vector2(8, 316), _STONE_LIT)
-
-
-func _env_rect(parent: Node2D, at: Vector2, size: Vector2, colour: Color) -> void:
-	var rect: ColorRect = ColorRect.new()
-	rect.position = at
-	rect.size = size
-	rect.color = colour
-	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(rect)
 
 
 ## Warm clutter so the outpost reads as lived-in, not four buildings on an empty
@@ -192,7 +161,9 @@ func _build_dressing() -> void:
 	for i: int in props.size():
 		props[i].position = spots[i]
 		add_child(props[i])
-	for at: Vector2 in [Vector2(845, 300), Vector2(1180, 320)]:
+	# 268 is the gantry beam's underside (hub_scenery.gd): with open sky behind
+	# the frame, a chain has to visibly start AT the timber, not float below it.
+	for at: Vector2 in [Vector2(845, 268), Vector2(1180, 268)]:
 		var lantern: Node2D = SetDressing.make_lantern(120.0)
 		lantern.position = at
 		add_child(lantern)
@@ -248,6 +219,8 @@ func _physics_process(_delta: float) -> void:
 		near = &"blacksmith"
 	elif _player.global_position.distance_to(_mine_marker.global_position) <= interact_range:
 		near = &"mine"
+	elif _hollow_mouth.visible and _player.global_position.distance_to(_hollow_marker.global_position) <= interact_range:
+		near = &"hollow"
 	_near = near
 	_note_tour_progress(near)
 	_show_only(near)
@@ -280,11 +253,17 @@ func _show_only(id: StringName) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _vendor_panel.visible or _blacksmith_panel.visible:
 		return
-	# The mine takes a deliberate DOWN; the shops take Interact.
+	# Both mine mouths take a deliberate DOWN, same verb, same fiction; the
+	# shops take Interact.
 	if _near == &"mine":
 		if event.is_action_pressed(&"move_down") and _deliberate(event):
 			get_viewport().set_input_as_handled()
 			_descend()
+		return
+	if _near == &"hollow":
+		if event.is_action_pressed(&"move_down") and _deliberate(event):
+			get_viewport().set_input_as_handled()
+			_descend_hollow_below()
 		return
 	if not event.is_action_pressed(&"interact"):
 		return
@@ -325,4 +304,15 @@ func _descend() -> void:
 	generator.randomize()
 	GameState.pending_seed = generator.randi()
 	GameState.pending_mode = &"free"
+	get_tree().change_scene_to_file.call_deferred(DELVE_SCENE)
+
+
+## THE HOLLOW BELOW: the same delve scene, same seed-picking rule as an
+## ordinary descent — the mode swap (Delve.start reads pending_mode) is what
+## routes it to the shorter single-zone chain instead of the usual three.
+func _descend_hollow_below() -> void:
+	var generator: RandomNumberGenerator = RandomNumberGenerator.new()
+	generator.randomize()
+	GameState.pending_seed = generator.randi()
+	GameState.pending_mode = &"hollow"
 	get_tree().change_scene_to_file.call_deferred(DELVE_SCENE)
