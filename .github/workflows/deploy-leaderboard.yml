@@ -1,0 +1,32 @@
+# Deploys the leaderboard worker when its code changes — same "push to main,
+# CI ships it" contract as deploy-web.yml. Needs two repo secrets
+# (CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID); until they exist this
+# workflow just fails quietly without touching anything. Setup:
+# server/leaderboard/README.md.
+#
+# Security note: no run: steps, and no interpolation of event-derived strings
+# (titles, branch names, commit messages) anywhere — only repo secrets.
+
+name: deploy-leaderboard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "server/leaderboard/**"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-leaderboard
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: server/leaderboard

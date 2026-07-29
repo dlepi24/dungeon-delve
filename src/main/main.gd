@@ -58,10 +58,13 @@ func _ready() -> void:
 	# their progress is still here.
 	var has_save: bool = GameState.banked_haul > 0 or not GameState.upgrade_levels.is_empty()
 	_play.text = "CONTINUE" if has_save else "DESCEND"
-	_daily.text = "DAILY DELVE"
+	# The UTC day is part of the button: it names WHICH daily this is (the seed
+	# and the board both key off this string), and it quietly explains why the
+	# daily rolls over when it does for players away from UTC.
+	_daily.text = "DAILY DELVE  ·  %s" % GameState.today_string()
 	# One ranked shot per day; after that the same seed is open practice.
 	if not GameState.daily_available():
-		_daily.text = "DAILY DELVE  (PRACTICE)"
+		_daily.text = "DAILY DELVE  ·  %s  (PRACTICE)" % GameState.today_string()
 	_records_button.text = "RECORDS"
 	_new_game.text = "NEW GAME"
 	_settings_button.text = "OPTIONS"
@@ -83,6 +86,13 @@ func _ready() -> void:
 	_play.grab_focus()
 	_order = [_play, _daily, _records_button, _new_game, _settings_button, _quit]
 	MenuNav.disable_builtin_nav(_order)
+	# Menu hugs a fixed top position and grows down/centred (top-centre pivot);
+	# Confirm is a small centred dialog (centre pivot).
+	UiScaler.apply(_menu, Settings.ui_scale, Vector2(0.5, 0.0))
+	UiScaler.apply(_confirm, Settings.ui_scale, Vector2(0.5, 0.5))
+	Settings.ui_scale_changed.connect(func(s: float) -> void:
+		UiScaler.apply(_menu, s, Vector2(0.5, 0.0))
+		UiScaler.apply(_confirm, s, Vector2(0.5, 0.5)))
 
 
 ## Only the main menu column — Records, Settings and the wipe Confirm each hide
@@ -179,7 +189,8 @@ func _first_destination() -> String:
 ## Straight down the mine on today's shared seed — no hub stop, no heat, no
 ## carried loadout: the ceremony is that everyone faces the same mine.
 func _on_daily() -> void:
-	var now: Dictionary = Time.get_datetime_dict_from_system()
+	# UTC, matching GameState.today_string(): one shared day worldwide.
+	var now: Dictionary = Time.get_datetime_dict_from_system(true)
 	GameState.pending_seed = Rng.daily_seed(now["year"], now["month"], now["day"])
 	GameState.pending_mode = &"daily"
 	get_tree().change_scene_to_file.call_deferred(DELVE_SCENE)

@@ -61,6 +61,21 @@ text = "TODAY'S DELVE"
 layout_mode = 2
 text = "Not yet attempted."
 
+[node name="SepGlobal" type="HSeparator" parent="Panel/Margin/Rows"]
+layout_mode = 2
+
+; The online day-board section. Hidden whenever the Leaderboard autoload is
+; dormant (no SERVICE_URL) — local records stay the whole screen.
+[node name="GlobalHeader" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.95, 0.55, 0.35, 1)
+text = "THE DAY'S BOARD — EVERYONE"
+
+[node name="Global" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+text = ""
+
 [node name="Sep1" type="HSeparator" parent="Panel/Margin/Rows"]
 layout_mode = 2
 
@@ -96,6 +111,7 @@ theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.75, 0.66, 0.5, 1)
 text = ""
 horizontal_alignment = 1
+autowrap_mode = 2
 
 [node name="Back" type="Button" parent="Panel/Margin/Rows"]
 layout_mode = 2

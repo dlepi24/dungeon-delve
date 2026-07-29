@@ -10,9 +10,10 @@ config_version=5
 
 [application]
 
-config/name="my-game"
+config/name="PAYDIRT"
 run/main_scene="res://src/main/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.png"
 
 [autoload]
 
@@ -23,11 +24,8 @@ Keybinds="*res://src/systems/keybinds.gd"
 Music="*res://src/systems/music.gd"
 Rng="*res://src/systems/rng.gd"
 Sfx="*res://src/systems/sfx.gd"
+Leaderboard="*res://src/autoload/leaderboard.gd"
 Settings="*res://src/systems/settings.gd"
-
-[audio]
-
-buses/default_bus_layout="res://default_bus_layout.tres"
 
 [debug]
 
@@ -167,10 +165,9 @@ pause={
 
 [physics]
 
-; ProjectSettings.save() drops any setting equal to its engine default, and 60 IS
-; the default, so the editor strips this line every time it rewrites the file.
-; The whole game's determinism (daily seeds, ghost replays) depends on a fixed 60
-; tick. If this section vanishes again, put it back.
+; PINNED ON PURPOSE: 60 is the engine default, so ProjectSettings.save() strips
+; this line whenever the editor saves settings. Determinism (daily seeds, ghost
+; replays) depends on the fixed 60 tick — if this line is missing, put it back.
 common/physics_ticks_per_second=60
 
 [rendering]

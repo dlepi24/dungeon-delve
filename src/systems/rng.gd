@@ -30,11 +30,26 @@ func get_seed() -> int:
 	return _seed
 
 
-## The seed for a given calendar day, for M8's daily-seed mode. Derived from the
-## date so every player gets the same delve, and stable regardless of timezone
-## because the caller passes the date parts explicitly.
+## Self-owned FNV-1a (32-bit) — replaces the engine's hash() for every seed
+## derivation (2026-07-28, the pre-publish hardening pass). Godot documents no
+## cross-version stability for hash(); if an engine upgrade ever changed it,
+## every daily seed and every stream would silently reshuffle, and players on
+## mixed game versions would race DIFFERENT mines on the same daily. This
+## function is ours, pinned by rng_test, and can never move underneath us.
+## (Landing it was itself a one-time reshuffle of all prior seeds — accepted
+## now, before any seed has been shared or ranked online.)
+func fnv32(text: String) -> int:
+	var h: int = 0x811C9DC5
+	for b: int in text.to_utf8_buffer():
+		h = ((h ^ b) * 0x01000193) & 0xFFFFFFFF
+	return h
+
+
+## The seed for a given calendar day, for the daily-seed mode. Derived from the
+## date so every player gets the same delve. Callers must pass the UTC date —
+## one shared day worldwide, or two timezones rank different mines.
 func daily_seed(year: int, month: int, day: int) -> int:
-	return hash("daily:%04d-%02d-%02d" % [year, month, day])
+	return fnv32("daily:%04d-%02d-%02d" % [year, month, day])
 
 
 ## Turn a human-typed seed ("cavern", "12345") into a master seed, so seeds can
@@ -43,7 +58,7 @@ func seed_from_text(text: String) -> int:
 	var trimmed: String = text.strip_edges()
 	if trimmed.is_valid_int():
 		return trimmed.to_int()
-	return hash(trimmed)
+	return fnv32(trimmed)
 
 
 ## An independent generator for one concern. Same master seed + same stream name
@@ -55,8 +70,10 @@ func stream(name: StringName) -> RandomNumberGenerator:
 	if not _streams.has(name):
 		var generator: RandomNumberGenerator = RandomNumberGenerator.new()
 		# Mixing the name into the seed is what makes streams independent rather
-		# than merely separate cursors into one sequence.
-		generator.seed = hash("%d:%s" % [_seed, name])
+		# than merely separate cursors into one sequence. Self-owned fnv32 for
+		# the same reason as daily_seed: engine hash() may move between
+		# versions, and streams ARE the delve layout.
+		generator.seed = fnv32("%d:%s" % [_seed, name])
 		_streams[name] = generator
 	return _streams[name]
 

@@ -23,6 +23,7 @@ signal run_action_taken
 @onready var _ui_scale_value: Label = $Panel/Margin/Rows/UiScaleRow/Value
 @onready var _screen_shake: CheckButton = $Panel/Margin/Rows/ScreenShakeRow/Toggle
 @onready var _pause_blur: CheckButton = $Panel/Margin/Rows/PauseBlurRow/Toggle
+@onready var _handle_field: LineEdit = $Panel/Margin/Rows/HandleRow/Field
 @onready var _controls: Button = $Panel/Margin/Rows/Controls
 @onready var _back: Button = $Panel/Margin/Rows/Back
 @onready var _keybinds: Control = $KeybindScreen
@@ -60,6 +61,22 @@ func _ready() -> void:
 	# Click-to-edit only: a focus-ALL LineEdit traps gamepad/keyboard navigation
 	# (it eats the arrows for its caret), so stick navigation skips it.
 	_seed_field.focus_mode = Control.FOCUS_CLICK
+	# Commit on Enter AND on focus loss — walking away from a half-typed name
+	# should keep it, not lose it. The field re-reads the sanitized result so
+	# what you see is exactly what the board will show.
+	_handle_field.focus_mode = Control.FOCUS_CLICK
+	_handle_field.text_submitted.connect(func(_t: String) -> void: _commit_handle())
+	_handle_field.focus_exited.connect(_commit_handle)
+	# Live preview while the slider drags, since Settings.set_ui_scale emits
+	# ui_scale_changed synchronously — no separate hookup needed in the slider's
+	# own value_changed handler below.
+	UiScaler.apply(_panel, Settings.ui_scale, Vector2(0.5, 0.5))
+	Settings.ui_scale_changed.connect(func(s: float) -> void: UiScaler.apply(_panel, s, Vector2(0.5, 0.5)))
+
+
+func _commit_handle() -> void:
+	Settings.set_daily_handle(_handle_field.text)
+	_handle_field.text = Settings.daily_handle
 
 
 ## Back one level: keybinds -> settings panel -> whoever hosts us. B on a pad,
@@ -95,6 +112,7 @@ func open() -> void:
 	_ui_scale_value.text = "%d%%" % roundi(Settings.ui_scale * 100.0)
 	_screen_shake.set_pressed_no_signal(Settings.screen_shake)
 	_pause_blur.set_pressed_no_signal(Settings.pause_blur)
+	_handle_field.text = Settings.daily_handle
 	# The run tools only exist mid-run; from the title or hub they are noise.
 	var in_run: bool = GameState.run_active
 	_run_sep.visible = in_run

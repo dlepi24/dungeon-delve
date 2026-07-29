@@ -1,6 +1,57 @@
 # Roadmap
 
 ## Status
+- **2026-07-28 (latest, M8 build): competition layer landed — dormant until
+  the worker deploys.** Hardening: Rng.fnv32 replaces engine hash() in
+  daily_seed/seed_from_text/stream (one-time reshuffle of all prior seeds,
+  taken deliberately pre-publish); rng_test pins literal derivation constants
+  (a failing pin = release blocker). Daily is UTC end-to-end; title button
+  names the day. Online day-board: Leaderboard autoload (submit ranked daily,
+  fetch top rows; offline-tolerant with pending-retry file; additive UI,
+  never blocks), records screen board section, DAILY HANDLE field in OPTIONS
+  (sanitized, auto-minted MINER-####). Server: server/leaderboard Cloudflare
+  Worker + D1, deployed via GH Actions per Dustin's "lean into GH" steer
+  (write path can't be GitHub-only without shipping a token). DORMANT:
+  SERVICE_URL="" in leaderboard.gd — Dustin's 10-minute launch checklist is
+  in server/leaderboard/README.md (D1 create, two repo secrets, paste URL,
+  commit). Suite green: check (9 autoloads), rng (with pins), loop, delve,
+  smoke. NEXT: Dustin does the README setup, then a two-machine same-day
+  sanity test of the board; ghost-tape sharing stays deferred until the board
+  earns it.
+- **2026-07-28 (later, publishing push): PAYDIRT + de-tinned hits + real pad
+  glyphs + app icon; M8 found mostly built.** Name locked (GDD q5 answered;
+  project/export paths/bundle id updated). Hit SFX reworked in gen_sfx.py —
+  the tin was the impact layer's all-treble synthesis; pick/blade/stone moved
+  down-spectrum, parry deliberately untouched (pillar). Real controller chip
+  art via Keybinds.hint_info + KeyChip.draw_action (drawn Sony shapes, coloured
+  Xbox letters, D-pad arrows, radial hold sweep) — chips only, text hints stay
+  text; proof rig tools/glyph_preview.tscn. App icon baked (tools/gen_icon.py →
+  icon.png, was unset). M8 AUDIT: daily seed mode, one-ranked-attempt rule,
+  ghost tape recorder + practice-run ghost, records screen and run history all
+  ALREADY EXIST — the genuine M8 remainder is (a) hardening: self-owned seed
+  hash (engine hash() can shift across versions) + UTC day + surfacing the
+  seed string, and (b) the ONLINE daily leaderboard (plan proposed to Dustin
+  this session, awaiting his calls: UTC vs local day, backend flavour, ship
+  local-first or wait for online). Dustin still owes listen tests on the new
+  hits and an eyes-on of the glyph sheet. Check green throughout.
+- **2026-07-28: HUB OUTDOOR ART PASS — the surface stopped being a brown box.**
+  Dustin's read: the hub's art was "different and frankly worse" than the game.
+  Structural cause: the hub environment never went through the art pipeline —
+  flat ColorRects under a bright grade, finished props on M0 geometry. Landed
+  `src/hub/hub_scenery.gd` (runtime-built, visual only, all exported): dusk-sky
+  gradient + fixed-seed stars + moon, two silhouette ridgelines, a distant
+  headframe on the horizon, world-tileset ground with a mossy walk-line lip,
+  and a terraced rock face the two mine mouths bore into (the Hollow's spot is
+  real rock until earned). The old rock ceiling is gone — the pit-head gantry
+  beam stays, open-air, posts now full height, lanterns hanging from its
+  underside. Collision untouched (tile layers run collision_enabled=false; the
+  Geometry StaticBody still owns it) — pure art change. Also new:
+  `tools/screenshot.tscn`, a generic scene-to-PNG rig for visual verification
+  (used to check this pass before handover). Check green (109 scripts), hub
+  boots clean, smoke boot green. NEXT (Dustin's queue): playtest the sky in
+  motion + tune exported colours; then the deferred dressing pass (surface
+  props on the new ground, ridge silhouette detail); physics pin was found
+  stripped again and restored (now carries a louder comment).
 - **2026-07-22: ZONES — the mine got strata (Yvette's "levels feel the same" fix).**
   The run now descends through three named zones — THE UPPER WORKINGS (warm
   timber, the approved look) → THE HOT VEIN (red grade, rising embers, magma

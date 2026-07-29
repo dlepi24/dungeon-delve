@@ -94,6 +94,15 @@ func _test_text_seeds() -> void:
 	_check(Rng.seed_from_text("cavern") != Rng.seed_from_text("caverns"), "similar words differ")
 	_check(Rng.daily_seed(2026, 7, 15) == Rng.daily_seed(2026, 7, 15), "a daily seed is stable")
 	_check(Rng.daily_seed(2026, 7, 15) != Rng.daily_seed(2026, 7, 16), "consecutive days differ")
+	# PINNED VALUES, not just self-consistency: the hash is self-owned fnv32 so
+	# no engine upgrade can move it — these constants are the proof. If one of
+	# these ever fails, seed derivation changed and every shared/daily seed in
+	# the wild just broke: stop and treat it as a release blocker, not a test
+	# to update.
+	_check(Rng.fnv32("daily:2026-07-28") == 939708641, "fnv32 matches the pinned reference value")
+	_check(Rng.daily_seed(2026, 7, 28) == 939708641, "daily seed derivation is pinned")
+	_check(Rng.seed_from_text("cavern") == 1626719312, "word-seed derivation is pinned")
+	_check(Rng.fnv32("12345:delve") == 3386374170, "stream-seed derivation is pinned")
 
 
 func _report() -> void:

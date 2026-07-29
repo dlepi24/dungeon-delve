@@ -1,0 +1,12 @@
+# PAYDIRT daily leaderboard worker. Deployed by GitHub Actions
+# (.github/workflows/deploy-leaderboard.yml); see README.md for the one-time
+# setup (creating the D1 database and filling in database_id below).
+name = "paydirt-leaderboard"
+main = "worker.js"
+compatibility_date = "2026-07-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "paydirt-leaderboard"
+# Paste the id printed by `wrangler d1 create paydirt-leaderboard`:
+database_id = "REPLACE_ME"

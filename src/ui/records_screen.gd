@@ -5,7 +5,11 @@ extends Control
 
 signal closed
 
+@onready var _panel: PanelContainer = $Panel
 @onready var _today_value: Label = $Panel/Margin/Rows/TodayValue
+@onready var _sep_global: HSeparator = $Panel/Margin/Rows/SepGlobal
+@onready var _global_header: Label = $Panel/Margin/Rows/GlobalHeader
+@onready var _global: Label = $Panel/Margin/Rows/Global
 @onready var _dailies: Label = $Panel/Margin/Rows/Dailies
 @onready var _frees: Label = $Panel/Margin/Rows/Frees
 @onready var _career: Label = $Panel/Margin/Rows/Career
@@ -15,6 +19,9 @@ signal closed
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_back.pressed.connect(func() -> void: closed.emit())
+	Leaderboard.board_loaded.connect(_on_board_loaded)
+	UiScaler.apply(_panel, Settings.ui_scale, Vector2(0.5, 0.5))
+	Settings.ui_scale_changed.connect(func(s: float) -> void: UiScaler.apply(_panel, s, Vector2(0.5, 0.5)))
 
 
 func _input(event: InputEvent) -> void:
@@ -27,7 +34,45 @@ func _input(event: InputEvent) -> void:
 func open() -> void:
 	visible = true
 	_rebuild()
+	_refresh_global()
 	_back.grab_focus()
+
+
+## The online section: shown only when the Leaderboard is live, filled async.
+## Never an error dialog — an unreachable board is one quiet line and the
+## local records still carry the screen.
+func _refresh_global() -> void:
+	var show: bool = Leaderboard.enabled()
+	_sep_global.visible = show
+	_global_header.visible = show
+	_global.visible = show
+	if not show:
+		return
+	_global.text = "Fetching the day's board…"
+	Leaderboard.fetch_board()
+
+
+func _on_board_loaded(ok: bool, rows: Array[Dictionary], my_rank: int, total: int) -> void:
+	if not visible:
+		return
+	if not ok:
+		_global.text = "The board is out of reach right now — your score is kept and sent later."
+		return
+	if rows.is_empty():
+		_global.text = "Nobody has ranked today. The mine is all yours."
+		return
+	var lines: PackedStringArray = []
+	for i: int in mini(5, rows.size()):
+		var row: Dictionary = rows[i]
+		var mark: String = "" if bool(row.get("survived", true)) else "  ·  died"
+		lines.append("%d.  %s  —  %d ore  ·  room %d%s" % [
+			i + 1, str(row.get("handle", "?")), int(row.get("haul", 0)), int(row.get("depth", 0)), mark,
+		])
+	if my_rank > 0:
+		lines.append("you (%s):  #%d of %d" % [Settings.daily_handle, my_rank, total])
+	elif Settings.daily_handle != "":
+		lines.append("you (%s):  not in the top %d of %d" % [Settings.daily_handle, Leaderboard.TOP_COUNT, total])
+	_global.text = "\n".join(lines)
 
 
 func _rebuild() -> void:
@@ -56,8 +101,11 @@ func _rebuild() -> void:
 
 	_dailies.text = _top_lines(dailies, 5, "No ranked dailies yet.")
 	_frees.text = _top_lines(frees, 5, "No extractions yet.")
-	_career.text = "%d runs   ·   deepest room %d   ·   best extract %d   ·   %d kills" % [
+	# Best heat survived (BLAZING, 2026-07-23): once heat has no ceiling, this
+	# is the number a veteran actually chases — same career line, same read.
+	_career.text = "%d runs   ·   deepest room %d   ·   best extract %d   ·   %d kills   ·   best heat %d" % [
 		GameState.total_runs, GameState.deepest_room, GameState.best_haul, GameState.total_kills,
+		GameState.best_heat_survived,
 	]
 
 

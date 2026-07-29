@@ -34,7 +34,7 @@ const EXPECTED_LAYERS: PackedStringArray = [
 ## Settings is deliberately LAST in project.godot's [autoload] block: its _ready
 ## pushes prefs onto Music, so Music must be initialised first. Autoloads load in
 ## file order, not this list's order.
-const EXPECTED_AUTOLOADS: PackedStringArray = ["Events", "GameState", "Hitstop", "Keybinds", "Music", "Rng", "Sfx", "Settings"]
+const EXPECTED_AUTOLOADS: PackedStringArray = ["Events", "GameState", "Hitstop", "Keybinds", "Music", "Rng", "Sfx", "Leaderboard", "Settings"]
 
 ## The audio bus graph (default_bus_layout.tres). Code addresses buses by NAME —
 ## Music/Sfx voices, Settings' sliders, the shrine hum, the axe — so a renamed or
