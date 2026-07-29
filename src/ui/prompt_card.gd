@@ -59,7 +59,7 @@ static func gated_row(label: String) -> Dictionary:
 
 static func _chip_width(row: Dictionary) -> float:
 	if row["kind"] == &"action" or row["kind"] == &"hold":
-		return KeyChip.chip_size(Keybinds.hint_for(row["action"]), CHIP_FS).x
+		return KeyChip.action_size(row["action"], CHIP_FS).x
 	return KeyChip.dir_size(CHIP_FS).x
 
 
@@ -116,9 +116,9 @@ static func draw(ci: CanvasItem, at: Vector2, title: String, subtitle: String, r
 	var row_h: float = KeyChip.dir_size(CHIP_FS).y
 	for row: Dictionary in rows:
 		if row["kind"] == &"action":
-			KeyChip.draw_chip(ci, Keybinds.hint_for(row["action"]), CHIP_FS, Vector2(x, y))
+			KeyChip.draw_action(ci, row["action"], CHIP_FS, Vector2(x, y))
 		elif row["kind"] == &"hold":
-			KeyChip.draw_chip(ci, Keybinds.hint_for(row["action"]), CHIP_FS, Vector2(x, y), row["progress"])
+			KeyChip.draw_action(ci, row["action"], CHIP_FS, Vector2(x, y), row["progress"])
 		elif row["kind"] == &"dir":
 			KeyChip.draw_dir(ci, row["up"], CHIP_FS, Vector2(x, y))
 		var colour: Color = GATED_COL if row["kind"] == &"gated" else ROW_COL

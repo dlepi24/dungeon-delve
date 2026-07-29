@@ -128,6 +128,33 @@ func hint_for(action: StringName) -> String:
 	return label_for(action)
 
 
+## Structured version of hint_for, for chip renderers that draw real button art
+## instead of a text cap. `kind` is one of:
+##   &"key"  — text in a square cap (keyboard keys, Stick, shoulders, Menu…)
+##   &"face" — a pad face button: draw a round button. `index` 0..3 picks which;
+##             `text` is the Xbox letter for flavours that letter their buttons.
+##   &"dpad" — a D-pad direction: draw an arrow cap. `dir` is a unit Vector2.
+## Sentence-style hints keep using hint_for; this feeds KeyChip.draw_action.
+func hint_info(action: StringName) -> Dictionary:
+	if not using_gamepad:
+		return {"kind": &"key", "text": label_for(action)}
+	var table: Dictionary[int, String] = _PS_BUTTONS if pad_flavor == &"playstation" else _XBOX_BUTTONS
+	for event: InputEvent in InputMap.action_get_events(action):
+		if event is InputEventJoypadButton:
+			var index: int = (event as InputEventJoypadButton).button_index
+			if index >= 0 and index <= 3:
+				return {"kind": &"face", "index": index, "text": _XBOX_BUTTONS.get(index, "?")}
+			if index >= 11 and index <= 14:
+				const DIRS: Dictionary[int, Vector2] = {
+					11: Vector2.UP, 12: Vector2.DOWN, 13: Vector2.LEFT, 14: Vector2.RIGHT,
+				}
+				return {"kind": &"dpad", "dir": DIRS[index]}
+			return {"kind": &"key", "text": table.get(index, "Pad")}
+		if event is InputEventJoypadMotion:
+			return {"kind": &"key", "text": "Stick"}
+	return {"kind": &"key", "text": label_for(action)}
+
+
 func _capture_defaults() -> void:
 	for action: StringName in REBINDABLE:
 		if not InputMap.has_action(action):

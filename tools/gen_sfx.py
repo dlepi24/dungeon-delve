@@ -140,31 +140,42 @@ def metallic(partials, dur, decay=8.0, attack=0.001):
 # so the material layer underneath it does the pitch work.
 
 def impact_pick():
-    """Sharp metallic tick — a pointed pick biting in. Bright, very short."""
-    n = _n(0.09)
+    """A pointed pick biting in: a short steel TOCK with real weight under it.
+    Reworked (Dustin's "tin" note, 2026-07-28): the old version was a 2600/3900 Hz
+    ring — a triangle ding. Same fix the armor material got: keep the bite, move
+    the energy down. Body below 200 Hz carries the arm; a compact mid knock is
+    the steel; the bright content is ONE very short transient, not a ring."""
+    n = _n(0.11)
     out = []
     for i in range(n):
         t = i / RATE
-        e = env(i, n, 0.0006, power=6.0)
-        tick = noise() * (1.0 - i / n) ** 10
-        ring = sine(2600, t) * 0.4 + sine(3900, t) * 0.2
-        out.append(soft((tick * 0.7 + ring * 0.5) * e, 1.6))
-    return normalize(out, 0.85)
+        p = i / n
+        e = env(i, n, 0.0006, power=5.0)
+        body = sine(175 * (1.0 - 0.4 * p), t) * 0.85          # the swing's weight
+        knock = sine(430, t) * 0.5 * (1.0 - p) ** 3           # steel point, low-mid
+        bite = noise() * (1.0 - p) ** 14 * 0.8                # 3ms of grit, then gone
+        glint = sine(1250, t) * 0.16 * (1.0 - p) ** 6         # a hint of edge, not a ping
+        out.append(soft((body + knock + bite + glint) * e, 1.7))
+    return normalize(out, 0.88)
 
 
 def impact_blade():
-    """A slashing 'shing' — filtered noise sweeping up, thin and keen."""
+    """A slashing cut — keen, but with a forearm behind it. Reworked with the
+    pick (same "tin" note): the shing noise is shaved darker, the sheen sweep
+    sits an octave lower and quieter, and a dropping low body runs underneath
+    so the slice reads as a heavy edge, not a letter opener."""
     n = _n(0.13)
     raw = [noise() for _ in range(n)]
-    band = hp(lp(raw, 0.5), 0.06)  # band-ish
+    band = lp(hp(lp(raw, 0.5), 0.06), 0.75)  # band-ish, then the top shaved off
     out = []
     for i in range(n):
+        t = i / RATE
         p = i / n
         e = env(i, n, 0.001, power=4.0)
-        # rising centre gives the metallic 'sheen'
-        sheen = sine(1800 + 2600 * p, i / RATE) * 0.3 * (1.0 - p)
-        out.append(soft((band[i] * 0.8 + sheen) * e, 1.5))
-    return normalize(out, 0.85)
+        body = sine(190 * (1.0 - 0.45 * p), t) * 0.6          # the weight under the cut
+        sheen = sine(900 + 1300 * p, t) * 0.18 * (1.0 - p)    # the keen edge, tamed
+        out.append(soft((band[i] * 0.65 + sheen + body) * e, 1.5))
+    return normalize(out, 0.88)
 
 
 def impact_blunt():
@@ -232,15 +243,17 @@ def mat_bone():
 
 
 def mat_stone():
-    """Hard, unyielding crack — a chip of rock, bright and instant, no give."""
+    """Hard, unyielding crack — a chip of rock, instant, no give. The old ping
+    partials (900/1500) joined the tin chorus; rock knocks low, so the knock
+    moved to the low-mids and the brightness lives in the 2ms chip alone."""
     n = _n(0.1)
     out = []
     for i in range(n):
         t = i / RATE
         e = env(i, n, 0.0004, power=9.0)
         chip = noise() * (1.0 - i / n) ** 5
-        ping = (sine(900, t) + sine(1500, t) * 0.5) * 0.4 * (1.0 - i / n) ** 3
-        out.append(soft((chip + ping) * e, 1.4))
+        knock = (sine(340, t) + sine(560, t) * 0.5) * 0.45 * (1.0 - i / n) ** 3
+        out.append(soft((chip + knock) * e, 1.4))
     return normalize(out, 0.8)
 
 
