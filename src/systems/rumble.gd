@@ -14,6 +14,10 @@ static func _buzz(weak: float, strong: float, duration: float) -> void:
 		return
 	for device: int in Input.get_connected_joypads():
 		Input.start_joy_vibration(device, weak, strong, duration)
+	# The same beats reach the phone's vibrator when touch is live. Amplitude
+	# takes the hotter of the two motors; no-ops on hardware without one.
+	if TouchControls.is_touch_active():
+		Input.vibrate_handheld(int(duration * 1000.0), maxf(weak, strong))
 
 
 static func hit() -> void:
