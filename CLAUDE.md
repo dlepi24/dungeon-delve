@@ -196,6 +196,17 @@ Gotchas found in M0/M1, worth not rediscovering:
   for unrelated reasons. Held state (`is_action_pressed`, `get_axis`) is fine, so
   simulated movement works. For one-shot verbs, drive `InputBuffer.press()`
   directly — see the note in `src/systems/input_buffer.gd`.
+- **Injected input: use `Input.parse_input_event(InputEventAction)`, never
+  `Input.action_press()` — and don't trust the first frames after boot.** The
+  event path behaves exactly like hardware: `is_action_just_pressed/released`
+  fire correctly inside `_physics_process`, event handlers see the event, and
+  polled state updates. That is how the touch controls inject every verb with
+  zero gameplay changes. But ONE event injected within the first few frames
+  after process boot can be silently swallowed (found as "press works, release
+  is eaten → button stuck held forever"; which event dies depends on ordering).
+  Real fingers can't race that window through a title screen, so only TESTS
+  care: settle ~30 physics frames before the first injection, as
+  `tests/touch_test.gd` does.
 - **Re-running `gen_music.py`/`gen_sfx.py` does NOT make the game hear the new
   audio.** Both write straight over the existing `.wav` at the same path, but
   Godot only re-imports a changed asset when something explicitly triggers a

@@ -14,6 +14,9 @@ config/name="PAYDIRT"
 run/main_scene="res://src/main/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.png"
+; Android's back gesture must never hard-quit a run: TouchControls turns the
+; go-back request into a pause press instead.
+config/quit_on_go_back=false
 
 [autoload]
 
@@ -25,6 +28,7 @@ Music="*res://src/systems/music.gd"
 Rng="*res://src/systems/rng.gd"
 Sfx="*res://src/systems/sfx.gd"
 Leaderboard="*res://src/autoload/leaderboard.gd"
+TouchControls="*res://src/ui/touch/touch_controls.tscn"
 Settings="*res://src/systems/settings.gd"
 
 [debug]

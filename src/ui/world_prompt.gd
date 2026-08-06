@@ -42,6 +42,10 @@ var _title: String = ""
 var _subtitle: String = ""
 var _rows: Array = []
 
+## World-space rect of the last drawn card. The touch layer hit-tests taps
+## against it so the card itself is a button on glass.
+var last_card_rect: Rect2 = Rect2()
+
 # 0 = hidden, 1 = fully shown; eased toward the arbitration result each frame.
 var _shown: float = 0.0
 var _want: bool = false
@@ -88,6 +92,27 @@ func hide_prompt() -> void:
 	_wanting.erase(self)
 
 
+## Public face of _winner() for the touch layer: the prompt currently holding
+## the screen, or null. Callers should still check .visible — arbitration can be
+## won while the card is mid-fade.
+static func active_prompt() -> WorldPrompt:
+	return _winner()
+
+
+## The card's first interact row, mirrored onto the touch layer's thumb chip:
+## {"label", "hold", "progress"}, or {} when this card carries no interact
+## action (extract/descend cards are directional and stay stick-driven).
+func interact_row() -> Dictionary:
+	for row: Dictionary in _rows:
+		if (row["kind"] == &"action" or row["kind"] == &"hold") and row["action"] == &"interact":
+			return {
+				"label": row["label"],
+				"hold": row["kind"] == &"hold",
+				"progress": row.get("progress", 0.0),
+			}
+	return {}
+
+
 ## The one prompt allowed to show right now: highest priority among those asking,
 ## ties broken by who asked first (array order). Invalid entries are skipped.
 static func _winner() -> WorldPrompt:
@@ -130,6 +155,7 @@ func _draw() -> void:
 	var world_tl: Vector2 = global_position + Vector2(-size.x * 0.5, -lift - size.y + bob + rise)
 	if clamp_to_view:
 		world_tl = _clamp_to_view(world_tl, size)
+	last_card_rect = Rect2(world_tl, size)
 	PromptCard.draw(self, to_local(world_tl), _title, _subtitle, _rows)
 
 
