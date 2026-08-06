@@ -30,7 +30,7 @@ const INTRO_SCENE: String = "res://src/rooms/intro_sequence.tscn"
 @onready var _stats: Label = $Stats
 @onready var _flavor: Label = $Flavor
 
-const VERSION: String = "v0.6"
+const VERSION: String = "v0.6-t8"
 @onready var _confirm: PanelContainer = $Confirm
 @onready var _confirm_yes: Button = $Confirm/Margin/Rows/Buttons/Yes
 @onready var _confirm_cancel: Button = $Confirm/Margin/Rows/Buttons/Cancel

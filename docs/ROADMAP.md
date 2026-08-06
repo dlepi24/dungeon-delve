@@ -1,7 +1,56 @@
 # Roadmap
 
 ## Status
-- **2026-07-28 (latest, M8 build): competition layer landed — dormant until
+- **2026-07-29 (latest): Android touch layer landed (controls only; APK still
+  needs the Android SDK + an export preset).** Dustin's calls: floating stick
+  (bottom-left), dedicated jump button (double-tap rejected for latency), and
+  tap-the-prompt interact with a thumb-reachable mirror. New `TouchControls`
+  autoload (`src/ui/touch/`, CanvasLayer 20): floating analog stick; right-hand
+  cluster jump/attack/roll/parry + hook + weapon-swap + pause (all offsets/radii
+  exported for on-device tuning); contextual INTERACT CHIP that mirrors the live
+  WorldPrompt (label + HoldInteract fill) — and the world card itself is
+  tappable. Everything injects real InputEventAction through
+  Input.parse_input_event, so zero gameplay code changed; the stick gates
+  move_up/down at the pad's 0.7 "deliberate" tilt (hysteresis) so extract/
+  descend can't fire on a graze, while left/right stay analog. Player gained
+  `touch_parry_bonus_ms` (35, touch-only buffer widening — the active window is
+  untouched). Android back = pause (`quit_on_go_back=false`). Overlay hides
+  when paused/menus own focus (all menus grab focus, so that's the flag) and
+  releases all holds on hide. `tests/touch_test.tscn` pins injected input
+  reaching `_physics_process` + the stick laws (found: the engine can drop ONE
+  injected event in the first frames after boot — test settles 30 frames;
+  unreachable by real fingers). Consumable_1/2 are bound but unused by any code
+  — no buttons given. Known cosmetic gap: KeyChip prompts still show
+  keyboard/pad glyphs on touch (a "touch device" hint mode is M9-adjacent
+  polish). Feel test's i-frame assertion fails on clean main — it reads the
+  REAL save's mobility level (task chip spun off; that session stopped without
+  landing, still open). Restored the stripped physics-tick pin (again).
+- **2026-08-06 (Android on-device iteration, builds t1–t8, all from Dustin's
+  Galaxy playtests):** APK pipeline stands (SDK via Homebrew symlinked to
+  ~/Library/Android/sdk so editor-settings rewrites can't break it; debug
+  keystore mirrored to both paths Godot may believe in; `Android` preset,
+  arm64, `godot --headless --export-debug Android build/paydirt.apk`; local
+  http.server for sideloading). SHIPPED BUGS the device exposed, all fixed +
+  pinned where testable: (1) intro crawl + result screen soft-locked touch —
+  root Control/Panel default mouse_filter STOP ate taps before
+  _unhandled_input (result screen would have dead-ended EVERY run); both now
+  tap-to-advance/dismiss, pinned in touch_test. (2) "Tap anywhere swings the
+  pickaxe" — KB+M binds attack/parry to mouse buttons and Android emulates
+  every tap as a left click; TouchControls now strips mouse events from
+  gameplay actions when touch is live (pinned). (3) Auto-attack swung at
+  corpses — dead enemies linger in the enemies group while fading; is_dead()
+  filter added (aim-assist too). CONTROL SCHEME after three feel rounds:
+  corner-arc polar layout (thumb pivots at bezel), flick-the-stick = roll (no
+  button; travel-in-window detection, pinned), auto-attack on touch
+  (Settings.auto_attack, default on — Dead Cells mobile pattern, implemented
+  as buffer presses so all commitment rules hold), contextual buttons (hook
+  only near an anchor, swap only with two weapons), press haptics + Rumble
+  routed to vibrate_handheld. CAMERA on touch only: player anchored ~45%
+  screen height, bottom/side overscan past room bounds, wider zoom (1.55) —
+  desktop M1 framing untouched. NEXT: mobile UI overhaul (menu scale, touch
+  glyphs on chips, auto-attack settings toggle, intro skip), rock-fade skirt
+  under the floor overscan, then release signing when anyone else installs.
+- **2026-07-28 (M8 build): competition layer landed — dormant until
   the worker deploys.** Hardening: Rng.fnv32 replaces engine hash() in
   daily_seed/seed_from_text/stream (one-time reshuffle of all prior seeds,
   taken deliberately pre-publish); rng_test pins literal derivation constants
