@@ -23,6 +23,26 @@ extends Camera2D
 ## clamped, so tall rooms like the Chasm still frame their full height.)
 @export var zoom_level: float = 1.85
 
+@export_group("Touch framing")
+## Everything in this group applies ONLY while touch controls are live — the
+## desktop framing above passed the M1 gate and is never altered by these.
+## The phone problem (Dustin, 2026-08-01): thumbs and buttons own the bottom
+## band of the screen, and the desktop framing parks the character exactly
+## there. These lift the character into clean glass.
+## Slightly wider than desktop: telegraph reads need more room on a small
+## screen, and the extra view height gives the anchor below space to work.
+@export var touch_zoom_level: float = 1.55
+## Where the character sits on screen, as a fraction of view height from the
+## top. 0.5 = centre; lower = higher on screen, clear of the thumb band.
+@export_range(0.2, 0.8) var touch_player_anchor: float = 0.45
+## How far past the room's bottom edge the view may look, px. This is THE
+## lever that makes the anchor possible on a room floor — without it the
+## bottom clamp pins the character low no matter what. Below-floor shows dark
+## mine void; if that reads wrong on device, it gets a cosmetic rock skirt.
+@export var touch_overscan_bottom: float = 220.0
+## Same idea sideways, so room entries don't pin you under the stick thumb.
+@export var touch_overscan_x: float = 60.0
+
 ## Bounds of the current room, set by the Delve per room (variable-width rooms
 ## report their own size). The camera clamps inside; an axis where the view is
 ## bigger than the room centres instead.
@@ -42,16 +62,27 @@ func set_room_bounds(size: Vector2) -> void:
 
 
 func _clamp_to_room(goal: Vector2) -> Vector2:
-	var half: Vector2 = get_viewport_rect().size * 0.5 / zoom_level
+	var on_touch: bool = TouchControls.is_touch_active()
+	var half: Vector2 = get_viewport_rect().size * 0.5 / _active_zoom()
+	var over_x: float = touch_overscan_x if on_touch else 0.0
+	var over_b: float = touch_overscan_bottom if on_touch else 0.0
 	if _room_size.x <= half.x * 2.0:
 		goal.x = _room_size.x * 0.5
 	else:
-		goal.x = clampf(goal.x, half.x, _room_size.x - half.x)
-	if _room_size.y <= half.y * 2.0:
-		goal.y = _room_size.y * 0.5
+		goal.x = clampf(goal.x, half.x - over_x, _room_size.x - half.x + over_x)
+	var max_y: float = _room_size.y - half.y + over_b
+	if max_y <= half.y:
+		# Room shorter than the view. Desktop centres it; touch pins the room's
+		# FLOOR a fixed height above the view bottom instead, so the character
+		# still rides above the thumb band in short rooms and the hub.
+		goal.y = max_y if on_touch else _room_size.y * 0.5
 	else:
-		goal.y = clampf(goal.y, half.y, _room_size.y - half.y)
+		goal.y = clampf(goal.y, half.y, max_y)
 	return goal
+
+
+func _active_zoom() -> float:
+	return touch_zoom_level if TouchControls.is_touch_active() else zoom_level
 
 @export_group("Shake")
 @export_range(0.0, 1.0) var trauma_hit: float = 0.35
@@ -100,10 +131,16 @@ func _on_player_hurt(_damage: float) -> void:
 
 func _process(delta: float) -> void:
 	_zoom_punch = move_toward(_zoom_punch, 0.0, 0.25 * delta)
-	zoom = Vector2.ONE * zoom_level * (1.0 + _zoom_punch)
+	zoom = Vector2.ONE * _active_zoom() * (1.0 + _zoom_punch)
 
 	if target != null:
-		var goal: Vector2 = _clamp_to_room(Vector2(target.global_position.x, target.global_position.y - 200.0))
+		# Desktop: the M1-gate framing (character low, room above). Touch: aim
+		# the camera so the character sits at the anchor fraction instead.
+		var goal_y: float = target.global_position.y - 200.0
+		if TouchControls.is_touch_active():
+			var view_h: float = get_viewport_rect().size.y / _active_zoom()
+			goal_y = target.global_position.y + (0.5 - touch_player_anchor) * view_h
+		var goal: Vector2 = _clamp_to_room(Vector2(target.global_position.x, goal_y))
 		global_position = global_position.lerp(goal, minf(1.0, follow_stiffness))
 
 	if _trauma <= 0.0:
