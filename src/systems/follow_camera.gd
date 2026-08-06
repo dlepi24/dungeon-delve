@@ -56,9 +56,15 @@ func punch_zoom(amount: float = 0.05) -> void:
 	_zoom_punch = maxf(_zoom_punch, amount)
 
 
+## Under-floor rock fill for the touch overscan; null on desktop.
+var _skirt: RoomSkirt = null
+
+
 func set_room_bounds(size: Vector2) -> void:
 	if size.x > 0.0 and size.y > 0.0:
 		_room_size = size
+		if _skirt != null:
+			_skirt.set_room(_room_size)
 
 
 func _clamp_to_room(goal: Vector2) -> Vector2:
@@ -104,6 +110,12 @@ func _ready() -> void:
 	Events.player_hurt.connect(_on_player_hurt)
 	if target == null:
 		target = get_tree().get_first_node_in_group(&"player") as Player
+	# The touch camera looks below the room floor (overscan); give that space
+	# rock instead of void. Deferred: adding a sibling during _ready is illegal.
+	if TouchControls.is_touch_active():
+		_skirt = RoomSkirt.new()
+		_skirt.set_room(_room_size)
+		get_parent().add_child.call_deferred(_skirt)
 
 
 func add_trauma(amount: float) -> void:
