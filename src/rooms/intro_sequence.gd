@@ -44,6 +44,12 @@ var _auto: Tween = null
 
 
 func _ready() -> void:
+	# The scene ROOT is a Control, and a Control's default mouse_filter is STOP:
+	# the GUI phase consumed every click and tap right here, so they never
+	# reached _unhandled_input. The labels below were already IGNORE (see the
+	# note on _build_ui) but the root was the one doing the eating — "click to
+	# advance" never actually worked until the Android build exposed it.
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	Cursor.menu()
 	# The title's calm hub bed carries in through the Music autoload; keep it.
 	# The delve track belongs to the tutorial, which starts it on entry.
@@ -182,7 +188,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			or event.is_action_pressed(&"ui_accept")
 	var click: bool = event is InputEventMouseButton and event.is_pressed() \
 			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
-	if not (press or click):
+	# A phone tap arrives as a ScreenTouch, not a mouse click. GUI buttons
+	# translate touches on their own, but an _unhandled_input listener must
+	# accept them itself — without this the crawl soft-locks Android at
+	# "Press to begin." (shipped: first on-device install, 2026-07-29).
+	var tap: bool = event is InputEventScreenTouch and event.is_pressed()
+	if not (press or click or tap):
 		return
 	get_viewport().set_input_as_handled()
 	if _started:

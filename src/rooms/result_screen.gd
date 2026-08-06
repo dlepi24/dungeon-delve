@@ -19,6 +19,10 @@ signal dismissed
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
+	# The Panel's default mouse_filter (STOP) would swallow a tap landing on it
+	# before _unhandled_input could dismiss — the exact centre of the screen,
+	# where every thumb goes. Purely informational surface, so let input pass.
+	($Panel as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 ## outcome: "died", "extracted", or "cleared". amount: haul lost or banked.
@@ -45,7 +49,13 @@ func show_result(outcome: StringName, amount: int) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if event.is_action_pressed(&"interact") or event.is_action_pressed(&"jump"):
+	# Tap-anywhere and click-anywhere dismiss alongside the action presses: this
+	# screen PAUSES the tree, which hides the touch overlay's buttons, so on a
+	# phone the actions are unreachable and interact/jump alone would soft-lock
+	# every run's ending here.
+	var tap: bool = (event is InputEventScreenTouch or event is InputEventMouseButton) \
+			and event.is_pressed()
+	if event.is_action_pressed(&"interact") or event.is_action_pressed(&"jump") or tap:
 		get_viewport().set_input_as_handled()
 		get_tree().paused = false
 		dismissed.emit()
