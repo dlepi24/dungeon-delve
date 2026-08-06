@@ -40,6 +40,11 @@ var daily_handle: String = ""
 ## also the cheap fallback on weak hardware.
 var pause_blur: bool = true
 
+## Touch QoL (Dustin's call, 2026-08-01, the Dead Cells mobile pattern): the
+## pickaxe swings itself when an enemy is in reach. Only consulted while touch
+## controls are active — on keyboard/pad this flag does nothing.
+var auto_attack: bool = true
+
 
 func _ready() -> void:
 	_load()
@@ -127,6 +132,11 @@ func set_pause_blur(on: bool) -> void:
 	_save()
 
 
+func set_auto_attack(on: bool) -> void:
+	auto_attack = on
+	_save()
+
+
 ## Master bus in dB. A linear 0..1 slider maps through linear_to_db so it feels
 ## right (a fader, not a light switch); 0 hard-mutes.
 func _apply_master() -> void:
@@ -161,6 +171,7 @@ func _save() -> void:
 	config.set_value("display", "ui_scale", ui_scale)
 	config.set_value("accessibility", "screen_shake", screen_shake)
 	config.set_value("accessibility", "pause_blur", pause_blur)
+	config.set_value("touch", "auto_attack", auto_attack)
 	config.set_value("daily", "handle", daily_handle)
 	config.save(SAVE_PATH)
 
@@ -176,5 +187,6 @@ func _load() -> void:
 	ui_scale = clampf(float(config.get_value("display", "ui_scale", 1.0)), 0.75, 2.0)
 	screen_shake = bool(config.get_value("accessibility", "screen_shake", true))
 	pause_blur = bool(config.get_value("accessibility", "pause_blur", true))
+	auto_attack = bool(config.get_value("touch", "auto_attack", true))
 	# Re-sanitized on load: the cfg is hand-editable.
 	daily_handle = sanitize_handle(str(config.get_value("daily", "handle", "")))

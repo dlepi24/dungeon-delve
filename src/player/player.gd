@@ -51,6 +51,12 @@ const BUFFERED_ACTIONS: PackedStringArray = ["jump", "roll", "attack", "parry"]
 @export var input_buffer_ms: int = 100
 ## GDD feel spec: 80 ms. Jump stays legal briefly after walking off a ledge.
 @export var coyote_ms: int = 80
+## Extra parry buffer granted ONLY when touch controls are live. Glass adds
+## real latency a keyboard doesn't have, and parry is the tightest window in
+## the game — this widens the buffer, never the active window, so the parry
+## stays exactly as greedy, it just forgives the platform's own lag. Set 0 to
+## feel the difference on-device before trusting it.
+@export var touch_parry_bonus_ms: int = 35
 
 @export_group("Roll")
 ## GDD feel spec: ~350 ms total.
@@ -310,6 +316,7 @@ func _physics_process(delta: float) -> void:
 		_last_grounded_tick = _tick
 
 	_tick_buffs()
+	_auto_attack()
 	_handle_weapon_select()
 	_update_landing_juice()
 
@@ -550,6 +557,40 @@ func hone_equipped_weapon() -> bool:
 	held_weapons[active_slot] = honed
 	_wield(honed)
 	return true
+
+
+## Extra horizontal reach beyond the weapon's hitbox before auto-attack wakes,
+## px. Slightly generous so the swing starts as the enemy ARRIVES in range.
+@export var auto_attack_reach_pad: float = 14.0
+## Vertical band an enemy must be inside to count as attackable, px.
+@export var auto_attack_height: float = 90.0
+
+
+## Touch QoL (Dustin's call, 2026-08-01 — the Dead Cells mobile pattern): with
+## an enemy in swing reach, press attack FOR the touch player. Implemented as a
+## buffer press, exactly what a thumb does — every state rule still applies
+## (commitment, cancel windows, riposte cash-in), positioning and parry stay
+## the player's. Keyboard/pad runs never enter this path, so desktop combat
+## and its ghosts are untouched. Deterministic: reads only enemy positions.
+func _auto_attack() -> void:
+	if not TouchControls.is_touch_active() or not Settings.auto_attack:
+		return
+	var reach: float = weapon_hitbox_offset().x + weapon_hitbox_size().x * 0.5 + auto_attack_reach_pad
+	for node: Node in get_tree().get_nodes_in_group(&"enemies"):
+		var enemy: Node2D = node as Node2D
+		if enemy == null or not is_instance_valid(enemy):
+			continue
+		# Corpses LINGER in the enemies group while they fade (enemy.gd DEAD
+		# state) — without this check every kill earned a few bonus swings at
+		# the fading body, which read as "the pickaxe gets stuck swinging".
+		if node.has_method(&"is_dead") and node.call(&"is_dead"):
+			continue
+		if absf(enemy.global_position.x - global_position.x) > reach:
+			continue
+		if absf(enemy.global_position.y - global_position.y) > auto_attack_height:
+			continue
+		_buffer.press(&"attack", _tick)
+		return
 
 
 ## Swap is a physics-tick input like every other verb (determinism: ghost
@@ -895,6 +936,9 @@ func aim_at_nearest_enemy() -> void:
 		var enemy: Node2D = node as Node2D
 		if enemy == null or not is_instance_valid(enemy):
 			continue
+		# Same corpse filter as _auto_attack: never aim at a fading body.
+		if node.has_method(&"is_dead") and node.call(&"is_dead"):
+			continue
 		var d: float = absf(enemy.global_position.x - global_position.x)
 		if d < best_d and absf(enemy.global_position.y - global_position.y) < 120.0:
 			best_d = d
@@ -972,7 +1016,8 @@ func try_consume_attack() -> bool:
 
 
 func try_consume_parry() -> bool:
-	if not _buffer.is_buffered(&"parry", _tick, ms_to_ticks(input_buffer_ms)):
+	var window_ms: int = input_buffer_ms + (touch_parry_bonus_ms if TouchControls.is_touch_active() else 0)
+	if not _buffer.is_buffered(&"parry", _tick, ms_to_ticks(window_ms)):
 		return false
 	_buffer.consume(&"parry")
 	return true
