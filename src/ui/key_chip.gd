@@ -115,8 +115,34 @@ static func draw_action(ci: CanvasItem, action: StringName, font_size: int, at: 
 			return _draw_face(ci, info, font_size, at, progress)
 		&"dpad":
 			return _draw_dpad(ci, info["dir"] as Vector2, font_size, at)
+		&"touch":
+			return _draw_touch(ci, info["action"] as StringName, font_size, at, progress)
 		_:
 			return draw_chip(ci, info["text"] as String, font_size, at, progress)
+
+
+## Touch chip: a round cap wearing the SAME drawn glyph as the on-screen
+## button (TouchGlyphs), so a prompt points at a thing the thumb can find.
+## Roll gets the flick chevrons — on touch that verb is a gesture, not a
+## button. Hold-to-commit charges as the face buttons' clock sweep.
+static func _draw_touch(ci: CanvasItem, action: StringName, font_size: int, at: Vector2, progress: float) -> float:
+	var size: Vector2 = dir_size(font_size)
+	var centre: Vector2 = at + size * 0.5
+	var radius: float = size.x * 0.5
+	ci.draw_circle(centre, radius, FILL)
+	if progress > 0.0:
+		var sweep: PackedVector2Array = PackedVector2Array([centre])
+		var steps: int = 24
+		for i: int in steps + 1:
+			var a: float = -PI * 0.5 + TAU * clampf(progress, 0.0, 1.0) * float(i) / float(steps)
+			sweep.append(centre + Vector2.from_angle(a) * (radius - 2.0))
+		ci.draw_colored_polygon(sweep, Color(BORDER, 0.40))
+	ci.draw_arc(centre, radius, 0.0, TAU, 32, BORDER, 2.0, true)
+	if action == &"roll":
+		TouchGlyphs.draw_flick(ci, centre, radius * 0.52, TEXT)
+	else:
+		TouchGlyphs.draw(ci, action, centre, radius * 0.5, TEXT)
+	return size.x
 
 
 static func _draw_face(ci: CanvasItem, info: Dictionary, font_size: int, at: Vector2, progress: float) -> float:

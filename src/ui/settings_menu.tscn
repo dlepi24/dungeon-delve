@@ -179,6 +179,21 @@ text = "PAUSE BLUR"
 layout_mode = 2
 button_pressed = true
 
+; Touch-only behaviour (the pickaxe swings itself in reach); shown on every
+; device so a phone player who plugs a keyboard can still find it.
+[node name="AutoAttackRow" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Margin/Rows/AutoAttackRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "AUTO-ATTACK (TOUCH)"
+
+[node name="Toggle" type="CheckButton" parent="Panel/Margin/Rows/AutoAttackRow"]
+layout_mode = 2
+button_pressed = true
+
 ; The online day-board name. Sanitized by Settings (12 chars, [A-Za-z0-9_-]);
 ; click-to-edit like the seed field so pad navigation never gets trapped.
 [node name="HandleRow" type="HBoxContainer" parent="Panel/Margin/Rows"]

@@ -103,6 +103,20 @@ func _build_ui() -> void:
 	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hint.add_theme_font_size_override(&"font_size", 16)
 	_hint.add_theme_color_override(&"font_color", Color(0.7, 0.62, 0.5, 0.85))
+
+	# Touch has no Esc/B, so the skip needs a real tappable. A GUI Button
+	# handles touches natively; focus_mode NONE keeps it out of pad nav.
+	if Keybinds.using_touch():
+		var skip: Button = Button.new()
+		skip.text = "SKIP  ▸▸"
+		skip.focus_mode = Control.FOCUS_NONE
+		skip.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		skip.offset_left = -190.0
+		skip.offset_top = 40.0
+		skip.offset_right = -50.0
+		skip.offset_bottom = 96.0
+		skip.pressed.connect(_finish)
+		add_child(skip)
 	add_child(_hint)
 	# The advance glyph follows whichever device is driving, like every other hint.
 	Keybinds.input_device_changed.connect(_refresh_hint)

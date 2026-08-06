@@ -30,7 +30,7 @@ const INTRO_SCENE: String = "res://src/rooms/intro_sequence.tscn"
 @onready var _stats: Label = $Stats
 @onready var _flavor: Label = $Flavor
 
-const VERSION: String = "v0.6-t8"
+const VERSION: String = "v0.6-t9"
 @onready var _confirm: PanelContainer = $Confirm
 @onready var _confirm_yes: Button = $Confirm/Margin/Rows/Buttons/Yes
 @onready var _confirm_cancel: Button = $Confirm/Margin/Rows/Buttons/Cancel
@@ -107,6 +107,11 @@ func _process(delta: float) -> void:
 ## M2: a build that does not state its verbs gets judged on the verbs you
 ## happened to guess.
 func _refresh_controls_line() -> void:
+	# On glass the keyboard listing would be a lie; say the two things the
+	# screen does not already show as buttons.
+	if Keybinds.using_touch():
+		_controls.text = "Stick move   ·   flick the stick to roll   ·   tap prompts to interact"
+		return
 	if Keybinds.using_gamepad:
 		_controls.text = "Stick move   %s jump   %s roll   %s attack   %s parry   %s pause" % [
 			Keybinds.hint_for(&"jump"), Keybinds.hint_for(&"roll"),

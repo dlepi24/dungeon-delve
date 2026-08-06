@@ -114,9 +114,25 @@ func _detect_flavor(device: int) -> void:
 	pad_flavor = &"playstation" if sony else &"xbox"
 
 
+## True while hints should speak TOUCH: a touchscreen is driving and no
+## gamepad has taken over (a pad paired to the phone rightly wins).
+func using_touch() -> bool:
+	return TouchControls.is_touch_active() and not using_gamepad
+
+
+## Compact hint words for touch, where an action's "key" is a screen button,
+## a tap, or a gesture — a keyboard letter would be a lie on glass.
+const _TOUCH_WORDS: Dictionary[StringName, String] = {
+	&"interact": "Tap", &"roll": "Flick", &"jump": "Jump", &"attack": "Attack",
+	&"parry": "Parry", &"skill_1": "Swap", &"skill_2": "Hook", &"pause": "Pause",
+}
+
+
 ## Device-aware hint for on-screen prompts: the keyboard key normally, the pad
 ## glyph while a gamepad is driving. Stick-only actions (movement) say "Stick".
 func hint_for(action: StringName) -> String:
+	if using_touch():
+		return _TOUCH_WORDS.get(action, label_for(action))
 	if not using_gamepad:
 		return label_for(action)
 	var table: Dictionary[int, String] = _PS_BUTTONS if pad_flavor == &"playstation" else _XBOX_BUTTONS
@@ -136,6 +152,10 @@ func hint_for(action: StringName) -> String:
 ##   &"dpad" — a D-pad direction: draw an arrow cap. `dir` is a unit Vector2.
 ## Sentence-style hints keep using hint_for; this feeds KeyChip.draw_action.
 func hint_info(action: StringName) -> Dictionary:
+	# Touch chips are round and wear the SAME drawn glyph as the on-screen
+	# button (TouchGlyphs), so "press [chip]" points at a thing that exists.
+	if using_touch() and _TOUCH_WORDS.has(action):
+		return {"kind": &"touch", "action": action}
 	if not using_gamepad:
 		return {"kind": &"key", "text": label_for(action)}
 	var table: Dictionary[int, String] = _PS_BUTTONS if pad_flavor == &"playstation" else _XBOX_BUTTONS

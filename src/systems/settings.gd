@@ -47,6 +47,12 @@ var auto_attack: bool = true
 
 
 func _ready() -> void:
+	# Touch screens are small and get held at arm's length: UI defaults bigger
+	# there. Set BEFORE _load so a saved Interface Size still wins — this only
+	# changes what "never touched the slider" means on a phone. (TouchControls
+	# loads before Settings in the autoload order, so the flag is ready.)
+	if TouchControls.is_touch_active():
+		ui_scale = 1.3
 	_load()
 	apply()
 
@@ -184,7 +190,7 @@ func _load() -> void:
 	music_volume = clampf(float(config.get_value("audio", "music_volume", 1.0)), 0.0, 1.0)
 	sfx_volume = clampf(float(config.get_value("audio", "sfx_volume", 1.0)), 0.0, 1.0)
 	fullscreen = bool(config.get_value("display", "fullscreen", true))
-	ui_scale = clampf(float(config.get_value("display", "ui_scale", 1.0)), 0.75, 2.0)
+	ui_scale = clampf(float(config.get_value("display", "ui_scale", ui_scale)), 0.75, 2.0)
 	screen_shake = bool(config.get_value("accessibility", "screen_shake", true))
 	pause_blur = bool(config.get_value("accessibility", "pause_blur", true))
 	auto_attack = bool(config.get_value("touch", "auto_attack", true))

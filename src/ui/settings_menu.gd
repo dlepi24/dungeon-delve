@@ -23,6 +23,7 @@ signal run_action_taken
 @onready var _ui_scale_value: Label = $Panel/Margin/Rows/UiScaleRow/Value
 @onready var _screen_shake: CheckButton = $Panel/Margin/Rows/ScreenShakeRow/Toggle
 @onready var _pause_blur: CheckButton = $Panel/Margin/Rows/PauseBlurRow/Toggle
+@onready var _auto_attack: CheckButton = $Panel/Margin/Rows/AutoAttackRow/Toggle
 @onready var _handle_field: LineEdit = $Panel/Margin/Rows/HandleRow/Field
 @onready var _controls: Button = $Panel/Margin/Rows/Controls
 @onready var _back: Button = $Panel/Margin/Rows/Back
@@ -55,6 +56,7 @@ func _ready() -> void:
 		Settings.set_ui_scale(v / 100.0); _ui_scale_value.text = "%d%%" % roundi(v))
 	_screen_shake.toggled.connect(func(on: bool) -> void: Settings.set_screen_shake(on))
 	_pause_blur.toggled.connect(func(on: bool) -> void: Settings.set_pause_blur(on))
+	_auto_attack.toggled.connect(func(on: bool) -> void: Settings.set_auto_attack(on))
 	_replay.pressed.connect(_on_replay)
 	_fresh.pressed.connect(_on_fresh)
 	_seed_field.text_submitted.connect(func(_t: String) -> void: _on_replay())
@@ -112,6 +114,7 @@ func open() -> void:
 	_ui_scale_value.text = "%d%%" % roundi(Settings.ui_scale * 100.0)
 	_screen_shake.set_pressed_no_signal(Settings.screen_shake)
 	_pause_blur.set_pressed_no_signal(Settings.pause_blur)
+	_auto_attack.set_pressed_no_signal(Settings.auto_attack)
 	_handle_field.text = Settings.daily_handle
 	# The run tools only exist mid-run; from the title or hub they are noise.
 	var in_run: bool = GameState.run_active
@@ -127,7 +130,7 @@ func open() -> void:
 ## Recomputed on every open — the run tools row only exists mid-run, so the
 ## wraparound order has to match whatever is actually visible right now.
 func _rebuild_order() -> void:
-	_order = [_master, _volume, _sfx, _fullscreen, _ui_scale, _screen_shake, _pause_blur, _controls]
+	_order = [_master, _volume, _sfx, _fullscreen, _ui_scale, _screen_shake, _pause_blur, _auto_attack, _controls]
 	if _run_buttons.visible:
 		_order.append(_replay)
 		_order.append(_fresh)
